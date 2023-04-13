@@ -21,14 +21,23 @@ Xdobry ist programmed in Tcl but it used many Tcl Extensions:
 # Installation #
 
 You will need tcl and many extension to get it run.
-There are windows binaries in releases.
+There are also old windows binaries in releases.
+
+Tested on 2023 using tcl8.6 and current from this time ubuntu.
+The almost 20 year code runs.
 
 For ubuntu
 
-   sudo apt-get install tcl tk nsf
+    sudo apt-get install tcl tk nsf tix tdom
+
+You will need also some db libraries
+
+    sudo apt-get install mysqltcl
 
 Start
  
-   wish SchemaEditor.tcl
-   wish FormEditor.tcl
-   wish FormServer.tcl
+    wish SchemaEditor.tcl
+    wish FormEditor.tcl
+    wish FormServer.tcl
+
+
