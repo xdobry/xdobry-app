@@ -1,0 +1,191 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>Fehlende Funktionalitäten bei Xdobry</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Dokumentation des Programms Xdobry"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Benutzer Handbuch"
+HREF="c163.html"><LINK
+REL="PREVIOUS"
+TITLE="Schema vs. Formularaussehen"
+HREF="x771.html"><LINK
+REL="NEXT"
+TITLE="Tutorial"
+HREF="c834.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Dokumentation des Programms Xdobry</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x771.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Benutzer Handbuch</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="c834.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN813"
+></A
+>Fehlende Funktionalitäten bei Xdobry</H1
+><P
+>Ich möchte die mögliche Fallen bei der Benutzung des Programms nennen:
+<P
+></P
+><UL
+><LI
+><P
+>Bei der Aggregation, Spezialisierung und Fremdschlüssel werden nur Ein-Attributige-Primärschlüssel unterstützt. Ein Objekt wird nur durch ein Attribut identifiziert.</P
+></LI
+><LI
+><P
+>Bei leeren Tabellen ist das Einfügen des ersten Tupels nur mit der Schaltflächen Speichern (Disketten-Ikon) möglich.</P
+></LI
+><LI
+><P
+>Die Daten in einem Formular werden erst nach der Änderung der Tuppelposition (mit Naviagtionsschaltflächen) oder durch die Schaltfläche Speichern zur Datenbank geschickt.</P
+></LI
+><LI
+><P
+>Es gibt Probleme mit Operationen (Löschen, Ändern, Einfügen), sie werden erst Sichtbar nach der Aktion Aktualisieren. Der Zustand, dass die Daten nicht aktuell sein könnten wird durch die rotgefärbte Schaltfläche Aktualisieren angezeigt.</P
+></LI
+><LI
+><P
+>Die Anzahl von offenen SQL-Verbindungen kann systemspezifisch begrenzt. Es hängt von der Datenbank und der benutzten Schnittstelle ab.</P
+></LI
+><LI
+><P
+>Die Widget (Multi-Spalten-Listen) für die Anzeige von Fremdschlüssel werden nur einmal bei dem Öffnen des Formulars initialisiert.
+Sollte sich der Zustand der Objekte ändern, auf die die Fremdschlüssel zeigen, wird es nicht angezeigt.</P
+></LI
+><LI
+><P
+>Die Formulare, die bei Aggregation benutzt werden, können separat geöffnet werden, die Fremdschlüssel werden jedoch als normale Widget angezeigt. 
+Das kann manuell in <B
+CLASS="COMMAND"
+>FormEditor</B
+> geändert werden, wird aber von FormAssistenten nicht automatisch gezeigt.</P
+></LI
+><LI
+><P
+>Form-Links funktionieren nicht wenn man auf das Wurzel-Formular zeigt, der Fremdschlüssel sich aber in einem Kind-Formular befindet. Siehe Tutorial (Formular Professor Link auf Assistent). 
+Solche Formular-Links brauchen eine spezielle Behandlung, das noch nicht programmiert wurde.</P
+></LI
+></UL
+>
+Haben Sie ähnliche Problem festgestellt, oder haben Sie Bedenken zu anderen Funktionsweisen, lassen Sie mich davon wissen.</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x771.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Zum Anfang</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="c834.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Schema vs. Formularaussehen</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c163.html"
+ACCESSKEY="U"
+>Nach oben</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Tutorial</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

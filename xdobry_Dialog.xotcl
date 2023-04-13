@@ -1,0 +1,137 @@
+# automatically generated from XOTclIDE
+package provide xdobry::Dialog 0.32
+Class ODialog -parameter {
+    {title dialog}
+    {type ok}
+    {message {Empty Message}}
+    {inputframe NIL}
+    {parent NIL}
+    {grab 1}
+}
+@ ::ODialog idemeta component xdobry::Dialog
+ODialog instproc execute {{win .odialog}} {
+    global mywait
+    my instvar inputframe title type message parent grab oldFocus oldGrab grabStatus
+    # Angelehr an orginalles Tk dialog erweitert aber um input frames
+    # für zusätzliche Input Widget im Dialog
+    if {$inputframe=="NIL"} {
+        return [tk_messageBox -title $title -message $message -type $type]
+    }
+    my map $win
+    tkwait variable mywait
+    if {$mywait=="ok"} {
+        $inputframe update_values
+        my set values [$inputframe get_values]
+    }
+    catch {focus $oldFocus}
+    catch {
+        # It's possible that the window has already been destroyed,
+        # hence this "catch".  Delete the Destroy handler so that
+        # tkPriv(button) doesn't get reset by it.
+
+        bind $win <Destroy> {}
+        destroy $win
+    }
+    if {$oldGrab != ""} {
+        if {$grabStatus == "global"} {
+            ::grab -global $oldGrab
+        } else {
+            ::grab $oldGrab
+        }
+    }
+    return $mywait
+}
+ODialog instproc map win {
+    my instvar title type message inputframe parent grab oldFocus oldGrab
+    global mywait
+    # Angelehr an orginalles Tk dialog erweitert aber um input frames 
+    # für zusätzliche Input Widget im Dialog
+    catch {destroy $win}
+    toplevel $win -class Dialog
+    wm title $win $title
+    wm iconname $win Dialog
+    wm protocol $win WM_DELETE_WINDOW { }
+     ::message $win.msg -relief raised -bd 1 -text $message -width 220
+     $inputframe map ${win}.inputframe
+    tixButtonBox $win.buttons -orientation horizontal
+    switch $type {
+        ok {
+            $win.buttons add ok -text OK -underline 0 -command "set mywait ok" 
+            
+        }
+        okcancel {
+            $win.buttons add ok -text OK -underline 0 -command "set mywait ok"
+            $win.buttons add cancel -text Close -underline 0  -command "set mywait cancel"
+        }
+        default {
+            error "Nicht unterstützte Message type $type (ok,okcancel)"
+        }
+    }
+    pack $win.msg -side top -fill both -expand yes
+    pack $win.inputframe -side top -fill both -expand 1
+    pack $win.buttons -side bottom -fill both
+    bind $win <Destroy> { set mywait cancel}
+
+    # 6. Withdraw the window, then update all the geometry information
+    # so we know how big it wants to be, then center the window in the
+    # display and de-iconify it.
+
+    wm withdraw $win
+    update idletasks
+    set x [expr [winfo screenwidth $win]/2 - [winfo reqwidth $win]/2  - [winfo vrootx [winfo parent $win]]]
+    set y [expr [winfo screenheight $win]/2 - [winfo reqheight $win]/2  - [winfo vrooty [winfo parent $win]]]
+    wm geom $win +$x+$y
+    wm deiconify $win
+
+    # 7. Set a grab and claim the focus too.
+
+    set oldFocus [focus]
+    set oldGrab [::grab current $win]
+    if {$oldGrab != ""} {
+        set grabStatus [::grab status $oldGrab]
+    }
+    ::grab $win
+    focus $win
+}
+@ Class OInputDialog {
+description {Diese Klasse vereinfacht die Benutzung von inputframe
+es verwendet die Factory Mehtode
+(WidgetFactory make_inputs_keylist $inputname $input)
+um es zu bilden
+die execute methode gibt get_changes von inputframe}
+}
+Class OInputDialog -superclass ::ODialog -parameter {
+    {title dialog}
+    {type okcancel}
+    {message {Input Dialog}}
+    {inputframe NIL}
+    {parent NIL}
+    {grab 1}
+    {returnChanges 1}
+}
+@ ::OInputDialog idemeta component xdobry::Dialog
+OInputDialog instproc execute {{win .odialog}} {
+    my instvar inputframe returnChanges
+    set ret [ next ]
+    if {$ret!="ok"} { 
+        return {}
+    } else {
+        if {$returnChanges} {
+            return [$inputframe get_changes]
+        } else {
+            return [$inputframe get_values]
+        }
+    }
+}
+@ OInputDialog instproc init {} {
+description {Die init Methode erwartet als erstes Argument
+(input Spezifikationen für WidgetFactory make_inputs_keylist)
+als zweites die Werte die gesetzt werden sollen}
+}
+OInputDialog instproc init {inputspec values args} {
+    my instvar inputframe
+    set inputframe [WidgetFactory make_inputs_keylist [self]::inputframe $inputspec]
+    next
+    $inputframe set_defaults $values
+}
+

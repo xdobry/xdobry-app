@@ -1,0 +1,1749 @@
+<!DOCTYPE BOOK PUBLIC "-//OASIS//DTD DocBook V4.2//EN" [
+<!ENTITY progname "Xdobry">
+]>
+<book id="index" lang="en">
+<bookinfo>
+<title>Dokumentation des Programms &progname;</title>
+<author><firstname>Artur</firstname><surname>Trzewik</surname></author>
+<abstract>
+<para>
+&progname ist ein System für das automatische Erstellung von DB-Formular Anwendungen zu relationalen Datenbanken.
+Die Formulare unterstützen direkt folgende Abstaktionen:  Assoziation (Formular-Links) , Aggregation (eingebettete Formulare) und Spezialisierung (Notebook Formular Elemente).
+Das Programm entstand ursprünglich als praktischer Teil einer <ulink url="http://www.xdobry.de/artur/diplomarbeit.html">Diplomarbeit</ulink> und beinhaltet viele neue Ansätzte der Entwiklcung der DB-Applikationen. Wurde aber im Laufe der Zeit überarbeitet und weiterentwickelt. <ulink url="http://www.xdobry.de">Xdobry Homepage www.xdobry.de</ulink> 
+</para>
+</abstract>
+</bookinfo>
+<chapter lang="de" id="progspez">
+<title>&progname; Spezifikation</title>
+<para>
+Dieses Kapitel beschreibt den Verwendungszweck des Programms und seine Haupteigenschaften.
+Es werden die Fragen beantwortet wem und wozu es nützlich sein könnte.
+Die Zielgruppe und ihre Anforderungen werden genannt.
+</para>
+<sect1><title>Hauptziel des Programms</title>
+<para>
+Dieses Programm ermöglicht schnelle und einfache Erstellung von DB-Formular-Anwendungen.
+DB-Formulare sind die graphischen Schnittstellen einer Datenbank, die die komfortable Bearbeitung von Dateninhalten erlauben. (Eingabemasken).
+Mit &progname; ist es möglich ein existierendes Schema einer Datenbank: Auszulesen, Modifizieren, Anlegen und Daten zwischen verschiedenen Datenbanken-Systemen zu migrieren.
+Die Erstellung der Formulare verlauft automatisch oder halb-automatisch durch Hilfe der Assistenten.
+Es werden keine Programmierkenntnisse benötigt.
+Die erstellte Formulare sind nicht einfach die Abbildungen der Tabellen in relationalen Datenbank.
+Sie entsprechen vielmehr einem höheren Abstraktions-Niveau bekannt aus konzeptionellen Modellen.
+</para>
+</sect1>
+
+<sect1><title>Besondere Merkmale</title>
+<itemizedlist>
+<listitem><para>Platformunabhängig: binäre Pakete für Windows und Linux (Intel)</para></listitem>
+<listitem><para>Unterstützt die alle Hauptdatenbanken: Oracle, MS SQL-Server, mysql, postgres, MS Access, allgemein ODBC</para></listitem>
+<listitem><para>Erlaubt einfache Migration des Schemas und Daten zwischen unterschiedlichen Datenbanksystemen.
+</para></listitem>
+<listitem><para>Kleine Laufzeitumgebung, die keine besondere Installation oder besondere Voraussetzungen benötigt.</para></listitem>
+<listitem><para>Spezielle Assistenten, die Migration, Schemamanipulation und Erstellung der Formularen erleichtern</para></listitem>
+<listitem><para>Reiches Umfang an datenbankspezifischen Oberflächenelementen</para></listitem>
+</itemizedlist>
+</sect1>
+
+<sect1><title>Eigenschaften des Programms</title>
+<para>
+Das Programm wurde entworfen als ein offenes System für die Erstellung von formularbasierten DB-Applikationen.
+Im Gegensatz zu vorhandenen Systemen wurde die Erstellung der Formularen als mehrstufiger Prozess aufgefasst.
+Der Hauptgrund für die mindere Qualität der automatisch erstellten Formulare, bei herkömmlichen System, ist die Benutzung des relationalen Schema als Informationsquelle für Formulargenerator.
+Solche Formulare müssen dann aufwendig manuell angepasst werden.
+Relationales Schema (Tabellenstruktur) beinhaltet nur wenige Informationen über die Semantik der Daten.
+Es sind einfach zu wenige Informationen um gute Formulare zu erstellen.
+Bei &progname; verlauft die Erstellung der Formulare in drei Stufen
+<orderedlist>
+<listitem><para>Genaue Spezifizierung der DB-Schema auf der Stufe des konzeptionellen Modell, Benutzung von Reverse Engineering Techniken. Benutzer DB-Administrator</para></listitem>
+<listitem><para>Automatische Erstellung der Formulare. Anpassung des Aussehen im GUI-Editor. Benutzer DB-App. Entwickler </para></listitem>
+<listitem><para>Benutzung der DB-Formulare für die Bearbeitung der Daten. Endbenutzer</para></listitem>
+</orderedlist>
+Auf diese weise kann man leicht und schnell qualitativ sehr gute Formulare erstellen.
+Formulare unterstützen direkt höhere Konzepte der Datenbankmodellierung ohne der speziellen Programmierung.
+<itemizedlist>
+<listitem><para>Die Assoziationen (Relationship oder Beziehungen) zwischen den Objekten werden für die Navigationshilfen benutzt.
+Auf diese Weise kann man durch Formulare etwa wie im Hypertextdokumenten navigieren (Hyperformulare).
+Die Assoziationen können so leicht erforscht werden, ohne der Kenntnis der Datenbankschema
+</para></listitem>
+<listitem><para>Aggregation und Spezialisierung werden direkt als eingebettete (geschachtelte Formulare realisiert.
+Die Formulare können dadurch als Objekte und nicht Tabellen angesehen werden.</para></listitem>
+<listitem><para>Die Konzepte der Datenbank-Modellierung wie Fremdschlüssel müssen bei dem Endbenutzer nicht vorhanden sein.
+Das System übernimmt die benutzerfreundliche Anzeige und Handhabung von Fremdschlüssel.
+</para></listitem>
+</itemizedlist>
+
+Für jedes Schritt ist ein getrenntes Programm zuständig, das für andere Zielgruppe entwickelt wurde:
+<orderedlist>
+<listitem><para>SchemaEditor</para></listitem>
+<listitem><para>FormEditor, Formgenerator und GUI-Drag and Drop Editor</para></listitem>
+<listitem><para>FormServer</para></listitem>
+</orderedlist>
+</para>
+<para>
+&progname; wurde als ein Teil einer <ulink url="http://www.xdobry.de/artur/diplomarbeit.html">Diplomarbeit</ulink> entwickelt.
+Es ist ein Programm, das theoretisch in der Diplomarbeit entworfen wurde, aber nachträglich modifiziert und erweitert wurde.
+</para>
+</sect1>
+
+<sect1><title>Zielgruppe</title>
+<para>
+&progname; ist ein hochspezialisiertes Programm für die Entwicklung von Datenbank Applikationen.
+Entsprechend hoch sind die Anforderungen an die Benutzer.
+Ich habe mir nicht vorgenommen ein System zu entwickelt, das komplexe Systeme, wie Datenbanken, einfach macht.
+Es soll nur die Bedienung von solchen Systemen einfach machen.
+Es ist ein Werkzeug für DB-Spezialisten, womit die Entwicklung von DB-Formularen effektiv und schnell sein kann.
+Entsprechend wird es nicht auf die Fachsprache verzichtet.
+</para>
+<para>
+Das System &progname; wurde so entworfen, das seine Komponenten von 3 unterschiedlichen Benutzergruppen ausgeführt werden.
+<orderedlist>
+<listitem><para>DB-Administrator: Kenntnisse: Relationale Datenbanken, DB-Entwurf, relationales Schema. konzeptionelles Schema</para></listitem>
+<listitem><para>DB-Applikation Entwickler: Kenntnisse: GUI-Entwurf. Besonders die Erstellung der Oberflächen unter Verwendung von Geometry-Manager (grid und pack)</para></listitem>
+<listitem><para>Endbenutzer: grundlegende Computerkenntnisse</para></listitem>
+</orderedlist>
+Um das Programm einzusetzen, sollten folgende Begriffe geläufig sein:
+relationales Datenbank, SQL, mySql, konzeptionelles Modell, Entity, Relationship, Aggregation, Schema, DB-Formular, Datenbankmodell, Abstraktion, Spezialisierung (Vererbung), Datenbank-Schema.
+</para>
+</sect1>
+
+<sect1><title>Technische Daten</title>
+<para>
+Das Programm wurde unter Linux mit Programmiersprache Tcl (und ihre Erweiterungen: Tk,Tix,tDom,XOTcl) entwickelt.
+Wegen der vielen Komponenten kann die Kompilation und Konfiguration schwierig sein. 
+Als haupt Testdatenbank wurde MySql relationale Datenbank benutzt.
+Es existiert auch eine Schnittstelle zu anderen Datenbanken, die zahlreichen herstellerspezifischen SQL Erweiterungen werden jedoch oft nicht unterstützt.
+Das System orientiert sich an SQL-92 Standard.
+</para>
+</sect1>
+<sect1><title>Version Neuheiten</title>
+<bridgehead>Version 0.12</bridgehead>
+<itemizedlist>
+<listitem><para>Grid Packer (Tabellen Geometry Manager) wird unterstützt</para></listitem>
+<listitem><para>Formular-Link wurden erweitert, so dass sie für die Navigation von kompletten Datenbanken benutzt werden können.
+Man kann auch über die n:m Beziehung Navigieren</para></listitem>
+<listitem><para>Es können in FormServer leicht eigenen Zusatzfunktionen eingebaut werden.
+Etwa eine API für FormServer.
+Es können leicht eigenen Prozeduren in Tcl für spezielle Datenverarbeitung, Datendarstellung oder Intergritätsüberprüfun hinzugefügt werden.
+</para></listitem>
+<listitem><para>Der Eigenschaften-Dialog im FormEditor wurde effizienter programmiert.</para></listitem>
+<listitem><para>Die Aktionen an Formularen können eingeschränkt werden (kein Löschen, kein Modifizieren, kein Hinzufügen).</para></listitem>
+<listitem><para>Sortieren der Tupel in Formularen ist möglich.</para></listitem>
+</itemizedlist>
+<bridgehead>Version 0.14</bridgehead>
+<itemizedlist>
+<listitem><para>Diverse Bugs wurden korrigiert</para></listitem>
+<listitem><para>Besseres Error-Handling (Die Sql Fehler werden abgefangen)</para></listitem>
+<listitem><para>Umstellung auf mysqltcl2.0 (nicht voll kompatibel zu mysqltcl1.53 aber deutlich schneller) und xotcl8.3</para></listitem>
+<listitem><para>Die Datenbank-Schnittstellen werden getrennt in Modulen nach Bedarf geladen.</para></listitem>
+</itemizedlist>
+<bridgehead>Version 0.15</bridgehead>
+<itemizedlist>
+<listitem><para>Getestet mit RedHat 7.0, mysql 3.23 und postgresql 7.0</para></listitem>
+<listitem><para>Die Veränderungen betreffen eigentlich nur den FormServer
+<itemizedlist>
+<listitem><para>Nur Einfügen Modus wird unterstützt</para></listitem>
+<listitem><para>viele Programmoptionen</para></listitem>
+<listitem><para>Überprüfung der Notnull Bedingung</para></listitem>
+<listitem><para>Navigieren auch durch Tasten-Kombinationen</para></listitem>
+<listitem><para>Bessere Benutzerfreundlichkeit (Deaktivieren von leeren Funktionen)</para></listitem>
+</itemizedlist>
+</para></listitem>
+<listitem><para>Unterstützung von dbitotcl Schnittstelle. Es können theoretisch alle Datenbanken benutzt werden, die eine Perl DBI Schnittstelle haben.</para></listitem>
+</itemizedlist>
+<bridgehead>Version 0.16</bridgehead>
+<itemizedlist>
+<listitem><para>Programm Quelltext Refactoring.</para></listitem>
+<listitem><para>Die Formular Filter können benannt und gespeichert werden..</para></listitem>
+<listitem><para>Formulare unterstützen die s.g. Schablonen. Die Schablonen erlauben schnelle Ausfüllen (Voreinstellen oder Verändern) von Datenfelder.</para></listitem>
+<listitem><para>Datenfelder können automatisch überprüft werden (Validation)</para></listitem>
+<listitem><para>Zu jedem Datenfeld kann eine Beschreibung angegeben werden, die bei Drücken der F1-Taste erscheint.</para></listitem>
+<listitem><para>Ein paar Fehler wurden behoben.</para></listitem>
+</itemizedlist>
+<bridgehead>Version 0.20</bridgehead>
+<itemizedlist>
+<listitem><para>Die Module FormEngine und FormFactory wurden massiv bereinigt (refactoring).</para></listitem>
+<listitem><para>Die Filter im FormServer werden im eigenen Fenster spezifiziert. Die Eingabe von spezielle Filters (z.B. &gt;2) ist möglich.</para></listitem>
+<listitem><para>Xdobry wird mit xotclIDE entwickelt. Eine von mir entwickelte IDE für XOTcl Programmiersprache. Die interne Struktur hat sich sehr verändert. Die Module werden per package require geladen.
+</para></listitem>
+</itemizedlist>
+<bridgehead>Version 0.30</bridgehead>
+<itemizedlist>
+<listitem><para>Unterstützung für sqlite Datenbank</para></listitem>
+<listitem><para>Auslieferung als Starkit für Windows und Linux. Keine weitere Voraussetzungen oder besondere Installation.</para></listitem>
+<listitem><para>Kontextabhängige Aktivation der Menüs</para></listitem>
+</itemizedlist>
+<bridgehead>Version 0.40</bridgehead>
+<itemizedlist>
+<listitem><para>Unterstützung für MS SQL-Server, MS Access und Oracle</para></listitem>
+<listitem><para>Mit SchemaEditor kann das DB-Schema anlegen und modifizieren</para></listitem>
+<listitem><para>&progname kann die Daten der veschiedenen Datenbanken migrieren</para></listitem>
+<listitem><para>Für Internationalisierung wird der standard Tcl Modul msgcat benutzt</para></listitem>
+<listitem><para>Überarbeitung der Dokumentation</para></listitem>
+<listitem><para>Zahlreiche Fehlerbehebungen</para></listitem>
+<listitem><para>Tclx wird nicht mehr eingesetzt</para></listitem>
+</itemizedlist>
+</sect1>
+</chapter>
+
+<chapter lang="de" id="handbuch">
+<title>Benutzer Handbuch</title>
+<sect1><title>Systemkomponenten</title>
+<para>
+<mediaobject><imageobject><imagedata fileref="system_komponenten.png" scale="50" ></imageobject></mediaobject>
+Das System besteht aus 3 ausführbaren Programmen <command>SchemaEditor</command>, <command>FormEditor</command> und <command>FormServer</command>.
+Als Starkit-Distribution wird zwar ein Programm gestartet aber zum Start muss entschieden werden welcher Komponenten ausgeführt werden soll.
+Die Schnittstellen zwischen den einzelnen Programme sind 2 XML-Dokumenten Typen; das Repository (Standard Datei-Erweiterung <emphasis>.xmldbschema</emphasis>) und Formular-Beschreibung (Standard Datei-Erweiterung <emphasis>.xmlforms</emphasis>).
+Die Bearbeitung von beiden XML-Dokumenten wird von entsprechenden Programmen übernommen, kann allerdings auch manuell in einem Editor erfolgen.
+Die passenden DTDs (Document Type Description) finden Sie in Verzeichnis <filename>dtd</filename>.
+</para>
+</sect1>
+<sect1><title>SchemaEditor</title>
+<para>
+Die
+Hauptaufgabe des Schema-Editor ist eine XML-Repository zu schaffen und zu verwalten.
+Weiterhin kann das Schema-Editor benutzt werden um Daten zwischen verschiedenen Datenbanken zu migrieren und Datenabzüge als XML oder SQL zu erstellen.
+Es wird ein Benutzer des Schema-Editor als ein Datenbank-Administrator oder auch ein Daten-Verwalter vorausgesetzt. 
+Der Benutzer hat Kenntnisse über die Struktur der Daten und ihrer Repräsentation im relationalem Modell.
+Das Schema-Editor besitzt folgende Funktionalitäten:
+<orderedlist>
+<listitem><para>Die Data Dictionary (Schema) einer relationalen Datenbank auslesen und in XML-Repository umzuwandeln.</para></listitem>
+<listitem><para>Hinzufügen von semantische Informationen zum Repository. Dabei werden die
+Reverse Engineering Techniken (siehe. 3.3) benutzt, die entweder ganz automatisch oder durch Befragung des Benutzers verlaufen. Der Benutzer kann auch die
+semantische Informationen selber hinzufügen .</para></listitem>
+<listitem><para>Hinzufügen und Editieren der Meta-Informationen der Attributen.</para></listitem>
+<listitem><para>Anlegen oder Löschen von Tabellen</para></listitem>
+<listitem><para>Anlegen oder Löschen von Taballenspalten</para></listitem>
+<listitem><para>Anlegen einer DB-Schema aus Xdobry-Repository</para></listitem>
+<listitem><para>Generieren von XML, SQL Datenbankabzügen</para></listitem>
+<listitem><para>Importieren und Exportieren von DB-Schema für alle unterstütze Datenbank</para></listitem>
+<listitem><para>Automatische Migration der Daten und Datenschema zwischen allen unterstützten Datenbanken</para></listitem>
+</orderedlist>
+
+<important>
+<para>
+Im Gegenteil zu Anderen DB-Manager-Programmen arbeitet Schema-Editor nicht direkt auf einer Datenbankschema. Das Datenbankschema wird ausgelesen und in eigene Datenstruktur (Repository) umgewandelt, die auch als XML Datei (.xmlschema) gespeichert und wieder geladen werden kann.
+Diese Struktur unabhängig von dem Datenbanksystem.
+Auf diese weise ist eine Verbindungslose Bearbeitung des Schemas möglich.Aus diesem Schema können DDL-Sql für jedes Datenbanksystem erzeugt werden.
+Auch die Änderungen des Schemas können als DDL-Sql generiert werden.
+</para>
+</important>
+
+Die Idee der graphischer Oberfläche basiert auf der Darstellung des Schema als
+einer Baumstruktur, die von dem Benutzer manipuliert werden kann.
+Diese Baumstruktur hat folgende Knotentypen.
+<figure id="figure"><title>Anzeige von DB-Schema als ein Baum</title>
+<mediaobject><imageobject><imagedata fileref="schema_edit_baum.png" scale="50" ></imageobject></mediaobject>
+</figure>
+<orderedlist>
+<listitem><para>Tabelle (Knoten)</para></listitem>
+<listitem><para>Attribut (Blatt)</para></listitem>
+<listitem><para>Assoziationcontainer</para></listitem>
+<listitem><para>Assoziationtarget</para></listitem>
+<listitem><para>Tabellen-Etikette</para></listitem>
+<listitem><para>Attribut-Gruppen (strukturierte Attribute)</para></listitem>
+</orderedlist>
+</para>
+
+<sect2><title>Reverse Engineering</title>
+<para>
+Das relationale Modell ist streng wertorientiert.
+Es kennt keine Verknüpfungstypen.
+Die Verknüpfungen werden als Fremdschlüssel repräsentiert.
+Die Tabellen können als Entities, Relationen, Teilobjekte (bei Generalisierung) oder Eigenschaften (z.B Listen der Attributen) verwendet werden.
+Bei Reverse Engineering wird die semantische Bedeutung, also die Information, wie das relationale Modell zu interpretieren ist, wiedergewonnen.
+Diese Informationen werden durch die Namensgebung der Attribute wiedergespiegelt.
+Weder MySql noch Postgresql unterstützen die Definition von Fremdschlüssel was bei der Erstellung der Formulare großes Nachteil ist.
+Die Reverse-Engineering Algorithmen basieren bei &progname; nur auf den relationalen Schema, der Dateninhalt wird nicht ausgewertet.
+Es wurden drei Reverse-Engineering Algorithmen implementiert.
+Die Fremdschlüssel-Findung ist eine Basis für andere Algorithmen (außer des Spezialisierung-Findung).
+<variablelist>
+<varlistentry><term>Fremdschlüssel-Findung</term>
+<listitem>
+<para>
+Finde alle Attributen die genau so heißen wie die Primärschlüssel der anderen Tabellen aber nicht die Prim-Attributen sind oder nicht einziges Prim-Attribut sind oder den Namen als id mit Präfix der Tabellennamen haben.
+Beschränkung: Schüssel der Objekttabellen bestehen aus einzigen Attribut. 
+Keine Rekursive Beziehungen! Aktion: Es wird eine einfache Referenz erstellt. 
+Assoziation-Container erhält den Fremdschlüssel. 
+Assoziation-Target erhält den Primärschlüssel.
+Es ist eine Basis für die weitere Algorithmen.
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>Spezialisierung-Findung</term>
+<listitem>
+<para>
+Suche die Spezialisierung. 
+Finde alle Tabellen die einen gleichnamigen
+ Primärschlüssel haben.
+Sie müssen die Vatertabelle selbst ermitteln.
+Bei Mehrstufiger Vererbung (Enkelobjekte) muss die Aktion mehrfach durchgeführt werden. 
+Beschränkung: Schüssel der Objekttabellen bestehen aus einzigen Attribut.
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>Finde Assoziation-Tabellen</term>
+<listitem>
+<para>
+Dieses Reverse Engineering Technik basiert auf dem Schritt "Finde Fremdschlüssel".
+Es sollten die Tabellen ermittelt werden, die Relationship modellieren (z.B n:m Beziehung). 
+Algorithmus: Finde alle Tabellen, dessen Primärschlüssel aus mehreren Fremdschlüssel besteht oder mehrere Fremdschlüssel und kein eindeutiges Primärschlüssel haben. 
+Aktion: Die Relationship-Tabellen werden besonders gezeichnet. 
+Die n:m oder n:m:z.. Beziehungen werden erkannt. 
+Beziehungen dürfen eigene Attribute haben.
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>Aggregation Vorschlagen</term>
+<listitem>
+<para>
+Dieses Reverse Engineering Technik basiert auf dem Schritt "Finde Fremdschlüssel". 
+Schlage die Aggregation (Komposition) der Tabellen vor. (eingebettete Tabellen). 
+Das Algorithmus zeigt nur die Vorschläge, die Aggregation-Semantik kann nur von Benutzter bestimmt werden. Vorschläge: Alle Tabellen die nur einen Fremdschlüssel haben. 
+Es können noch weiter Aggregation existieren. Überprüfen sie die 1:n Assoziationen
+</para>
+</listitem>
+</varlistentry> 
+</variablelist>
+</para>
+</sect2>
+<sect2><title>Definieren von Abstraktionen</title>
+<para>
+Es können drei Arten von Abstraktionen der konzeptionellen Datenbankmodellierung definiert werden: Assoziation, Aggregation uns Spezialisierung.
+Die Definition erfolgt stufenweise mit Hilfe von Assistenten.
+<variablelist>
+<varlistentry><term>Assoziation</term>
+<listitem>
+<para>
+ist am schwierigsten zu definieren.
+Es entspricht den Relationship des ER-Modells.
+Es werden folgende Fragen gestellt.
+<itemizedlist>
+<listitem><para>Ist die Assoziation rekursiv? Es gibt Beziehungen (Relationship) zwischen den Objekten des gleichen Typs.</para></listitem>
+<listitem><para>Gibst es eine Tabelle mit Referenzen? Musste die Assoziation mit Hilfen von zusätzlichen Tabellen abgebildet werden, was beim N:M Beziehungen immer der Fall ist, oder wie bei 1:N Beziehungen gibt es nur ein Verweis in einer der Tabelle</para></listitem>
+<listitem><para>Granularität der Beziehung: beim N:M ist es 2 beim N:M:O ist es 3</para></listitem>
+<listitem><para>Rollennamen: Ein Objekt Student bekommt durch die Beziehung zu Objekt Prüfung einen Rolennamen Prüfling; (nicht obligatorisch)</para></listitem>
+<listitem><para>Existenz Abhängigkeit: Werden bis jetzt nicht weiter unterstützt können aber hier definiert werden</para></listitem>
+</itemizedlist>
+Beim n:m Beziehungen muss klar werden: welche Objekte (Tabellen) nehmen an der Beziehung teil, welche Tabelle beinhaltet die Verweise.
+</para>
+<para>
+Eine Assoziation wird als Container (Sammlung) mit Verweisen auf Objekte aufgefasst.
+Die Sammlung kann entweder als getrennte Tabelle mit Verweisen oder als ein Verweis in einem Objekt (1:n) modelliert werden.
+Um eine Assoziation zu modellieren werden zwei neue Knotentypen hinzugefügt: <emphasis>Assozitaioncontainer</emphasis> bei Verweisen und <emphasis>Assoziationtarget</emphasis> bei Objekten.
+Zu jeder Assoziation gehört ein Assoziationcontainer und mindestens zwei Assoziatontargets.
+Die Assoziationen (Assoziationcontainer) besitzen einen eindeutigen Namen.
+Auf diese weise können auch komplexe Assoziation modelliert werden wie: rekursive 1:n und n:m Beziehungen und Beziehungen der höheren Granularität n:m:s:r.
+Entsprechung in ER-Modell <xref linkend="er-assoziation">
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>Aggregation</term>
+<listitem>
+<para>
+Hier handelt es sich um etwa die Modellierung von eingebetteten oder geschachtelten Tabellen.
+Sie werden naher von <command>FormServer</command> als eingebettete Formulare dargestellt.
+Man muss spezifizieren: die Behälter Tabelle, die Element Tabelle und Referenz, Fremdschlüssel in Elementtabelle, das auf Primärschlüssel in Container-Tabelle zeigt.
+Entsprechung in ER-Modell <xref linkend="er-aggregation">
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>Spezialisierung</term>
+<listitem>
+<para>
+Auch als Vererbung oder Generalisierung bekannt.
+Es gibt immer einen Vater Objekt und ein Kind Objekt, die in zwei Tabellen modelliert werden.
+Man muss auch den vererbten Primärschlüssel angeben.
+Entsprechung in ER-Modell <xref linkend="er-generalisierung">.
+</para>
+</listitem>
+</varlistentry> 
+</variablelist>
+</para>
+</sect2>
+
+<sect2><title>DB-Schema Anlegen und Verändern</title>
+<para>
+&progname; kann benutzt werden um Datenbank zu modellieren.
+Es können Tabellen und Tabellenspalten angelegt, verändert und gelöscht werden.
+&progname; arbeitet nicht direkt auf der Datenbank Dictionary (Schema) sondern hat eigene Datenbanksystem unabhängige Repräsentation des Schemas, die als XML-Datei abgelegt werden kann.
+Durch diesen Einsatz ist es möglich eine Schema ohne Datenbank zu entwickeln und auf mehrere unterschiedliche Datenbanksystem aufzuspielen.
+Die &progname; spezifisches Schema basiert auf ER-Diagramm und enthält mehr semantische Information als die Datadictionary einer Datenbank.
+</para>
+<sect3><title>Anlegen einer neuen Schema</title>
+<para>
+Für das einlegen einer neuen Schema ist keine Datenbankverbindung nötig.
+Durch das Menü
+<menuchoice>
+  <guimenu>Schema</guimenu>
+  <guimenuitem>Neu</guimenuitem>
+</menuchoice>
+wird neues Datenbankschema angelegt.
+Benutzten Sie die kontextsensitive Menüs (einen Knoten selektieren und rechte Maustaste klicken) um
+neue Tabellen und Spalten anzulegen.
+</para>
+<para>
+&progname; hat eigenes Datentypen System, der an Mysql-Datenbanksystem angelegt ist aber auch andere Typen (wie Money oder Boolean) unterstützt.
+<table>
+<title>Unterstützte Typen und Typenkonventierung</title>
+<tgroup cols='6' align='left' colsep='1' rowsep='1'>
+<thead>
+<row>
+ <entry>Xdobry</entry>
+  <entry>Mysql</entry>
+  <entry>MS Access</entry>
+  <entry>MS SQL</entry>
+  <entry>Postgres</entry>
+  <entry>Oracle</entry>
+</row>
+</thead>
+<tbody>
+<row>
+  <entry>decimal</entry>
+  <entry>Decimal, numeric</entry>
+  <entry>Currency, money</entry>
+  <entry>monay</entry>
+  <entry>money</entry>
+  <entry>number</entry>
+</row>
+<row>
+  <entry>double</entry>
+  <entry>double </entry>
+  <entry>float</entry>
+  <entry>float</entry>
+  <entry>double</entry>
+  <entry>double</entry>
+</row>
+<row>
+  <entry>float</entry>
+  <entry>float </entry>
+  <entry>real</entry>
+  <entry>real</entry>
+  <entry>real</entry>
+  <entry>float</entry>
+</row>
+<row>
+  <entry>int</entry>
+  <entry>int</entry>
+  <entry>Integer, int</entry>
+  <entry>int</entry>
+  <entry>Integer, int</entry>
+  <entry>int</entry>
+</row>
+<row>
+  <entry>smallint</entry>
+  <entry>Smallint, tinyint</entry>
+  <entry>smallint</entry>
+  <entry>smallint</entry>
+  <entry>smallint</entry>
+  <entry>smallint</entry>
+</row>
+<row>
+  <entry>Boolean </entry>
+  <entry>smallint</entry>
+  <entry>boolean</entry>
+  <entry>boolean</entry>
+  <entry>Boolean, bool</entry>
+  <entry>Number(1)</entry>
+</row>
+<row>
+  <entry>text</entry>
+  <entry>Text, mediumtext, tinytext</entry>
+  <entry>Memo, LONGTEXT, LONGCHAR, MEMO, NOTE, NTEXT </entry>
+  <entry>image</entry>
+  <entry>text</entry>
+  <entry>clob</entry>
+</row>
+<row>
+  <entry>datetime</entry>
+  <entry>Datetime, date, time </entry>
+  <entry>datetime</entry>
+  <entry>timestamp</entry>
+  <entry>timestamp</entry>
+  <entry>timestamp</entry>
+</row>
+<row>
+  <entry>timestamp</entry>
+  <entry>timestamp </entry>
+  <entry>datetime</entry>
+  <entry>datetime</entry>
+  <entry>timestamp</entry>
+  <entry>timestamp</entry>
+</row>
+<row>
+  <entry>enum</entry>
+  <entry>enum </entry>
+  <entry>Varchar(50)</entry>
+  <entry>Varchar(50)</entry>
+  <entry>Varchar(50)</entry>
+  <entry>Varchar(50)</entry>
+</row>
+<row>
+  <entry>set</entry>
+  <entry>set </entry>
+  <entry>Varchar(50)</entry>
+  <entry>Varchar(50)</entry>
+  <entry>Varchar(50)</entry>
+  <entry>Varchar(50)</entry>
+</row>
+<row>
+  <entry>varchar</entry>
+  <entry>varchar </entry>
+  <entry>TEXT(n), ALPHANUMERIC, CHARACTER, STRING, VARCHAR, CHARACTER VARYING, NCHAR, NATIONAL CHARACTER, NATIONAL CHAR, NATIONAL CHARACTER VARYING, NATIONAL CHAR VARYING </entry>
+  <entry>varchar</entry>
+  <entry>text</entry>
+  <entry>varchar2</entry>
+</row>
+<row>
+  <entry>char</entry>
+  <entry>char </entry>
+  <entry>char</entry>
+  <entry>char</entry>
+  <entry>char</entry>
+  <entry>char</entry>
+</row>
+<row>
+  <entry>longblob</entry>
+  <entry>Longblob, mediumblob, tinyblob</entry>
+  <entry>IMAGE, LONGBINARY, GENERAL, OLEOBJECT, BINARY</entry>
+  <entry>image</entry>
+  <entry>bytea</entry>
+  <entry>blob</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+
+<table>
+<title>Autoincrement Spalten</title>
+<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+<thead>
+<row>
+  <entry>Database</entry>
+  <entry>Kind</entry>
+</row>
+</thead>
+<tbody>
+<row>
+  <entry>MS Acces</entry>
+  <entry>Typ Counter</entry>
+</row>
+<row>
+  <entry>MS SQL</entry>
+  <entry>Indent(1,1)</entry>
+</row>
+<row>
+  <entry>mysql</entry>
+  <entry>autoincrement</entry>
+</row>
+<row>
+  <entry>Postgres</entry>
+  <entry>Sequencer</entry>
+</row>
+<row>
+  <entry>Oracle</entry>
+  <entry>Sequencer</entry>
+</row>
+<row>
+  <entry>Sqlite</entry>
+  <entry>Not supported</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+&progname kann auch die autoincrement-Spalten entsprechend der Datenbank anlegen.
+Falls kein Autoincrement-Typ vorhanden ist wird ein Sequencer angelegt.
+<table>
+<title>Autoincrement Spalten</title>
+<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+<thead>
+<row>
+  <entry>Database</entry>
+  <entry>Typ</entry>
+</row>
+</thead>
+<tbody>
+<row>
+  <entry>MS Acces</entry>
+  <entry>Typ Counter</entry>
+</row>
+<row>
+  <entry>MS SQL</entry>
+  <entry>Indent(1,1)</entry>
+</row>
+<row>
+  <entry>mysql</entry>
+  <entry>autoincrement</entry>
+</row>
+<row>
+  <entry>Postgres</entry>
+  <entry>Sequencer</entry>
+</row>
+<row>
+  <entry>Oracle</entry>
+  <entry>Sequencer</entry>
+</row>
+<row>
+  <entry>Sqlite</entry>
+  <entry>Not supported</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+MS Datenbank können auch mit [] Maskierung Tabellen mit Leerzeichen anlegen.
+(Wird oft in Beispieldatenbank der Firma verwendet).
+Diese werden falls nötig zu _ konventiert.
+<table>
+<title>Leerstelle in Tabellennamen</title>
+<tgroup cols='2' align='left' colsep='1' rowsep='1'>
+<thead>
+<row>
+  <entry>Datenbank</entry>
+  <entry>Tabellenname</entry>
+</row>
+</thead>
+<tbody>
+<row>
+  <entry>MS Access</entry>
+  <entry>[Order Details]</entry>
+</row>
+<row>
+  <entry>MS SQL</entry>
+  <entry>[Order Details]</entry>
+</row><row>
+  <entry>mysql</entry>
+  <entry>Order_Details</entry>
+</row><row>
+  <entry>postgres</entry>
+  <entry>Order_Details</entry>
+</row><row>
+  <entry>Sqlite</entry>
+  <entry>[Order Details]</entry>
+</row><row>
+  <entry>Oracle</entry>
+  <entry>Order_Details</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+
+
+</para>
+<para>
+Um das Schema auf konkreten Datenbank anzulegen benutzten Sie das Menü
+<menuchoice>
+  <guimenu>Schema</guimenu>
+  <guisubmenu>Operationen auf Schema</guisubmenu>
+  <guimenuitem>DB aus Schema anlegen</guimenuitem>
+</menuchoice>.
+Durch das Menü
+<menuchoice>
+  <guimenu>Schema</guimenu>
+  <guisubmenu>Operationen auf Schema</guisubmenu>
+  <guimenuitem>Zeige SQL-Definition für Schema</guimenuitem>
+</menuchoice>
+können Sie die CREATE-SQL für die spezifische Datenbank erzeugen.
+Dieses SQL kann durch datenbankspezifische Prozeduren ergänzt werden, die
+von &progname; nicht unterstützt werden.
+Die so angepasste SQL muss mit datenbankeigenen Werkzeugen aufgespielt werden.
+</para>
+</sect3>
+<sect3><title>Datenbankschema Ändern</title>
+<para>
+Falls Sie die bereits existierende Datenbank verändern wollen, müssen Sie zuerst die &progname; Repräsentation der Schema erzeugen.
+Benutzen Sie dafür das Menü
+<menuchoice>
+  <guimenu>Schema</guimenu>
+  <guisubmenu>Neu aus DB</guisubmenu>
+</menuchoice>.
+Sie müssen dann die Datenbankverbindung spezifizieren.
+Die Änderungen auf der Schema werden nicht sofort auf die Datenbank übertragen.
+Durch das Menü
+<menuchoice>
+  <guimenu>Schema</guimenu>
+  <guisubmenu>Schema Operationen</guisubmenu>
+  <guimenuitem>Änderungen auf DB aufspielen</guimenuitem>
+</menuchoice>
+werden die Änderung auf die Datenbank aufgespielt.
+Durch das Menü
+<menuchoice>
+  <guimenu>Schema</guimenu>
+  <guisubmenu>Schema Operationen</guisubmenu>
+  <guimenuitem>Zeige Schema Änderungen</guimenuitem>
+</menuchoice>
+können Sie sich die Änderung-SQL anschauen.
+<tip>
+<para>
+Sie können die Änderung-SQL benutzten um die Änderungsskript für mehrere Datenbanken (Entwicklung, Intergration, Produktion) zu erzeugen.
+</para>
+</tip>
+</para>
+<para>
+Falls die &progname; XML-Schema bereits existiert, soll Sie als erstes geladen werden.
+Schema-Editor bietet an nach dem Laden der Schema automatisch sich mit der Datenbank zu verbinden, aus dem das Schema entstanden ist.
+Falls eine andere Verbindung gewünscht ist oder das Schema nicht aus einer Datenbank entstanden ist, kann
+mit der Funktion
+<menuchoice>
+  <guimenu>Schema</guimenu>
+  <guisubmenu>Verbinde mit Datenbank</guisubmenu>
+</menuchoice>
+die Verbindung erstellt werden.
+Ist das Schema der Datenbank mit der Schema von &progname; nicht konsistent.
+Z.B wurde das Schema der Datenbank mit anderen Werkzeugen bearbeitet, kann man
+mit der Funktion
+<menuchoice>
+  <guimenu>Schema</guimenu>
+  <guisubmenu>Operationen auf Schema</guisubmenu>
+  <guimenuitem>Synchronisiere Schema mit Datenbank</guimenuitem>
+</menuchoice>
+Das &progname; Schema mit der Datenbank synchronisieren.
+Danach kann das Schema wie gewöhnt angepasst werden.
+<important>
+<para>
+Man kann die Änderungen an Schema nicht zwischen in mehrere Sitzungen festhalten.
+So müssen die Änderungen auf der Datenbank aufgespielt werden, damit Sie nicht durch das Beenden der Sitzung verloren gehen.
+Schema Editor besitzt keine Funktion für das Synchronisieren der Datenbankschema an &progname; Schema.
+</para>
+</important>
+</para>
+</sect3>
+
+</sect2>
+<sect2><title>DB-Schema und Daten migrieren</title>
+<para>
+Schema-Editor besitzt vielfältige Möglichkeiten das Schema und die Daten zwischen verschiedenen Datenbanksystem zu migrieren.
+Schema-Editor kann gleichzeitig 2 Datenbankverbindungen offen halten und die Daten satzweise von einen Datenbank auf eine andere zu transponieren.
+Dabei kann der Umfang der zu migrierten Daten angepasst werden.
+Es können sowohl Tabellen oder auch einzelne Spalten aus der Migration ausgeschlossen werden.
+</para>
+<para>
+Durchführen der Migration
+<orderedlist>
+<listitem><para>Eine Schema aus der Quelldatenbank erzeugen. Die Verbindung mit Quelldaten Bank muss vorhanden sein</para></listitem>
+<listitem><para>Die Tabellen oder Spalten, die nicht migriert werden sollen, sollen aus der Schema entfernt werden (Sie werden nicht tatsächlich im Quelldatenbank gelöscht)</para></listitem>
+<listitem><para>Die Migration starten durch Menü
+<menuchoice>
+  <guimenu>Schema</guimenu>
+  <guisubmenu>Migration</guisubmenu>
+  <guimenuitem>Migriere Datenbank</guimenuitem>
+</menuchoice>
+</para></listitem>
+<listitem><para>Treten während der Migration Fehler auf. Werden diese angezeigt. Die Migration kann in diesem Fall abgebrochen oder fortgesetzt werden. Bei Abbruch wird die Zieldatenbank nicht gelöscht</para></listitem>
+</orderedlist>
+</para>
+</sect2>
+
+<sect2><title>DB-Schema und Daten Exportieren und Importieren</title>
+<para>
+Schema-Editor kann die Daten auf 2 weisen exportieren.
+Als XML-Abzug
+<menuchoice>
+  <guimenu>Schema</guimenu>
+  <guisubmenu>Migration</guisubmenu>
+  <guimenuitem>Datenbank als XML dumpen</guimenuitem>
+</menuchoice> 
+der SQL-Abzug 
+<menuchoice>
+  <guimenu>Schema</guimenu>
+  <guisubmenu>Migration</guisubmenu>
+  <guimenuitem>Datenbank als XML dumpen</guimenuitem>
+</menuchoice>.
+Bei SQL-Abzug muss der Zieldatenbank-Typ angegeben werden.
+<important>
+<para>
+Der Export oder Import mittels XML-Abzug ist nur für kleinere Datenbanken geeignet.
+Bei XML-Abzug wird in den Arbeitsspeicher kurzfristig die gesamte Datenbank abgebildet (DOM-Objekt).
+Auf diese Weise kann das &progname; bei größeren Datenmengen schnell überlaufen.
+Eine Iterative Erzeugung von XML ist möglich und wird für die nächste Version von &progname; geplant.
+Der SQL-Abzug wird iterativ erstellt und verursacht keine übermäßige Beanspruchung von Arbeitsspeicher.
+</para>
+</important>
+</para>
+<para>
+Mit der Funktion
+<menuchoice>
+  <guimenu>Schema</guimenu>
+  <guisubmenu>Migration</guisubmenu>
+  <guimenuitem>XML-Dump zu SQL umwandeln</guimenuitem>
+</menuchoice>
+kann man ein XML-Abzug zu SQL-Abzug konvertieren.
+</para>
+</sect2>
+</sect1>
+
+<sect1><title>FormEditor</title>
+<para>
+Der Zweck der Komponente ist es zuerst eine Sammlung der Formulare zu einer Datenbank zu generieren und zweitens eine Benutzerschnittstelle für die Anpassung der Formulare zu liefern.
+Das Produkt des Formular-Editor eine Beschreibung der Formulare als ein XML-Dokument.
+Dabei wird es im Gegenteil zu vorhanden ähnlichen Systemen nicht einzeln zu jedem Tabellen ein Formular generiert, vielmehr wird eine ganze Sammlung der Formularen in einem Schritt generiert.
+Dabei werden die Assoziationen im Datenbank in der Formularen direkt unterstützt.
+Der Benutzer des Formular-Editor (Applikation-Entwickler) muss das Schema der Daten nicht kennen.
+Seine Aufgabe ist es höchstens die automatisch erzeugte Formulare unter dem gestalterischen Gesichtspunkten anzupassen oder die Eingabefelder des Formulars noch weiter zu spezifizieren.
+</para>
+<para>
+Ein Formular wird als eine Sammlung von verschiedenen Eingabefelder, ihrer Platzierung, und ihrer Entsprechung zu Objekten in der Datenbank verstanden.
+Folgende Typen der Eingabefelder wurden realisiert:
+<simplelist>
+<member>Frames. Rahmen für die Platzierung der Elemente</member>
+<member>einfache Textfelder (einzeilig)</member>
+<member>Eingabefelder für Ganzzahlen mit Steuerungspfeilen</member>
+<member>Listenfelder</member>
+<member>Radiobuttons</member>
+<member>Checkbox Felder (Ja/Nein Schalter)</member>
+<member>mehrzeilige Textfelder</member>
+<member>Mehrspaltige Auswahllisten für die Darstellung der Fremdschlüssel (Referenzen)</member>
+<member>Formular Links</member>
+<member>Objekt für die Einbettung von Formularen</member>
+</simplelist>
+Zu speziellen Elementen der Formulare gehören die eingebettete Formulare und die Formular Links.
+Beide sind verschiedene Visualisierung der Formularverknüpfungen.
+Die Verknüpfungen entstehend entlang der Beziehung Pfaden (Assoziation oder auch Aggregation).
+Dabei kann man aus einem Formular ein Formular des Objekts erreichen der ein Fremdschlüssel auf das erste Formular hat.
+Dabei wird bei dem verknüpften Formular der Fremdschlüssel ausgeblendet (Der Wert wird von ersten Formular bestimmt) und die Dateien werden nach dem Fremdschlüssel gefiltert.
+Es werden durch die Filterung nur die Objekte gezeigt, die mit dem gezeigten Objekt in dem ersten Formular in Verbindung stehen.
+Bei eingebetteten Formularen ist der verknüpfte Formular ein Teil des Elternformulars.
+Bei Formular-Links wird eine Schaltfläche eingebaut, die erst zum öffnen des verknüpften Formulars dient.
+Die Fremdschlüssel werden nicht als normale Attribute behandelt sondern als spezielle graphische Elemente dargestellt.
+Dabei sind zwei Tatsachen zu berücksichtigen.
+Zuerst ist das Wertebereich des Fremdschlüssel durch Integritätsbedingungen auf die Menge von Primärschlüsselwerte in der korrespondierenden Tabelle begrenzt.
+Das kann durch eine Auswahlliste repräsentiert werden.
+Der Benutzer weiß dann, dass er nur eine bestimmte Anzahl von Möglichkeiten hat, die er ansehen und auswählen kann.
+Zweitens sind die Werte des Schlüssel oft für den Benutzer aussageleer oder ungeeignet für die Identifizierung des Objektes.
+Dafür erwartet der Benutzer weitere Attribute (z.B Name und Vorname außer des PersonalIDs).
+Die Aggregation kann als die eingebetteten Formulare realisiert werden.
+Die Assoziation wird als Formular-Links umgesetzt.
+Die Spezialisierung kann auch als eine Verknüpfung von Formularen realisiert werden.
+Dabei wird ein Formular für ein Elternobjekt (Ober-Typ) und je ein Formular für den Kindobjekt (Unter-Typ) verwendet.
+</para>
+<sect2><title>GUI Editor für Formulare</title>
+<para>
+Durch das Doppelklick auf ein Formular in Hauptfenster wird ein GUI Editor für Formulare geöffnet.
+Damit kann das Aussehen des Formulars und die Verknüpfungen der einzelnen Elemente zum Datenbank spezifiziert werden.
+<figure id="guieditor"><title>GUI-Form-Editor (screenshoot)</title>
+<mediaobject><imageobject><imagedata fileref="guieditor.png" scale="50" ></imageobject></mediaobject>
+</figure>
+Die Eigenschaften der Elemente werden auf drei Typen
+<variablelist>
+<varlistentry><term>Widget</term>
+<listitem>
+<para>
+Die Eigenschaften, die zu eigentlichen GUI-Objekt gehören wie: Länge, Art.
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>Data</term>
+<listitem>
+<para>
+Verknüpfung mit Tabellen-Spalte.
+Defaultwert und NotNULL
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>Packer</term>
+<listitem>
+<para>
+Angaben zu Platzierung des Elements
+</para>
+</listitem>
+</varlistentry> 
+</variablelist>
+Die Platzierung der Elemente wird nicht absolut (also mit Koordinaten) aber unter Verwendung von s.g Geometry-Manager angegeben.
+Es werden der Pack-Geomentry-Manager und Grid-Widget-Manager der Tk-Widgetset unterstützt.
+Die Elementen können in s.g. Frames (Rahmen) gestellt werden (auch geschachtelt).
+<tip>
+<para>
+Die aktuellen Pack Optionen kann man in der Statusleiste nach dem Anzeigen des Widgets mit Mauszeiger auslesen.
+</para>
+</tip>
+Die meisten Standard-Widget werden angezeigt wie sie sind.
+Die anderen speziellen Widget wie (NestedForm, FormLink, SQLReference) werden bei GUI Editor durch die Vertreter angezeigt.
+Ihre Größe entspricht nicht der Wirklichkeit (Vorsicht beim NestedForm).
+Will man das tatsächlich Aussehen der Formulare haben, muss man den <command>FormServer</command> benutzten, die DB-Anbindung ist für solche Zwecke nicht nötig.
+</para>
+<sect3><title>Drag and Drop im FormEditor</title>
+<para>
+Die Fläche der FormEditor wird im drei Flächen geteilt.
+<simplelist>
+<member>Widget Sammlung</member>
+<member>Arbeitsfläche mit dem gezeigten Formular</member>
+<member>Ablage (untere Bereich)</member>
+</simplelist>
+Die Mögliche Drag &amp; Drop Operationen werden in  <xref linkend="draganddrop"> gezeigt.
+Die Drag &amp; Drop wird gezeigt durch das veränderte Maus-Zeiger Icon.
+Das Objekt wird selbst nicht bewegt.
+Die Ablage ist hier etwas neues und ungewohntes.
+Meist verschwindet ein Objekt bei Ausschneiden in einen unsichtbaren
+Puffer. 
+Hier wird es einfach in die Ablage bewegt.
+Das gleiche kann man mit Drag &amp; Drop auf die Ablage erreichen.
+Die Ablage kann mehrere Objekte beinhalten.
+Deswegen gibt es auch keine Einfüge-Operation.
+<tip>
+<para>
+Bei Einfügen der Widget zu Formular wird immer das Typ genommen der in Widgetsammlung ausgewählt wurde, also durch dunkles Hintergrund markiert ist.
+</para>
+</tip>
+<figure id="draganddrop"><title>Drag and Drop Operationen (schematisch)</title>
+<mediaobject><imageobject><imagedata fileref="draganddrop.png" scale="50" ></imageobject></mediaobject>
+</figure>
+</para>
+<bridgehead>Platzieren in einem Pack-Frame</bridgehead>
+<para>
+Die Reihenfolge der Elemente in einem Frame ist entscheidend.
+Der Pack-Geomentry-Manager nimmt nacheinander die Elemente und stellt sie in den Rahmen der restliche Platz wird für nächste Elemente verwendet.
+Folgende Eigenschaften spezifizieren die Platzierung:
+<simplelist>
+<member>side - An welcher Seite der Rahmen soll der Objekt hinzugefügt werden</member>
+<member>anchor - Anker zu welcher Seite</member>
+<member>fill - Soll der Objekt in eine Richtung zu den verbleibenden Platz ausgefüllt werden</member>
+<member>expand - Soll bei Änderung der Fenstergröße der Objekt angepasst werden</member>
+</simplelist>
+Wichtig in diesem Zusammenhang ist die Vorgehensweise wie beim Drag and Drop die Platzierung der Elemente vorgenommen wird.
+Zeigt man auf ein Frame allgemein wird das Element in das Frame an letzten Stelle mit Standard Optionen angefügt (-side top -anchor center -fill none -expand 0).
+Die genauere Platzierung wird durch das Anzeigen (Drop) auf ein Element, das bereits in der Frame ist ermöglicht.
+Die Reihenfolge wird relativ zu dem Angezeigten Element ermittelt, die -side Option wird von dem Element übernommen.
+Andere Optionen können nur im Eigenschaftenfenster verändert werden.
+<figure id="droppack"><title>Platzieren in einem Pack-Frame (schematisch)</title>
+<mediaobject><imageobject><imagedata fileref="droppack.png" scale="50" ></imageobject></mediaobject>
+</figure>
+Die <xref linkend="droppack"> Zeigt an einem Beispiel das Prinzip wie der Pack-Geometry-Manager arbeitet und wie bei einen Drag &amp; Drop Operation die Platzierung des Widget ermittelt wird .
+Die Widget haben folgende Platzierung-Optionen.
+Die Reihen Folge ist wichtig.
+Der Algorithmus platziert zuerst das erste Widget (markiert mit 1), der Bereich A wird besetzt und kann weiter nicht mehr verwendet werden.
+Die Optionen der weiteren Widget.
+<orderedlist>
+<listitem><para>-side left</para></listitem>
+<listitem><para>-side top</para></listitem>
+<listitem><para>-side bottom -anchor e</para></listitem>
+<listitem><para>-side right</para></listitem>
+</orderedlist>
+Wie das Widget in seinem Bereich platziert wird hängt von -anchor Attribut.
+Standardmäßig wird es zentriert (-anchor center).
+Will man ein neues Widget in das Frame einfügen, muss man die Position 
+relativ zu bestehenden 4 Widget angeben.
+Zeigt man in den Raum (Blau) zwischen den Widget, wird aus am Ende der Packliste (Position 5) mit Standardoptionen eingefügt (-side top -anchor center).
+Also das blaue Raum in der Mitte.
+Zeigt man auf ein Widget, wird der -side Attribut von dem Widget übernommen,
+die Pasten wird relativ zu dem gezeigten weidest ermittelt.
+Zeigt man auf die Fläche (a) des ersten Widget wird die Position auf 0 gewählt.
+Man kann auf diese Weise die Widget schnell aneinander reihen.
+Die speziellen Optionen können erst in einem Dialog spezifiziert werden.
+</para>
+<bridgehead>Platzieren in einem Grid-Frame</bridgehead>
+<para>
+Das Grid-Manager platziert die Widget in einem Gitter (Tabelle).
+Die Zellen-Größen werden entsprechen der Bedürfnissen der einzelnen Widget ermittelt.
+Ein Widget kann auch mehrere benachbarte Zellen besetzen (-columnspan -rowspan).
+Im Gegenteil zu anderen GUI-Editoren werden die Spalten und Zeilen dynamisch gebildet.
+Man muss also die Zeilen- und Spaltenzahl nicht angeben oder keine neuen Zeilen oder Spalten einfügen.
+<figure id="dropgrid"><title>Platzieren in einem Grid-Frame (schematisch)</title>
+<mediaobject><imageobject><imagedata fileref="dropgrid.png" scale="50" ></imageobject></mediaobject>
+</figure>
+Die <xref linkend="dropgrid"> Zeigt ein beispielhaftes Grid-Frame.
+Die Zellen A2,B2,B3,C1,C3 sind bereits besetzt.
+Beim Drag&amp;Drop Operation wird es zuerst ermittelt ob eine Zelle frei ist.
+Ist das der Fall wird sie einfach besetzt.
+Wird auf eine besetzte Zelle gezeigt (z.B. B2), wird angenommen, dass
+eine neue Spalte oder Zeile hinzugefügt werden soll um eine neue Zelle zu schaffen.
+Wird (siehe Zelle B2) der Bereich d (oben) angezeigt wird eine Zeile 
+über der Zelle B3 hinzugefügt.
+Das neue Widget wird über das Widget im Zelle B2 platziert.
+</para>
+<para>
+Die speziellen Optionen wie Spaltenbreite und Zeilenhöhe der Zelle können erst in einem Dialog spezifiziert werden.
+</para>
+</sect3>
+
+<sect3>
+<title>Pack Geometry Manager</title>
+<para>
+Es wurden zwei geometry Manager pack und grid für die Platzierung der
+Widget benutzt.
+Beide sind sehr mächtig und erlauben sehr gute Feststellung von Windows
+Platzierung auch beim wechselnden Windowsgroßen.
+Ähnliche oder gleiche Geometrymanager werden auch bei Java, Gtk und Qt benutzt.
+Grid ist am schnellsten zu verstehen und entspricht etwa der Tabelle.
+</para>
+<para>
+Mehr dazu Lesen Sie in Tk-Dokumantation <emphasis>man pack, man grid</emphasis>
+Hier ein Ausschnitte aus pack Man-Dokumentation.
+</para>
+<para>
+For each master the packer maintains an ordered list of slaves called the packing list. The -in, -after, and -before configuration
+options are used to specify the master for each slave and the slave's position in the packing list. If none of these options is given for
+a slave then the slave is added to the end of the packing list for its parent. 
+
+The packer arranges the slaves for a master by scanning the packing list in order. At the time it processes each slave, a rectangular
+area within the master is still unallocated. This area is called the cavity; for the first slave it is the entire area of the master. 
+
+For each slave the packer carries out the following steps: 
+<orderedlist>
+<listitem><para>
+     The packer allocates a rectangular parcel for the slave along the side of the cavity given by the slave's -side option. If the side
+     is top or bottom then the width of the parcel is the width of the cavity and its height is the requested height of the slave plus
+     the -ipady and -pady options. For the left or right side the height of the parcel is the height of the cavity and the width is the
+     requested width of the slave plus the -ipadx and -padx options. The parcel may be enlarged further because of the -expand
+     option (see ``EXPANSION'' below) 
+</para></listitem>
+<listitem><para>
+     The packer chooses the dimensions of the slave. The width will normally be the slave's requested width plus twice its -ipadx
+     option and the height will normally be the slave's requested height plus twice its -ipady option. However, if the -fill option is
+     x or both then the width of the slave is expanded to fill the width of the parcel, minus twice the -padx option. If the -fill
+     option is y or both then the height of the slave is expanded to fill the width of the parcel, minus twice the -pady option. 
+</para></listitem>
+<listitem><para>
+     The packer positions the slave over its parcel. If the slave is smaller than the parcel then the -anchor option determines
+     where in the parcel the slave will be placed. If -padx or -pady is non-zero, then the given amount of external padding will
+     always be left between the slave and the edges of the parcel. 
+</para></listitem>
+</orderedlist>
+Once a given slave has been packed, the area of its parcel is subtracted from the cavity, leaving a smaller rectangular cavity for the
+next slave. If a slave doesn't use all of its parcel, the unused space in the parcel will not be used by subsequent slaves. If the cavity
+should become too small to meet the needs of a slave then the slave will be given whatever space is left in the cavity. If the cavity
+shrinks to zero size, then all remaining slaves on the packing list will be unmapped from the screen until the master window
+becomes large enough to hold them again. 
+</para>
+</sect3>
+</sect2>
+</sect1>
+
+<sect1><title>FormServer</title>
+<para>
+Es ist ein Programm, mit dem der eigentlicher Endbenutzer der Datenbank zu tun hat.
+Dieses Programm kann die Formularbeschreibungen, die von Formular-Editor stammen, richtig auswerten und die Formulare darstellen.
+Dieses Programm muss die Manipulationen auf den Formularen richtig in in die SQL Anweisungen umsetzten und an die Datenbank quittieren.
+Dabei werden folgende Funktionen unterstützt:
+<itemizedlist>
+<listitem><para>Daten Anzeigen (View)</para></listitem>
+<listitem><para>Daten Modifizieren (Update)</para></listitem>
+<listitem><para>Daten Anlegen (Create)</para></listitem>
+<listitem><para>Daten Filtern oder Durchsuchen</para></listitem>
+<listitem><para>Daten Sortieren</para></listitem>
+<listitem><para>durch Daten Navigieren (Browsing or Navigate)</para></listitem>
+</itemizedlist>
+Durch die Formular-Links ist auch eine Navigation durch Dateninhalte entlang der Verknüpfungspfaden möglich.
+Der Benutzer kann ähnlich wie in Hypertext-Dokumenten navigieren und jede Information auf verschiedenen Wegen erreichen.
+Vor allem ist die Frage, was ist mit dem Objekt überhaupt verknüpft ist, schnell ohne der Kenntnis des Schemas beantwortet.
+</para>
+<para>
+Die Formulare selbst unterstützen direkt höhere Abstraktionskonzepte wie Assoziation, Aggregation und Spezialisierung.
+Die Kenntnisse über die Konzepte der relationalen Modellierung wie Fremdschlüssel und Primärschlüssel müssen nicht vorhanden sein.
+Der Benutzer kann die verständliche und allgemeinere Konzepte wie Aggregation und Assoziation wahrnehmen, ohne auf die besondere Techniken der relationalen Modell eingehen zu müssen.
+<mediaobject><imageobject><imagedata fileref="formserver.png" scale="50" ></imageobject></mediaobject>
+</para>
+<sect2 id="formularLinks"><title>Navigieren mit Formularen</title>
+<para>
+Die Benutzung der Formulare zum Navigieren durch eine Daten-Bank war die Idee, die mich zur Entwicklung des System verleitet hat.
+Mit dem s.g Formular-Links (Verweisen) kann man in einer Datenbank wie in Hypertextdokumenten navigieren.
+Die Idee der Hyperlinks sollte inzwischen jedem Benutzter bekannt sein.
+Die Links entstehen entlang der Assoziation-Pfaden.
+<figure id="studentPruefenEr"><title>Assoziation der Kardinalität 3 mit einem Attribut</title>
+<mediaobject><imageobject><imagedata fileref="student_pruefen_er.png" scale="50" ></imageobject></mediaobject>
+</figure>
+Die <xref linkend="studentPruefenEr"> zeigt eine Assoziation zwischen Drei Objekten (Student, Vorlesung, Professor).
+Die entspreche Tabellen-Struktur ist wie folgt:
+<screen>
+Professor     {PersNr,Rang,Raum}
+Student       {MatrNr,Name,Semester}
+Vorlesung     {VorlesungNr,Titel,SWS,PersNr}
+pruefen       {MatrNr},VorlesungNr,PersNr,Note}
+</screen>
+Diese Assoziation (Beziehung, Relationship) entsteht durch das Faktum, dass die drei Objekte durch eine Prüfung zueinander assoziiert werden.
+Die Grundidee war, dass man aus dem Student-Formular einfach nachschauen kann (durch ein Klick) bei welchen Prüfungen der Student teilnimmt.
+Zusätzlich kann man durch die Formular-Links die Datenbank erforschen, ohne die genaue Datenstruktur zu kennen.
+Man sieht unmittelbar, dass ein Student an Assoziation Prüfung teilnimmt.
+</para>
+<para>
+Die Assoziationen haben aber eine komplexere Semantik als Hypertext-Links.
+Die Assoziation ist immer transitiv (zweiseitig). Die Hyper-Links haben nur einen einseitigen Verweis-Charakter.
+Die Assoziationen können zwischen mehren Objekten bestehen.
+Man sagt, die Granuliät der Assoziation kann größer als 2 sein.
+Ein Hyper-Link verbindet nur 2 Dokumente.
+Die Kardinalität der Assoziation kann mehr als 1 betragen.
+Ein Student nimmt an mehreren Prüfungen teil.
+<figure id="formNavigation"><title>Navigieren mit Formular-Links</title>
+<mediaobject><imageobject><imagedata fileref="form_navigation.png" scale="50" ></imageobject></mediaobject>
+</figure>
+Die <xref linkend="formNavigation"> zeigt wie ein Link (Prüfen) aus Formular Student ausgeführt werden kann.
+Es gibt mehrere Typen von Formular-Link, die auch den Assoziation-Typen in ER-Modell entsprechen.
+<variablelist>
+<varlistentry><term>1:N</term>
+<listitem>
+<para>
+Die Beziehung wird durch eine veränderbare Referenz dargestellt und deckt sich mit Fremdschlüssel-Attributen der Tabelle.
+Mit einem Doppelt-Klick kann das Formular des Objekts geöffnet werden, auf das die Referenz Verweis.
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>N:1</term>
+<listitem>
+<para>
+Die Beziehung wird als eine einfache Schaltfläche dargestellt.
+Es ist die andere Seite der 1:N Beziehung.
+Die Fragestellung lautet: Suche die Objekte die auf das Objekt zeigen.
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>N:N oder N:M:O:...</term>
+<listitem>
+<para>
+Die Beziehung wird durch einen Menü-Button dargestellt.
+Der erste Menüpunkt zeigt immer auf die N:1 Beziehung auf die Referenz-Tabellen (Tabellen, die N:M modellieren, und meistens nur Fremdschlüssel haben).
+Die nächsten Menüpunkte, zeigen die eigentliche Objekte der N:M:.. Beziehungen.
+Die Fragestellung: Suche die Objekte die durch die Referenz-Tabelle mit dem Objekt in der Beziehung stehen.
+</para>
+</listitem>
+</varlistentry> 
+</variablelist>
+Die Formulare bleiben nach dem Öffnen durch die Links verbunden und passen sich automatisch dem ersten Formular an.
+Es entsteht eine Link-Kette durch die geöffnete Formulare.
+Problematisch ist es, dass auch eine Schnittstelle zur Veränderung der Assoziationen angeboten werden muss.
+Um Missverständnisse zu Vermeiden, werden bei N:M Formular-Links die Funktionen Objekt-Einlegen oder Löschen abgeschaltet.
+Um Assoziationen zwischen Objekten anzulegen oder zu löschen, muss an der Referenzen (1:N) gearbeitet werden.
+In diesem Fall, um einen Student eine weitere Prüfung zuzuweisen, muss ein neuer Datensatz in Formular Prüfung angelegt werden.
+</para>
+<para>
+Das Konzept der Formular-Links kann auf dem ersten Moment sehr kompliziert erscheinen, ist allerdings intuitiv sehr schnell erlernbar und kann sogar durch die Möglichkeit von Links-Ketten sehr schnell zu Lösung von komplexen Fragen angewendet werden.
+Z.b. es kann schnell herausgefunden werden, mit welchen anderen Studenten ein Student einer Vorlesung zuhört.
+Die Fragestellungen. Wie heißen die Assistenten von Professoren, bei denen ein Student ein Prüfung ablegt, sind durch zwei Formular-Links zu lösen.
+Eine Frage, die bereits einer relativ komplexen SQL-Abfrage benötigt hätte.
+</para>
+</sect2>
+<sect2><title>Eigene Makros in Formularen</title>
+<para>
+FormularServer besitzt eine Schnittstelle, die es erlaubt, die Funktionalitäten der Formulare um eigene Prozeduren zu erweitern.
+Dazu können gehören:
+<simplelist>
+<member>Eigene Überprüfung der Integrität-Regel</member>
+<member>Besondere Behandlung von Attributen, z.B Formatierung bei Datenspeicherung oder Daten-Visualisierung</member>
+<member>Berechnung von abgeleiteten Attributen</member>
+<member>Selbstdefinierte Aktionen</member>
+</simplelist>
+Der FormularServer ist vollständig im Tcl (mit Erweiterungen) programmiert, weil Tcl eine interprative Sprache ist, erlaubt es, das Verhalten von FormularServer dynamisch zu ändern.
+Das wird durch Laden von zusätzlichen Tcl-Prozeduren zur Laufzeit erreicht.
+Es wurde eine Schnittstelle programmiert, die es ermöglicht die Standard-Prozeduren von FormServer zu beeinflussen.
+</para>
+<para>
+Die Makros (Selbstdefinierte Prozeduren) werden in XOTcl als eine abgeleitete Klasse von FormEngine geschrieben.
+Der Name der Klasse muss mit dem Namen des Formulars übereinstimmen.
+Die Makros gelten nur für dieses Formular.
+Sie werden von FormServer geladen und als ein Teil des Programm benutzt.
+Hier eine Unterlage die für die eigenen Makros benutzt werden kann.
+(für Formular myform)
+<screen> 
+Class myform -superclass FormEngine
+myform instproc update_check klvalues_ref {
+    return 1
+}
+myform instproc delete_check {} {
+    return 1
+}
+myform instproc insert_check klvalues_ref {
+    return 1
+}
+myform instproc after_delete {} {
+}
+myform instproc reload_form {} {
+}
+myform instproc position_check {pos} {
+    return 1
+}
+FormEngine instproc filling_form klvalues_ref {
+}
+</screen>
+Die Methoden-Parametern <emphasis>klvalues_ref</emphasis> sind Referenzen auf TclX keyd list; mehr dazu in TclX Dokumentation.
+Durch  _check Prozeduren kann man eine bestimmte Aktion verhindern (return 0).
+</para>
+<para>
+Sehen sie das Beispiel <emphasis>accountancy</emphasis> das vollständig mit 
+Makros implementiert ist.
+<mediaobject><imageobject><imagedata fileref="accountancy_er.png" scale="50" ></imageobject></mediaobject>
+Hier wurden Makros benutzt um folgende Eigenschaften zu garantieren
+<itemizedlist>
+<listitem><para>Ein Customer (Klient) kann nur gelöscht werden, wenn er keine oder nur Bezahlte Rechnungen (orders) hat.
+Danach wird der Fremd-Schlüssel (custId) in Tabellen cust_order (Bestellungen) auf NULL gesetzt.</para></listitem>
+<listitem><para>Für jede Rechnung wird der Preis (total) von FormularServer berechnet</para></listitem>
+<listitem><para>Berechnung des Preises für jedes Produkt (anzahl*preis)</para></listitem>
+<listitem><para>Überprüfung ob das Datum der Form 2000-01-01 entspricht</para></listitem>
+</itemizedlist>
+Sehen sie die Datei <filename>sample/accountancy.tcl</filename>
+für die Realisierung (z.B wie sql-Abfragen gebildet werden).
+</para>
+</sect2>
+<sect2><title>Programm-Parameter</title>
+<para>
+Beim Start von FormServer kann einer Reihe von Programm-Parameter angegeben werden. Es spart die Klick-Arbeit wenn das Programm aus Skripten ausgeführt wurde.
+<warning>
+<para>
+Bei der Starkit variante können keine Parameter spezifiziert werden.
+</para>
+</warning>
+<cmdsynopsis>
+  <command>FormServer</command>
+  <arg choice=plain>--</arg>
+  <arg>-help</arg>
+  <arg>-debug</arg>
+  <arg>-viewonly</arg>
+  <group>
+    <arg>-ignorexmlpar</arg>
+    <arg>-noconnectdialog</arg>
+    <arg>-connect <replaceable>connectpar</replaceable></arg>
+    <arg>-loadmacros <replaceable>macrofile</replaceable></arg>
+    <arg>-openform <replaceable>formname</replaceable></arg>
+    <arg choice=plain><replaceable>xmlfile</replaceable></arg>
+  </group>
+</cmdsynopsis>                                                                 
+
+<variablelist>
+<varlistentry><term>-debug</term>
+<listitem><para>
+Aktiviert Menüs für debugging: SQL-Monitor, XOtcl Klassen-Browser, Tk-Window Browser, Interaktiver Modus
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>-viewonly</term>
+<listitem><para>
+Die Datenbankinhalten können nur angeschaut werden. Kein Löschen, Einfügen und Modifizieren von Tupeln
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>-ignorexmlpar</term>
+<listitem><para>
+Die Parameter, die in XML-Datei kodiert werden (Datenbankanbindung, Makros), werden nicht beachtet (sinvoll mit -connect parameter)
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>-noconnectdialog</term>
+<listitem><para>
+Es wird versucht eine Datenbankverbindung ohne Befragungs der Benutzer durchzuführen die Verbindungsparameter können entweder in XML oder durch -connect Parameter spezifiziert werden.
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>-loadmacros</term>
+<listitem><para>
+Lädt automatisch ein Tcl-Skript. Sinnvoll um eigene Makros zu programmieren.
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>-connect</term>
+<listitem><para>
+Angeben von Datenbank Verbindungs-Parameter.
+Wenn keine -ignorexmlpar angeschaltet wurde, werden die XML-codierte Parameter überschrieben. Die Parameter werden in Form einer TclX keyed list angegeben. Die Namen der Parameter hängen von benutzten DB-Schnittstelle z.B. für mysql wäre das. 
+<screen>
+-connect "{interface mysql} {user root} {dbank test} {password geheim} {socket /var/lib/mysql/mysql.sock}"
+</screen>
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>-openform</term>
+<listitem><para>
+Das Programm versucht ein Formular nach dem Start sofort zu öffnen. Voraussetzung die Formulare wurden erfolgreich geladen und die Datenbankverbindung steht.
+</para>
+</listitem>
+</varlistentry> 
+</variablelist>
+<warning>
+<para>
+Alle FormServer Parameter müssen durch -- von Tcl-Parametern getrennt werden.
+</para>
+</warning>
+Beispiel (alles in einer Zeile)
+<screen>
+./FormServer.tcl -- -debug -viewonly
+ -connect "{interface mysql} {dbank uni} 
+           {user root} {socket /var/lib/mysql/mysql.sock}" 
+ -noconnectdialog -openform Student uni.xmlforms
+</screen>
+</para>
+</sect2>
+</sect1>
+
+<sect1><title>Schema vs. Formularaussehen</title>
+<para>
+Das System wurde nach dem Motto entwickelt: Das Aussehen der Formulare soll ihrer Semantik entsprechen.
+Hier die Beispiele, wie die Konzepte der Modellierung ihren Einfluss auf das Aussehen (Struktur) der Formulare haben.
+Die Screenshoots stammen alle aus dem Tutorial-Beispiel.
+</para>
+<sect2><title>Darstellung der Fremdschlüssel</title>
+<para>
+<mediaobject><imageobject><imagedata fileref="foreignkeys.png" scale="50" ></imageobject></mediaobject>
+Die Fremdschlüssel Attribute werden als Merhkolumnen-Auswahllisten dargestellt.
+Hier sieht man auf der ersten Stelle den Wert des Primärschlüssel und einen zusätzlichen Attribut (Name), das die Rolle des Objekts-Etikette hat.
+</para>
+</sect2>
+<sect2><title>Assoziation (Formular-Links)</title>
+<para>
+<mediaobject><imageobject><imagedata fileref="FormularLinks.png" scale="50" ></imageobject></mediaobject>
+<figure id="er-assoziation"><title>Assoziation in ER-Modell</title>
+<mediaobject><imageobject><imagedata fileref="er_assoziation.png" scale="50" ></imageobject></mediaobject>
+</figure>
+Die Formular-Links funktionieren etwa wie Anweisung: Öffne den Formular mit allen Objekten, die mit diesen Objekt verknüpft sind (ein Fremdschlüssel darauf haben).
+Sie werden entgegengesetzt als Fremdschlüsselverweise
+</para>
+</sect2>
+<sect2><title>Spezialisierung (Vererbung)</title>
+<para>
+<mediaobject><imageobject><imagedata fileref="FormularVererbung.png" scale="50" ></imageobject></mediaobject>
+<figure id="er-generalisierung"><title>Generalisierung in ER-Modell</title>
+<mediaobject><imageobject><imagedata fileref="er_generalisierung.png" scale="50" ></imageobject></mediaobject>
+</figure>
+Die Spezialisierung Formulare (Kinder-Formulare) werden in einem Notebook Widget des Eltern-Formula eingebettet.
+</para>
+</sect2>
+<sect2><title>Aggregation</title>
+<para>
+<mediaobject><imageobject><imagedata fileref="EigebetettesFormular.png" scale="50" ></imageobject></mediaobject>
+<figure id="er-aggregation"><title>Aggregation in ER-Modell</title>
+<mediaobject><imageobject><imagedata fileref="er_aggregation.png" scale="50" ></imageobject></mediaobject>
+</figure>
+Aggregation funktioniert als eingebettete Formulare, dabei werden Fremdschlüssel als Verknüpfung Pfade benutzt; unbemerkt von dem Benutzter. 
+</para>
+</sect2>
+</sect1>
+<sect1><title>Fehlende Funktionalitäten bei &progname;</title>
+<para>
+Ich möchte die mögliche Fallen bei der Benutzung des Programms nennen:
+<itemizedlist>
+<listitem><para>Bei der Aggregation, Spezialisierung und Fremdschlüssel werden nur Ein-Attributige-Primärschlüssel unterstützt. Ein Objekt wird nur durch ein Attribut identifiziert.</para></listitem>
+<listitem><para>Bei leeren Tabellen ist das Einfügen des ersten Tupels nur mit der Schaltflächen Speichern (Disketten-Ikon) möglich.</para></listitem>
+<listitem><para>Die Daten in einem Formular werden erst nach der Änderung der Tuppelposition (mit Naviagtionsschaltflächen) oder durch die Schaltfläche Speichern zur Datenbank geschickt.</para></listitem>
+<listitem><para>Es gibt Probleme mit Operationen (Löschen, Ändern, Einfügen), sie werden erst Sichtbar nach der Aktion Aktualisieren. Der Zustand, dass die Daten nicht aktuell sein könnten wird durch die rotgefärbte Schaltfläche Aktualisieren angezeigt.</para></listitem>
+<listitem><para>Die Anzahl von offenen SQL-Verbindungen kann systemspezifisch begrenzt. Es hängt von der Datenbank und der benutzten Schnittstelle ab.</para></listitem>
+<listitem><para>Die Widget (Multi-Spalten-Listen) für die Anzeige von Fremdschlüssel werden nur einmal bei dem Öffnen des Formulars initialisiert.
+Sollte sich der Zustand der Objekte ändern, auf die die Fremdschlüssel zeigen, wird es nicht angezeigt.</para></listitem>
+<listitem><para>Die Formulare, die bei Aggregation benutzt werden, können separat geöffnet werden, die Fremdschlüssel werden jedoch als normale Widget angezeigt. 
+Das kann manuell in <command>FormEditor</command> geändert werden, wird aber von FormAssistenten nicht automatisch gezeigt.</para></listitem>
+<listitem><para>Form-Links funktionieren nicht wenn man auf das Wurzel-Formular zeigt, der Fremdschlüssel sich aber in einem Kind-Formular befindet. Siehe Tutorial (Formular Professor Link auf Assistent). 
+Solche Formular-Links brauchen eine spezielle Behandlung, das noch nicht programmiert wurde.
+</para></listitem>
+</itemizedlist>
+Haben Sie ähnliche Problem festgestellt, oder haben Sie Bedenken zu anderen Funktionsweisen, lassen Sie mich davon wissen.
+</para>
+</sect1>
+
+</chapter>
+
+<chapter lang="de" id="tutorial">
+<title>Tutorial</title>
+<para>
+Hier wird es eine Beispielverwendung des System beschrieben.
+Es wurde eine Lehrbuch-Datenbank gewählt, so dass alle Eigenschaften des System gezeigt werden können.
+Die Schrittfolge entspricht etwa dem Vorgehen, das bei realen DB-Applikationen Erstellung anzutreffen ist.
+Zuerst wird ein ER-Diagramm des System erstellt und in relationales Schema abgebildet.
+Danach wird diese Schema mit Hilfe von Reverse Engineering Techniken in eine XML-Repository umgewandelt.
+Um die fertige Beispielformulare sofort zu sehen gehen sie zum letzten Schritt.
+</para>
+<sect1><title>Relationales Schema</title>
+<para>
+Angenommen, es wurde ein Datenbank-Schema mit Hilfe von ER-Modell entworfen.
+Dieses Schema enthält 5 Entities.
+Dabei wird Angestellte zu Assistent und Professor spezialisiert.
+Bei Termin handelt es sich um ein Weak-Entity.
+Es ist hier die Modellierung der Aggregation (besser Komposition) von Mengenwertigen Attribut des Objekts Vorlesung.
+Es gibt auch unterschiedliche Arten der Beziehungen (Relationships).
+Prüfen ist eine Beziehung der Granularität 3 mit einem eigenen Attribut Note.
+<mediaobject><imageobject><imagedata fileref="uni_er_diagramm.png" scale="50" ></imageobject></mediaobject>
+Dieses ER-Diagramm wird zum relationalen Schema umgewandelt.
+<screen>
+Angestellte   {PersNr,Name}
+Professor     {PersNr,Rang,Raum}
+Assistent     {PersNr,Rang,Raum,Professor}
+Student       {MatrNr,Name,Semester}
+Vorlesung     {VorlesungNr,Titel,SWS,PersNr}
+hoeren        {MatrNr,VorlesungNr}
+voraussetzten {VorgaengerNr,NachfolgerNr}
+pruefen       {MatrNr},VorlesungNr,PersNr,Note}
+Termin        {VorlesungNr,Wochentag,Zeit}
+</screen>
+Datei <filename>uni.xmldump</filename> im Verzeichnis <filename>sample</filename> des Programms beinhaltet ein XML-Abzug der Datenbank die mit SchemaEditor auf jede unterstützte Datenbank aufgespielt werden kann.
+Um die Datenbank anzulegen muss man zuerst die <database>uni</database> Datenbank kreieren.
+</para>
+<para>
+Für die Mysql Datenbank muss man folgende vorbereitende Schritte machen.
+<warning>
+<para>
+Voraussetzung! Sie haben die MySql Datenbank richtig installiert. Es läuft und Sie haben entsprechende rechte die Datenbank und Tabellen anzulegen.
+</para>
+</warning>
+<screen>
+[user@localhost]@ mysql
+mysql&gt; CREATE DATABASE uni
+</screen>
+</para>
+</sect1>
+
+<sect1><title>Erstellung des Repositories</title>
+<para>
+Für die Erstellung des Reposities, das eine Erweiterung des relationalen Schemas um semantische Informationen darstellt, wird das Programm <command>SchemaEditor</command> verwendet.
+Das Programm kann durch die SQL-Verbindung das relationale Schema auslesen.
+Dazu verwendet man den Menüpunkt
+<menuchoice>
+  <guimenu>Datei</guimenu>
+  <guimenuitem>Neues Schema aus DB</guimenuitem>
+</menuchoice>.
+In nachfolgenden Dialog muss die richtige Datenanbindung angegeben werden.
+<mediaobject><imageobject><imagedata fileref="dbconnect.png" scale="50" ></imageobject></mediaobject>
+Dann können weitere semantische Informationen hinzugefügt werden.
+<mediaobject><imageobject><imagedata fileref="schemaeditor.png" scale="50" ></imageobject></mediaobject>
+Das kann auf drei Arten geschehen
+<orderedlist>
+<listitem><para>Benutzung von Reverse Engineering Menü 
+<menuchoice>
+  <guimenu>Reverse Engineering</guimenu>
+</menuchoice>.
+</para></listitem>
+<listitem><para>Hinzufügen von Abstraktionskonzepten durch die Verwendung von Assistenten: +Assoziation (etwa Fremdschlüssel), +Aggregation, +Vererbung</para></listitem>
+<listitem><para>Editieren von Eigenschaften der Einzelnen Attributen (Schema-Elementen). Wie auf dem Screenshoots können zu jedem Attribut weitere Information spezifiziert werden.</para></listitem>
+<listitem><para>Hinzufügen von weiteren Schema-Elementen wie: Attribut-Gruppe, Label (Etikette). Es geschieht durch Benutzung von Pop-Up Menuüs (rechte Maustaste)</para></listitem>
+</orderedlist>
+Das komplette Beispiel von XML-Repository wird in Datei
+<filename>sample/uni.xmldbschema</filename> gespeichert.
+Zu einzelnen Tabellen wird die Semantische Information gespeichert, ob die Tabelle ein Objekt, Spezialisierung, Aggregation oder Assoziation (Relationship) abbildet.
+Zu Relationship werden können weitere Information eingegeben werden, wie Kardinalität, Rolennamen, Granularität, Existenzbedingungen (beim Löschen).
+</para>
+</sect1>
+
+<sect1><title>Erstellung der Formulare</title>
+<para>
+Das Erstellen der Formulare geschieht mit dem Programm <command>FormEditor</command>.
+Zuerst wird das DB-Schema <filename>sample/uni.xmldbschema</filename> geladen
+<menuchoice>
+  <guimenu>Datei</guimenu>
+  <guimenuitem>DB Schema Laden</guimenuitem>
+</menuchoice>.
+Automatisches Erstellen von DB-Formularen geschieht mit
+<menuchoice>
+  <guimenu>Werkzeuge</guimenu>
+  <guimenuitem>Formular Assistent</guimenuitem>
+</menuchoice>.
+Die Erstellten Formulare können mit einem GUI-Editor durch
+Schaltfläche <guibutton>Formular Entwerfen</guibutton>.
+Die fertige Formulare sind in <filename>sample/uni.xmlforms</filename> gespeichert.
+</para>
+</sect1>
+
+<sect1><title>Benutzung der Formularen</title>
+<para>
+Die fertige Formulare werden als XML-Dateien gespeichert.
+Das Programm <command>FormServer</command> kann die Formulare richtig darstellen und mit der Datenbank kommunizieren. Aufruf mit Argument aus Programmverzeichnis.
+<screen>
+./FormServer.tcl sample/uni.xmlforms 
+</screen>
+Wenn Sie tclkit installation benutzen, starten Sie &progname; in Modus FormServer.
+</para>
+</sect1>
+
+<sect1><title>Andere Beispiele</title>
+<para>
+Im Verzeichnis Sample befinden sich noch zwei weitere Beispiele.
+<orderedlist>
+<listitem><para>Ein Beispiel aus Publikation: 
+Roger H.L. Chiang; Terence M. Barron; Veda C. Storey. 
+Reverse engineering of relational databases: 
+Extraction of an EER model from a relational database.  
+Data &amp; Knowledge Engineering 12. Elsevier. 1994. Seiten 107-142.
+Unter dem Namen <emphasis>bussines</emphasis>. Es ist ein Datenbank Schema eines hypothetischen Firma. Es befinden sich folgende Dateien.
+<simplelist>
+<member><filename>bussines-er.dia</filename> ER-Diagramm der Datenbank in Format eines GNOME Programms DIA</member>
+<member><filename>bussines-er.eps</filename> ER-Diagramm als PostScript Datei</member>
+<member><filename>bussines.xmldump</filename> Abzug der Datenbank</member>
+<member><filename>bussines.xmldbschema</filename> Repository des Schemas</member>
+<member><filename>bussines.xmlforms</filename> Formulare</member>
+</simplelist>
+</para></listitem>
+<listitem><para>Ein Beispiel einer Kurs-Datenbank.
+Es werde verschiedene Kurs-Typen angeboten. Die Realisierung eines Kurses wird Angebot (mit Datum) genannt.
+Die Angebote werden von Referenten in einem Ort durchgeführt.
+Die Kurse sind hierarchisch strukturiert.
+Also zu Kurstyp A gehören Untertypen A1 A2 A3, etc...
+Zu jedem Kurs kann ein Vorgänger (umgekehrt Nachfolger) genannt werden.
+Z.B die Teilnahme am Kurs B setzt voraus die frühere Teilnahme am Kurs A (B ist Vertiefung von A).
+<simplelist>
+<member><filename>kurs-er.dia</filename> ER-Diagramm der Datenbank in Format eines GNOME Programms DIA</member>
+<member><filename>kurs-er.eps</filename> ER-Diagramm als PostScript Datei</member>
+<member><filename>kurs.xmldump</filename> Abzug der Datenbank</member>
+<member><filename>kurs.xmldbschema</filename> Repository des Schemas</member>
+<member><filename>kurs.xmlforms</filename> Formulare</member>
+</simplelist>
+</para></listitem>
+</orderedlist>
+
+</para>
+</sect1>
+
+</chapter>
+
+<chapter lang="de" id="develop">
+<title>Entwickler Informationen</title>
+<sect1><title>Programmierwerkzeuge</title>
+<para>
+Das gesamte System wurde in der Programmiersprache TCL (Tool Command Language)
+Programmiert.
+TCL ist eine interpretative und string-basierte Programmiersprache und charakterisiert sich durch einfaches Syntax und einfache Erweitbarkeit.
+Diese Eigenschaften machen es ideal für das Zusammenkleben von anderen spezialisierten Komponenten (meist Bibliotheken, die in anderen Sprachen (C, C++) geschrieben sind).
+Die Sprache wird oft für Zwecke des 
+<emphasis>Rapid Developments</emphasis> 
+<emphasis>Prototypings</emphasis> oder benutzt.
+Tcl benutzt eine geniale, einfache aber gewöhnungsbedürftige Syntax.
+Obwohl Tcl eine Skriptsprache ist, sind die Tcl-Applikationen deutlich schneller als Java-Programme und verbrauchen sehr wenig Ressourcen.
+Die objektorientierte Implementierung wurde durch an der UNI Essen entwickelte XOTcl ermöglicht.
+Das ermöglicht eine klare Strukturierung des Programms.
+Es wurden folgende zusätzliche Komponenten des TCL benutzt.
+Das Programm wird mit XOTclIDE Entwicklungsumgebung entwickelt.
+
+<variablelist>
+<varlistentry><term>Tk und Tix</term>
+<listitem>
+<para>
+Eine Bibliothek für das Entwerfen von graphischen Benutzerschnittstellen (Widgetset).</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>XOTcl</term>
+<listitem>
+<para>
+Erweitert Tcl um objektorientierte Eigenschaften.
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>mysqltcl pgtcl ...</term>
+<listitem>
+<para>
+Schnittstellen zu Mysql und Postgresql relationalen Datenbanken
+</para>
+</listitem>
+</varlistentry> 
+<varlistentry><term>tDom</term>
+<listitem>
+<para>
+ DOM Implementierung für TCL.
+</para>
+</listitem>
+</varlistentry> 
+</variablelist>
+Alle Komponenten sind einigermaßen (mit Erfahrung) leicht zu installieren.
+Ich hatte auch keine Ambition alles in Pure Tcl/Tk zu programmieren, wenn es so viele tolle Bibliotheken gibt.
+</para>
+</sect1>
+
+<sect1><title>XML</title>
+<para>
+Im System dienen XML Dokumente als Schnittstellen zwischen Schema-Editor und Formular-Editor (XML Klasse dbschema) und weiter zwischen Formular-Editor und Formular-Sever (XML Klasse xmlforms).
+Dadurch wird die hohe Unabhängigkeit der Komponenten und ihre Austauschbarkeit garantiert.
+Jede Komponente kann durch eine andere ersetzt werden, die das entsprechende XML-Dokument manipulieren (interpretieren) kann.
+Es heißt, sie musst der Schnittstelle, das als eine XML-Kasse (DTD-Dokument) beschrieben ist, genügen.
+Für den Benutzer des System ist die interne Verwendung des XML-Formats unsichtbar.
+Er kann nach Bedarf die XML-Dokumente auch manuell erstellen oder mit Hilfe von anderen allgemeinen XML-Werkzeugen verarbeiten.
+</para>
+<para>
+Die Beschreibungen der einzelnen XML-Klassen als DTD Dokumente werden in Dateien <filename>dtd/dbschema.dtd</filename> und <filename>dtd/dbforms.dtd</filename> beschreiben.
+Ein kleiner Skript <filename>validate.sh</filename> vereinfacht die Benutzung von nsgml Parser, der bereits standardmäßig zu jeder LINUX Distribution gehört.
+</para>
+<para>
+Das System wurde so Entworfen, dass diese XML-Dokumente von anderen Applikationen benutzt sein können.
+</para>
+</sect1>
+
+<sect1><title>Weiterentwicklung</title>
+<para>
+TODO-Liste:
+<orderedlist>
+<listitem><para>Schnittstelle zu weiteren Datenbanken.</para></listitem>
+<listitem><para>spezielle Widget für Zeittypen, Punktzahlen, BLOB</para></listitem>
+<listitem><para>unterstützung von BLOB-Typen, die per MIME-Typen spezifiziert werden. Etwa Anbindung an KDE oder GNOME System. Anzeigen von Bilddaten. Austausch mit Dateisystem</para></listitem>
+<listitem><para>Formular-Server unterstützt kaskadierendes Löschen und Modifizieren von Primärschlüssel</para></listitem>
+<listitem><para>Formular-Server unterstützt Beziehung-Kardinalitäten und andere Integritäts-Regel</para></listitem>
+<listitem><para>Direkt-Hilfe zu Dialogen</para></listitem>
+<listitem><para>Ballon oder Tip-Texte zu Widgets</para></listitem>
+<listitem><para>Alternative Darstellung von Formularen als Tabellen oder Tabelle als Teile der Formulare. Benutzung von tkTable Tcl-Erweiterung</para></listitem>
+<listitem><para>Unterstützung von Tabulator Folgen und allgemein Bessere Benutzerfreundlichkeit</para></listitem>
+<listitem><para>Befehle per Short-Cuts (Accelatoren)</para></listitem>
+<listitem><para>NULL-Wert Behandlung bei Widget. Bis jetzt nicht alle Widget können es gut unterstützen.</para></listitem>
+<listitem><para>Neue mächtigere GUI-Elemente (Widget) und mehr Optionen.</para></listitem>
+</orderedlist>
+</para>
+</sect1>
+
+<sect1><title>Ideen für die Zukunft</title>
+<para>
+Auf dem ersten Plan steht die Fehlerbehebung und Verbesserung der Benutzbarkeit.
+Das andere ist es wirklich neue Ideen zu verwirklichen.
+&progname; könnte als eine Basis für die Entwicklung von unterschiedlichen DB-Applikationen dienen.
+Mit XOTclIDE Entwicklungsumgebung ist es möglich &progname; auf eigene Bedürfnisse anzupassen.
+</para>
+<para>
+Als der kleinste Nenner für relationale Datenbanken wurde SQL-92 Standard und mysql gewählt.
+Viele der Probleme, bzgl. der beschränktet Typbildungmöglichkeiten, wurden in SQL99 Standard gelöst.
+Es bleibt vorerst abzuwarten bis die verfügbaren RDBMS diesen Standard unterstützen.
+Interessant könnte die Implementierung von objektrelationalen Eigenschaften des populären Datenbank Postgres sein.
+Viele von denen decken sich mit SQL3 Standard.
+<orderedlist>
+<listitem><para>Listen Attribute</para></listitem>
+<listitem><para>Tupel können per OID (Objectidentifier) identifiziert werden</para></listitem>
+<listitem><para>Versionifizierung</para></listitem>
+<listitem><para>Datenbank-Regel</para></listitem>
+</orderedlist>
+Es existieren auch 2 interessante Projekte zur Beschreibung der graphischer Benutzerschnittstelle als XML-Dokumente.
+Einer davon stammt als Nebenprodukt der Entwicklung von Open Source Netscape (Mozilla).
+Es ist XPToolkit (<ulink url="http://www.mozilla.org/xpfe">"http://www.mozilla.org/xpfe</ulink>), die Benutzerschnittstelle können plattformunabhängig als XML-Dokumente (XUL XMl UserInterface Language).
+Ein anderer Projekt in mit dem graphischen Editor für die Entwicklung von graphischen Benutzerschnittstellen GLADE <ulink url="http://glade.pn.org">http://glade.pn.org</ulink> verbunden.
+Es ist ein Teil des GNOME Projekt, freies Desktop Enivronment für LINUX.
+Die Idee bei der beiden Projekten ist, dass das Aussehen der graphischen Benutzerschnittstelle nicht festkodiert im Programm ist, sondern immer als ein XML-Dokument vorliegt.
+Das könnte eine bessere und flexible  Konfigurierbarkeit der Schnittstelle durch den Benutzter erlauben, ohne das Programm neu kompilieren zu müssen.
+Die beide Projekte sind um so mehr wertvoll, dass die komplette Quelltexte frei sind und die verfügbare Komponenten auch bei fremden Projekten verwendet werden können.
+Die Entwicklung von Formular-Editor und Formular-Server könnte davon profitieren.
+</para>
+<para>
+Eine andere Richtung für die Weiterentwicklung des Systems wäre die Unterstützung von weiteren Abstraktionen und Semantik in Schema-Editor und anschließend beim Formular-Server.
+Hier sind zwei Fälle vorstellbar:
+1. das System bietet eine Schnittstelle auf die Zusatzfunktionen der DBMS wie Versioniefizierung, neue Datentypen, DB-Regel (Trigger)
+2. Das System implementiert selbst neue Funktionalitäten wie Versioniefizierung, Authentiefizierung, Integrität Regel, kaskadierendes Löschen.
+Für den konzeptionelles Modell wäre die Unterstützung von weiteren Abstraktionen denkbar: abgeleitete Attributen, abgeleitete Beziehungen, abhängige Beziehungen (z.B ein Mitarbeiter kann nur an dem Projekt Teilnehmer wenn er die speziellen Qualifikationen hat)., Darstellung und Manipulation von Busstrukturen, die als Tabellen abgelegt sind.
+</para>
+</sect1>
+<sect1 id="db-interfaces"><title>Datenbankanbindung</title>
+<para>
+Zurzeit werden folgende Datenbank unterstützt.
+<itemizedlist>
+<listitem><para>mysql</para></listitem>
+<listitem><para>postgres</para></listitem>
+<listitem><para>sqlite</para></listitem>
+<listitem><para>MS SQL-Jet (MS Access Format) (durch ODBC)</para></listitem>
+<listitem><para>MS SQL Server (durch ODBC)</para></listitem>
+<listitem><para>Allegein ODBC</para></listitem>
+<listitem><para>Oracle</para></listitem>
+</itemizedlist>
+Die angebotene Funktionalität entspricht etwa SQL-92 (SQL2) Standard.
+</para>
+<para>
+&progname; basiert auf XOSQL-Addapter, der die spezifische Tcl-Schnittstellen verallgemeinert.
+</para>
+</sect1>
+
+<sect1><title>WWW-Verweise für Entwickler</title>
+<para>
+<orderedlist>
+<listitem><para><ulink url="http://www.tcl.tk">TCL-Tk Home</ulink> beste Einstiegseite zum Thema Tcl allgemein</para></listitem>
+<listitem><para><ulink url="http://www.xotcl.org">XOTcl</ulink> Homepage des Objektorientierten Tcl-Erweiterung, die in &progname; benutzt wurde</para></listitem>
+<listitem><para><ulink url="http://www.sourceforge/projects/tix">Tix</ulink> weitere GUI-Widget Homepage</para></listitem>
+<listitem><para><ulink url="http://www.sourceforge/projects/tclodbc">Tclodbc</ulink> ODBC Schnittstelle für Tcl
+<listitem><para><ulink url="http://www.xdobry.de/mysqltcl">Mysqltcl</ulink> Mysql Schnittstelle für Tcl
+<listitem><para><ulink url="http://www.tdom.org">tDom</ulink> Dom Implementierung für Tcl (wird von &progname; intensiv benutzt)</para></listitem>
+<listitem><para><ulink url="http://www.mysql.com">Mysql</ulink> freie relationale Datenbank Homepage</para></listitem>
+<listitem><para><ulink url="http://www.postgresql.org">Postgresql</ulink> freie postrelationele Datenbank</para></listitem>
+</orderedlist>
+</para>
+</sect1>
+
+</chapter>
+
+<chapter lang="de" id="commercial">
+<title>Produktiver Einsatz von &progname;</title>
+<sect1><title>Lizenz</title>
+<para>
+Dieses Software unterliegt der GPL Lizenz.
+Der genaue Wortlaut der GPL Lizenz auf Englisch ist im Hauptverzeichnis in <filename>LICENCE</filename> abgelegt.
+<important>
+<para>
+&progname; ist freie Software. Sie können es unter den Bedingungen der GNU General Public License, wie von der Free Software Foundation veröffentlicht, weitergeben und/oder modifizieren, entweder gemäß Version 2 der Lizenz oder (nach Ihrer Option) jeder späteren Version.
+Die Veröffentlichung dieses Programms erfolgt in der Hoffnung, daß es Ihnen von Nutzen sein wird, aber OHNE IRGENDEINE GARANTIE, sogar ohne die implizite Garantie der MARKTREIFE oder der VERWENDBARKEIT FÜR EINEN BESTIMMTEN ZWECK. Details finden Sie in der GNU General Public License. 
+</para>
+</important>
+</para>
+</sect1>
+
+<sect1><title>Einsatz von &progname;</title>
+<para>
+Dieses Software ist noch in der Entwicklung.
+Das bedeutet jedoch nicht, dass es nicht einsatzfähig ist.
+&progname; unterstützt viele Funktionalitäten, die für Produktiveinsatz und Manipulation der sensible Daten
+notwendig wären (Transaktionen, Sperren, Komplexe-Validierung).
+Ich kann mir aber vorstellen, dass &progname für ad hoc Programmierung und Prototyping einsatzfähig ist.
+</para>
+</sect1>
+
+<sect1><title>Vorteile gegenüber bestehenden Systemen</title>
+<para>
+Es gibt viele ähnliche Systeme, die mit der Funktionalität dieses weitgehend übertreffen, trotzdem ist es wert ein paar Besonderheiten der Software aufzuzählen, die das Produkt auszeichnen.
+<orderedlist>
+<listitem><para>DB-Formulare können durch die Folmular-Links (siehe <xref linkend="formularLinks">) zum Naviegieren in einer Datenbank benutzt werden. Die Formular-Link werden von System automatisch erzeugt und behandelt.</para></listitem>
+<listitem><para>Es ist sehr klein. Das Programm umfasst nur 12.000 Zeilen. Es kann locker auf einer Diskette gebracht werden</para></listitem>
+<listitem><para>Es wurden bereits existierende Komponenten mit Programmiersprache TCL zusammengeklebt.</para></listitem>
+<listitem><para>Quelltext ist zugänglich</para></listitem>
+<listitem><para>Es kann leicht um spezielle Eigenschaften erweitert werden</para></listitem>
+<listitem><para>Es benutzt konsequent XML-Format</para></listitem>
+</orderedlist>
+</para>
+<para>
+Der Hauptvorteil ist allerdings der neuartige Entwurf von DB-Formularen.
+Die Grundlage für die Formulare stellen nicht die Tabellen selbst sondern das konzeptionelle Modell. 
+Das konzeptionelle Modell wird durch Reverse Engineering aus Datenbank Schema (Data Dictionary) gewonnen.
+Die Formulare haben so bessere Qualität und bedürfen weniger Anpassungen als bei herkömmlichen Systemen.
+Die Fremdschlüssel werden als Listen dargestellt.
+Es wird die Vererbung direkt unterstützt.
+Eingebettete Formulare sind möglich.
+Das Entwurf und Benutzung von Formularen wurde getrennt (Es wird fast immer von unterschiedlichen Leuten gemacht), was den Resourcenverbrauch klein macht.
+Mehr davon in der zugrundeliegenden <ulink url="http://www.xdobry.de/artur/diplomarbeit.html">Diplomarbeit</ulink>.
+</para>
+</sect1>
+
+<sect1><title>Kontakt mit Autor</title>
+<para>
+Homepage: <ulink url="http://www.xdobry.de">http://www.xdobry.de</ulink>
+Email: <ulink url="mailto:mail@xdobry.de"><email>mail@xdobry.de</email></ulink>
+</para>
+</sect1>
+</chapter>
+
+<chapter lang="de" id="support">
+<title>Unterstützung</title>
+<para>
+Das Programm ist frei und es ist ein Geschenk.
+Wenn Sie Problem damit haben oder es funktioniert nicht scheuen Sie dennoch nicht mich davon zu benachrichtigen.
+Ich verspreche keine 100-prozentige Garantie der Antwort aber auf jede Fehlermeldung werde ich mich freuen.
+Das erlaubt das Programm zu verbessern.
+Zuerst besuchen sie das Homepage des Programms, vielleicht ist der Fehler bereit bekannt und in neuer Version behoben.
+Formulieren Sie die Fehlerbeschreibung so, dass die Reproduktion des Fehlers möglich ist. (Kopieren sie die Fehlermeldung)
+Sie können auch ihre Datenbankstruktur (als SQL-Dump) schicken, wenn die Daten nicht vertraulich sind.
+Ein ER-Diagramm oder Spezifikation der Daten wäre auch sinnvoll.
+Unterstützung nur durch Email.
+</para>
+</chapter>
+
+<chapter lang="de" id="install">
+<title>&progname aus Quelldateien installieren</title>
+<para>
+Es wird empfohlen die gepackte und vorkompielierte Starkpacks zu verwenden.
+Diese benötigen keine besondere Kompilierung oder Installation.
+Zur Zeit werden die Starpacks für Linux x86 und Windows angeboten.
+</para>
+<para>
+Das &progname; System besteht aus verschiedenen Tcl-Skripten und braucht deswegen keine Kompilierung.
+Es benutzt allerdings viele Tcl-Erweiterung (Bibliotheken), die in C oder C++ programmiert wurden.
+Dazu gehören Tk,Tix die zu jeder Standard Linux-Distribution gehören, also bereits auf Ihren Rechner installiert sein sollten oder von der Linux-Distribution nachinstalliert werden können.
+Die Windows-Benutzer können auf eine kostenlose Active-State Tcl-Distribution zurückgreifen.
+</para>
+<para>
+Weitere Tcl-Erweiterungen müssen wahrscheinlich separat installiert werden:
+<orderedlist>
+<listitem><para> XOTcl (objektorientierte Erweiterung des Tcl)</para></listitem>
+<listitem><para>tDom - ist eine DOM (Document Object Modell) Schnittstelle für Bearbeitung von XML-Dokumenten.</para></listitem>
+<listitem><para>mysqltcl - ist eine Tcl Schnittstelle zu MySql Datenbank.</para></listitem>
+<listitem><para>pgtcl - ist eine Tcl Schnittstelle zu Postgersqll Datenbank. Gehört zu auch zu neuesten RedHat Distribution.</para></listitem>
+</orderedlist>
+Die Installation von obigen Erweiterungen kann problematisch sein, da es einige Erfahrung bei Kompilierung abverlangt.
+</para>
+<para>
+&progname; analysiert beim Start welche DB-Schnittstellen vorhanden sind und bietet nur diese zur Auswahl.
+Für die Überprüfung wird Tcl-Kommando <command>package require</command> benutzt.
+Folgende packages werden gesucht:
+<itemizedlist>
+<listitem><para>mysqltcl für MySql Datenbanksystem</para></listitem>
+<listitem><para>sqlite für Sqlite Datenbanksystem</para></listitem>
+<listitem><para>Pgtcl für Postgres</para></listitem>
+<listitem><para>ORATcl für Oracle</para></listitem>
+<listitem><para>tclodbc für ODBC</para></listitem>
+<listitem><para>tclodbc für MS Access (nur Windows)</para></listitem>
+<listitem><para>tclodbc für MS SQL-Server (nur Windows)</para></listitem>
+</itemizedlist>
+</para>
+</chapter>
+</book>

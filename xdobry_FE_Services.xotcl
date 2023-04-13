@@ -1,0 +1,650 @@
+# automatically generated from XOTclIDE
+# script require component xdobry::FormEngine
+package provide xdobry::FE_Services 0.32
+package require xdobry::FormEngine
+Class FormEngine::FormService
+@ ::FormEngine::FormService idemeta component xdobry::FE_Services
+FormEngine::FormService instproc get_formengine {} {
+    return [my info parent]
+}
+FormEngine::FormService instproc init args {
+    if {![FormEngine isobject [my info parent]]} {
+        error "[self] [self class] must be aggregated to FormEngine Object"
+    }
+    my requireNamespace
+    next
+}
+FormEngine::FormService instproc restoreDialog {} {
+    my instvar old_defaults old_changes
+    set fengine [my get_formengine]
+    [$fengine set dialog_container] set_defaults $old_defaults
+    [$fengine set dialog_container] set_values $old_changes
+}
+FormEngine::FormService instproc storeDialog {} {
+    my instvar old_defaults old_changes
+    set fengine [my get_formengine]
+    [$fengine set dialog_container] update_values
+    set old_defaults [[$fengine set dialog_container] get_defaults]
+    set old_changes [[$fengine set dialog_container] get_changes]
+}
+@ Class FormEngine::Filter {
+description {Vorsicht Seiten Effekte auf andere Formular Instanzen
+wurden nicht berücksichtigt (vernachlässig)
+filters werden so zentral als tDOM gespeichert}
+}
+Class FormEngine::Filter -superclass ::FormEngine::FormService -parameter {
+    form_node {filtermenu {}}
+}
+@ ::FormEngine::Filter idemeta categories user-actions
+@ ::FormEngine::Filter idemeta categoriesMethods {{usefilter editfilter cancel nofilter delete save use}}
+@ ::FormEngine::Filter idemeta component xdobry::FE_Services
+FormEngine::Filter instproc buildFilterNav {} {
+    my instvar win checkfilter menuwin filters fwin
+        set fwin $win.navigation 
+        menu $win.fmb -tearoff 0
+        menu $win.fmb.filter -tearoff 0
+        $win.fmb add cascade -label [mc "Filter"]  -menu $win.fmb.filter -underline 1
+        # Name, Bitmap, Command
+        set menuwin $win.fmb
+        set commands {
+            {save filefloppy save {}} 
+            {delete delete delete {}}
+            {use run use {}}
+            {nofilter nofilter nofilter {}}
+            {cancel exit cancel {}}
+        }
+        frame $fwin  -bd 1 -relief ridge
+        frame $fwin.subbox -bd 1 -relief ridge
+        set checkfilter or
+        radiobutton $fwin.checkor -text [mc "Or"] -value or -variable [self]::checkfilter
+        radiobutton $fwin.checkand -text [mc "And"] -value and -variable [self]::checkfilter
+        tk_optionMenu $fwin.match [self]::filtermatch exact glob regexp
+        tixComboBox $fwin.combo -label [mc "Filter"] -editable true  -history true -prunehistory 1 -command "[self] editfilter"
+        foreach onefilter $filters {
+            $fwin.combo subwidget listbox insert end $onefilter
+        }
+        pack $fwin.combo -anchor w -side bottom -in $fwin.subbox
+        pack $fwin.checkor $fwin.checkand $fwin.match -side left -anchor w -in $fwin.subbox
+        pack $fwin.subbox -side left -anchor w
+        foreach command $commands {
+            set name [lindex $command 0]
+            set image [lindex $command 1]
+            set execute [lindex $command 2]
+            set accel [lindex $command 3]
+            button $fwin.$name -image [tix getimage $image]  -command "[self] $execute"  -takefocus 0 -bg #c0c0c0 -highlightbackground #c0c0c0
+                if {$accel==""} {
+                    $win.fmb.filter add command -label [mc "***navigation.${name}"]  -command "[self] $execute"
+                } else {
+                    $win.fmb.filter add command -label [mc "***navigation.${name}"]  -command "[self] $execute" -accelerator $accel
+                    bind [winfo toplevel $fwin] <$accel> "[self] $execute"
+                }
+            pack $fwin.$name -side left -anchor w
+        }
+   $win configure -menu $win.fmb
+   pack $fwin
+}
+FormEngine::Filter instproc buildWindow {} {
+    my instvar win dialog_container sqlconnect
+    if {![info exists win] || ![winfo exists $win]} {
+        set win [toplevel .[Object autoname .tempedit]]
+        wm withdraw $win
+        set fengine [my get_formengine]
+        wm title $win "filter input"
+        set ffactory [FilterFormFactory new -sqlconnect [[my info parent] set sqlconnect]]
+        set dialog_container [$ffactory makedialog_fromdom [$fengine set form_node] [self]]
+        $dialog_container map $win.dialog
+        pack $win.dialog -expand 1 -fill both        
+        menu $win.mb -tearoff 0
+        my buildFilterNav
+
+        wm deiconify $win
+    } else {
+        wm deiconify $win
+        focus $win
+    }
+}
+FormEngine::Filter instproc cancel {} {
+    my instvar win
+    wm withdraw $win
+    set editfilter 0
+}
+FormEngine::Filter instproc delete {} {
+    my instvar form_node fwin filters filtermenu
+    set name [$fwin.combo cget -value]
+    if {$name==""} {
+        set name [$fwin.combo subwidget entry get]
+        if {$name==""} {
+            return
+        }
+    }
+    set filter_node [$form_node selectNodes child::filters/child::filter\[@name=\"$name\"\]]
+    if {$filter_node!=""} {
+        [$filter_node parentNode] removeChild $filter_node
+        set index [lsearch $filters $name]
+        if {$index>=0} {
+            set filters [lreplace $filters $index $index]
+            set listbox [$fwin.combo subwidget listbox]
+            $listbox delete $index
+        }
+        if {$filtermenu!=""} {
+            puts "deleting filter $filtermenu $name [$filtermenu index $name]"
+            $filtermenu delete [$filtermenu index $name]
+        }
+        FormServerWin needSave 1
+        my initFilter
+    }
+}
+FormEngine::Filter instproc destroy {} {
+    my instvar win
+    if {[info exists win] && [winfo exists $win]} {
+          ::destroy $win
+    }
+    next
+}
+FormEngine::Filter instproc editfilter name {
+    my instvar form_node checkfilter filtermatch dialog_container
+    if {[set filter_node [$form_node selectNodes child::filters/child::filter\[@name=\"$name\"\]]]==""} {
+        if {$name!=""} {
+            my save
+        }
+        return
+    }
+    set form_data {}
+    foreach attr_node [$filter_node selectNodes child::attribute] {
+        keylset form_data [$attr_node getAttribute name] [$attr_node text]
+    }
+    set fengine [my get_formengine]
+    $fengine complete_data form_data
+    set filtermatch [$filter_node getAttribute filtermode]
+    set checkfilter [$filter_node getAttribute logmode]
+    $dialog_container set_defaults $form_data
+    
+}
+FormEngine::Filter instproc getfilter {} {
+    # liest den Filter (als keydlist) aus der Maske
+    my instvar dialog_container
+    $dialog_container update_values
+    return [$dialog_container get_values]
+}
+FormEngine::Filter instproc init args {
+    my instvar filterInUse filters form_node filtermenu editfilter  nammedFilterInUse
+    next
+    set filterInUse 0
+    set nammedFilterInUse {}
+    set filters [$form_node selectNodes child::filters/child::filter/attribute::name]
+    set filters [tdom_extractAttributes $filters]
+    if {$filtermenu!=""} {
+        foreach filter $filters {        
+            $filtermenu add command -label $filter -command "[self] usefilter [list $filter]"
+        }
+        $filtermenu add separator
+        $filtermenu add command -label [mc "Drop Filter"] -command "[self] nofilter"
+        set editfilter 0
+    }
+}
+FormEngine::Filter instproc initFilter {} {
+    my instvar fwin dialog_container
+    set fengine [my get_formengine]
+    set filter_data {}
+    $fengine complete_data filter_data
+    $dialog_container set_values $filter_data
+    $fwin.combo configure -value {}
+}
+FormEngine::Filter instproc nofilter {} {
+    my instvar old_filter filterInUse editfilter
+    if {$filterInUse} {
+        set fengine [my get_formengine]
+        if {$editfilter} {
+            set editfilter 0
+        }
+        set old_filter {}
+        ${fengine}::myDBProxy setFilter "" 1 exact
+        $fengine reload
+        set filterInUse 0
+        my setFilterInUseState
+        $fengine unmarkFilter
+    }
+}
+FormEngine::Filter instproc save {} {
+    my instvar form_node fwin checkfilter filtermatch filters filtermenu
+    set name [$fwin.combo cget -value]
+    if {$name==""} {
+        set name [$fwin.combo subwidget entry get]
+        if {$name==""} {
+            IDE::Dialog error [mc "specify the name of filter first (Combobox on the left)"]
+            return
+        }
+    }
+    set filter_data [my getfilter]
+    puts "filter save $name data $filter_data"
+    if {$filter_data==""} {
+        return
+    }
+    set rdom_doc [$form_node ownerDocument]
+    set filter_node [$form_node selectNodes child::filters/child::filter\[@name=\"$name\"\]]
+    if {$filter_node==""} {
+        if {[set filters_node [$form_node selectNodes child::filters]]==""} {
+            set filters_node [$rdom_doc createElement filters]
+            $form_node appendChild $filters_node
+        }
+        set filter_node [$rdom_doc createElement filter]
+        $filters_node appendChild $filter_node
+        $filter_node setAttribute name $name
+        lappend filters $name
+        if {$filtermenu!=""} {
+            $filtermenu insert 0 command -label $name -command "[self] usefilter [list $name]"
+        }
+    } else {
+        foreach node [$filter_node childNodes] {
+            $filter_node removeChild $node
+        }
+    }
+    $filter_node setAttribute filtermode $filtermatch
+    $filter_node setAttribute logmode $checkfilter
+    foreach fkey [keylkeys filter_data] {
+        if {[keylget filter_data $fkey]==""} continue
+        set attr_node [$rdom_doc createElement attribute]
+        $attr_node setAttribute name $fkey
+        $attr_node appendChild [$rdom_doc createTextNode [keylget filter_data $fkey]] 
+        $filter_node appendChild $attr_node
+    }
+    FormServerWin needSave 1
+}
+FormEngine::Filter instproc setFilterInUseState {} {
+    my instvar filterInUse win fwin
+    if {$filterInUse} {
+        set state normal
+    } else {
+        set state disabled
+    }
+    $fwin.nofilter configure -state $state
+    $win.fmb.filter entryconfigure 3 -state $state
+}
+FormEngine::Filter instproc setService {} {
+    my instvar checkfilter old_filter  filterInUse menuwin editfilter nammedFilterInUse win
+    set fengine [my get_formengine]
+    set fwin [winfo parent [$fengine set navwin]].filter
+
+    my buildWindow
+    my setFilterInUseState
+    if {![info exists old_filter]} {
+        set old_filter {}
+    }
+    if {$nammedFilterInUse!=""} {
+        #[self] editfilter $old_filter
+        $win.navigation.combo configure -value $nammedFilterInUse
+    }
+    set editfilter 1
+}
+FormEngine::Filter instproc use {} {
+    my instvar checkfilter filtermatch fwin old_filter filterInUse  editfilter nammedFilterInUse dialog_container
+    set fengine [my get_formengine]
+    $dialog_container update_values
+    set t_values [$dialog_container get_values]
+    set values {}
+    # Leere Werte ausfiltern 
+    foreach key [keylkeys t_values] {
+        if {[keylget t_values $key]!=""} {
+            keylset values $key [keylget t_values $key]
+        }
+    }
+    if {[lempty $values]} { 
+        my cancel
+        return
+    }
+    set old_filter $values
+    ${fengine}::myDBProxy setFilter $values $checkfilter $filtermatch
+    $fengine resetPosition
+    $fengine markFilter
+    $fengine reload
+    set filterInUse 1
+    my setFilterInUseState
+    set nammedFilterInUse {}
+    set editfilter 0
+}
+FormEngine::Filter instproc usefilter name {
+    my instvar form_node editfilter filterInUse old_filter nammedFilterInUse
+    if {!$editfilter} {
+        set filter_node [$form_node selectNodes child::filters/child::filter\[@name=\"$name\"\]]
+        if {$filter_node!=""} {
+            set fengine [my get_formengine]
+            set filter_data {}
+            foreach attr_node [$filter_node selectNodes child::attribute] {
+                keylset filter_data [$attr_node getAttribute name] [$attr_node text]
+            }
+            ${fengine}::myDBProxy setFilter $filter_data  [$filter_node getAttribute logmode]  [$filter_node getAttribute filtermode]
+            $fengine reload
+            set filterInUse 1
+            $fengine markFilter
+            set nammedFilterInUse [list $name]
+        }
+    }
+}
+@ Class FormEngine::Helper {
+description {Behandelt die Unterstützung von Widget-Hilfe-Texten
+stellt ein toplevel F1 Callback und behandelt es
+brauch ein initialisiertes FormEngine}
+}
+Class FormEngine::Helper -superclass ::FormEngine::FormService
+@ ::FormEngine::Helper idemeta component xdobry::FE_Services
+FormEngine::Helper instproc helpRequest win {
+    my instvar winList mapHash
+    set index -1
+    set twin $win
+    while {$index==-1 && $twin!="."} {
+        set index [lsearch $winList $twin]
+        set twin [winfo parent $twin]
+    }
+    if {$index>=0} {
+        set object $mapHash([lindex $winList $index])
+        if {[$object istype FormEngine]} {
+            ${object}::helper helpRequest $win
+        } else {
+            set title [mc "Helptext for Widget"]
+            if {[$object info vars data]!=""} {
+                append title " [$object set data]"
+            }
+            IDE::Dialog message [$object set description]
+        }
+        return
+    }
+    IDE::Dialog message [mc "No Help Text for this widget (Specify by using FormEditor)"]
+}
+FormEngine::Helper instproc init args {
+    next
+    my instvar winList
+    set winList {}
+    set fengine [my get_formengine]
+    [$fengine set dialog_container] foreach_elem_deep [self] visitWidget
+    set fe_win [$fengine set win]
+    # Macht nur Sinn wenn FormEngine ein Toplevel Window hat
+    if {$fe_win == [winfo toplevel $fe_win]} {
+        bind $fe_win <F1> "[self] helpRequest %W"
+    }
+}
+FormEngine::Helper instproc visitWidget widget {
+    my instvar winList mapHash
+    if {([$widget istype InputWidget] && [$widget info vars description]!="") ||
+        [$widget istype FormEngine]} {
+        lappend winList [$widget set win]
+        set mapHash([$widget set win]) $widget
+    } 
+}
+@ Class FormEngine::Template {
+description {Formular Schablonen (Tipp Beschleuniger und Eigenschaften-Setzter}
+}
+Class FormEngine::Template -superclass ::FormEngine::FormService -parameter {
+    form_node {templatemenu {}}
+}
+@ ::FormEngine::Template idemeta component xdobry::FE_Services
+FormEngine::Template instproc buildTemplateWin {} {
+    my instvar twin form_node templates
+    if {![info exists twin] || ![winfo exists $twin]} {
+        set twin [toplevel .[Object autoname .tempedit]]
+        wm withdraw $twin
+        frame $twin.attrs
+        set fengine [my get_formengine]
+        label $twin.attrs.hlabel -text [mc "Attribute"] -bd 1 -bg blue
+        label $twin.attrs.hentry -text [mc "Value"] -bd 1 -bg blue
+        label $twin.attrs.hcheck -text [mc "Overwrite"] -bd 1 -bg blue
+        grid $twin.attrs.hlabel $twin.attrs.hentry $twin.attrs.hcheck  -row 0 -sticky ew
+        set x 0
+        foreach attr [$fengine set attrlist] {
+            label $twin.attrs.datalab$x -text $attr -justify left -bd 1  -relief sunken
+            entry  $twin.attrs.edit$x
+            checkbutton  $twin.attrs.overwrite$x -bd 1 -relief sunken  -variable [self]::overwrite$x -takefocus 0
+            grid $twin.attrs.datalab$x $twin.attrs.edit$x  $twin.attrs.overwrite$x -row [expr {$x+1}] -sticky ew
+            incr x
+        }
+        pack $twin.attrs
+
+        set commands {
+            {save filefloppy save {}} 
+            {reset newtupel initTemplate {}}
+            {delete delete delete {}}
+            {copy editcopy copy {}}
+            {use editpaste use {}}
+            {cancel exit cancel {}}
+        }
+        frame $twin.buttons  -bd 1 -relief ridge
+        tixComboBox $twin.buttons.combo -label [mc "Template"] -editable true  -history true -prunehistory 1 -command "[self] edittemplate"
+        foreach onetemplate $templates {
+            $twin.buttons.combo subwidget listbox insert end $onetemplate
+        }
+        pack $twin.buttons.combo -side left -anchor w
+
+        menu $twin.mb -tearoff 0
+        menu $twin.mb.template -tearoff 0
+        $twin.mb add cascade -label [mc "Template"]  -menu $twin.mb.template -underline 1
+        
+        foreach command $commands {
+            set name [lindex $command 0]
+            set image [lindex $command 1]
+            set execute [lindex $command 2]
+            set accel [lindex $command 3]
+            button $twin.buttons.$name -image [tix getimage $image]  -command "[self] $execute"  -takefocus 0 -bg #c0c0c0 -highlightbackground #c0c0c0
+            pack $twin.buttons.$name -side left -anchor w
+            if {$accel==""} {
+                $twin.mb.template add command -label [mc $name]  -command "[self] $execute"
+            } else {
+                $twin.mb.template add command -label [mc $name]  -command "[self] $execute" -accelerator $accel
+                bind [winfo toplevel $twin.buttons] <$accel> "[self] $execute"
+            }
+        }
+        pack $twin.buttons -fill x -expand yes
+        $twin configure -menu $twin.mb
+        wm title $twin [mc "Template"]
+        wm deiconify $twin
+    } else {
+        my initTemplate
+        wm deiconify $twin
+        focus $twin
+    }
+}
+FormEngine::Template instproc cancel {} {
+    my instvar twin
+    # !!Vorsicht TK Window bleibt erhalten (resourcen verbrauch)
+    wm withdraw $twin
+}
+FormEngine::Template instproc copy {} {
+    my instvar twin
+    set fengine [my get_formengine]
+    set attrs [$fengine set attrlist]
+    [$fengine set dialog_container] update_values
+    set values [[$fengine set dialog_container] get_values]
+    foreach attr [keylkeys values] {
+        set x [lsearch $attrs $attr]
+        $twin.attrs.edit$x delete 0 end
+        $twin.attrs.edit$x insert 0 [keylget values $attr]
+    }
+}
+FormEngine::Template instproc delete {} {
+    my instvar form_node twin templates templatemenu
+    set name [$twin.buttons.combo cget -value]
+    if {$name==""} {
+        set name [$twin.buttons.combo subwidget entry get]
+        if {$name==""} {
+            return
+        }
+    }
+    set template_node [$form_node selectNodes child::templates/child::template\[@name=\"$name\"\]]
+    if {$template_node!=""} {
+        [$template_node parentNode] removeChild $template_node
+        set index [lsearch $templates $name]
+        if {$index>=0} {
+            set templates [lreplace $templates $index $index]
+            set listbox [$twin.buttons.combo subwidget listbox]
+            $listbox delete $index
+        }
+        if {$templatemenu!=""} {
+            $templatemenu delete $name
+        }
+        FormServerWin needSave 1
+        my initTemplate
+    }
+}
+FormEngine::Template instproc destroy {} {
+    my instvar twin
+    if {[info exists twin] && [winfo exists $twin]} {
+          ::destroy $twin
+    }
+    next
+}
+FormEngine::Template instproc edittemplate name {
+    my instvar form_node twin
+    #puts $name
+    if {[set template_node [$form_node selectNodes child::templates/child::template\[@name=\"$name\"\]]]==""} {
+        #puts "no template $name"
+        if {$name!=""} {
+            my save
+        }
+        return
+    }
+    set fengine [my get_formengine]
+    set attrs [$fengine set attrlist]
+    set form_data {}
+    foreach attr_node [$template_node selectNodes child::attrstamp] {
+        set x [lsearch $attrs [$attr_node getAttribute name]]
+        if {$x<0} {
+            #!!
+            #puts "[self] attribute [$attr_node getAttribute name] not found"
+            continue
+        }
+        $twin.attrs.edit$x delete 0 end
+        $twin.attrs.edit$x insert 0 [$attr_node text]
+        if {[$attr_node hasAttribute overwrite] &&
+            [$attr_node getAttribute overwrite]==1} {
+            my set overwrite$x 1
+        } else {
+            my set overwrite$x 0
+        }
+    }
+}
+FormEngine::Template instproc init args {
+    my instvar templates form_node templatemenu
+    next
+    set templates [$form_node selectNodes child::templates/child::template/attribute::name]
+    set templates [tdom_extractAttributes $templates]
+    if {$templatemenu!=""} {
+        foreach template $templates {        
+            $templatemenu add command -label $template -command "[self] usetemplate [list $template]"
+        }
+        $templatemenu add separator
+        $templatemenu add command -label [mc "Edit Templates"] -command "[self] setService"
+    }
+}
+FormEngine::Template instproc initTemplate {} {
+    my instvar twin
+    set x 0 
+    while {[winfo exists $twin.attrs.edit$x]} {
+        $twin.attrs.edit$x delete 0 end
+        my set overwrite$x 0
+        incr x
+    }
+    $twin.buttons.combo configure -value {}
+}
+FormEngine::Template instproc reset {} {
+}
+FormEngine::Template instproc save {} {
+    my instvar form_node twin templates templatemenu
+    set name [$twin.buttons.combo cget -value]
+    if {$name==""} {
+        set name [$twin.buttons.combo subwidget entry get]
+        if {$name==""} {
+            IDE::Dialog error [mc "specify the name of template (Combobox on the left)"]
+            return
+        }
+    }
+    set rdom_doc [$form_node ownerDocument]
+    set template_node [$form_node selectNodes child::templates/child::template\[@name=\"$name\"\]]
+    if {$template_node==""} {
+        if {[set templates_node [$form_node selectNodes child::templates]]==""} {
+            set templates_node [$rdom_doc createElement templates]
+            $form_node appendChild $templates_node
+        }
+        set template_node [$rdom_doc createElement template]
+        $templates_node appendChild $template_node
+        $template_node setAttribute name $name
+        lappend templates $name
+        if {$templatemenu!=""} {
+            $templatemenu insert 0 command -label $name -command "[self] usetemplate [list $name]"
+        }
+    } else {
+        foreach node [$template_node childNodes] {
+            $template_node removeChild $node
+        }
+    }
+    set fengine [my get_formengine]
+    set x 0
+    set one 0
+    foreach attr [$fengine set attrlist] {
+        set value [$twin.attrs.edit$x get]
+        if {$value!=""} {
+            set one 1
+            set attr_node [$rdom_doc createElement attrstamp]
+            if {[my set overwrite$x]} {
+                $attr_node setAttribute overwrite 1
+            }
+            $attr_node setAttribute name $attr
+            $attr_node appendChild [$rdom_doc createTextNode $value] 
+            $template_node appendChild $attr_node
+        }
+        incr x
+    }
+    if {!$one} {
+        #puts "no attrs"
+        $templates_node removeChild $template_node
+    }
+    FormServerWin needSave 1
+}
+FormEngine::Template instproc setService {} {
+    my buildTemplateWin
+}
+FormEngine::Template instproc use {} {
+    my instvar twin
+    set fengine [my get_formengine]
+    set attrs [$fengine set attrlist]
+    
+    [$fengine set dialog_container] update_values
+    set values [[$fengine set dialog_container] get_values]
+    set svalues {}
+    set x 0
+    foreach attr [$fengine set attrlist] {
+        set value [$twin.attrs.edit$x get]
+        if {[my set overwrite$x]} {
+            keylset svalues $attr $value
+        }
+        if {[keylget values $attr]=="" && $value!=""} {
+            keylset svalues $attr $value
+        }
+        incr x
+    }
+    [$fengine set dialog_container] set_values $svalues
+}
+FormEngine::Template instproc usetemplate name {
+    my instvar form_node
+    set template_node [$form_node selectNodes child::templates/child::template\[@name=\"$name\"\]]
+    if {$template_node!=""} {
+        set fengine [my get_formengine]
+        [$fengine set dialog_container] update_values
+        set values [[$fengine set dialog_container] get_values]
+        set valkeys [keylkeys values]
+        set svalues {}
+        set x 0
+        foreach attr_node [$template_node selectNodes child::attrstamp] {
+                set value [$attr_node text]
+            set attr [$attr_node getAttribute name]
+            if {[$attr_node hasAttribute overwrite] &&
+                [$attr_node getAttribute overwrite]==1} {
+                keylset svalues $attr $value
+                }
+            if {$value!="" && [lcontain $valkeys $attr] && 
+                [keylget values $attr]==""} {
+                keylset svalues $attr $value
+            }
+            incr x
+        }
+        [$fengine set dialog_container] set_values $svalues
+    }
+}
+

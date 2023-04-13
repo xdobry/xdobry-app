@@ -1,0 +1,1474 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>SchemaEditor</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Documentation of the Xdobry application"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="User manual"
+HREF="c167.html"><LINK
+REL="PREVIOUS"
+TITLE="User manual"
+HREF="c167.html"><LINK
+REL="NEXT"
+TITLE="FormEditor"
+HREF="x546.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Documentation of the Xdobry application</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c167.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>User manual</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x546.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN181"
+></A
+>SchemaEditor</H1
+><P
+>The major task of the schema-editor is to create a XML-Repository and to manage it.
+A user of the schema-editor is assumed as a databases-administrator.
+The user has knowledge about the structure of the data and its representation in the relational model.
+The <B
+CLASS="COMMAND"
+>SchemaEditor</B
+> possesses the following functional characters:<P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>To convert Data Dictionary of a relational databases to a XML-Repository.</P
+></LI
+><LI
+><P
+>Add semantic information to the Repository.
+ By using the reverse engineering colleges, which can run either completely automatically or by questioning the user.
+ The user can also add the semantic information separately.</P
+></LI
+><LI
+><P
+>Add and editing the Meta-information of the attributes.</P
+></LI
+><LI
+><P
+>Create and drop of tables</P
+></LI
+><LI
+><P
+>Create and drop of table rows</P
+></LI
+><LI
+><P
+>Create database from XML-schema</P
+></LI
+><LI
+><P
+>Create XML and SQL database dumps</P
+></LI
+><LI
+><P
+>Import and export schema between all supported databases</P
+></LI
+><LI
+><P
+>Migrate data and schema between all supported databases </P
+></LI
+></OL
+>
+
+<DIV
+CLASS="IMPORTANT"
+><P
+></P
+><TABLE
+CLASS="IMPORTANT"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/important.gif"
+HSPACE="5"
+ALT="Important"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>In the opposite to other DB-manager SchemaEditor does not work directly on data base schema. 
+The data base schema is picked out and converted into own data structure (Repository), which can be stored also as XML file (xmlschema) and loaded again.
+This structure is not data base system specific.
+In this way the editing of DB-repository without db-connection is possible.
+SchemaEditor can produce Data Definition SQL for each data base system supported by Xdobry
+Also the changes of the db-schema can be generated as DDL-Sql statement.</P
+></TD
+></TR
+></TABLE
+></DIV
+>
+
+The idea of the GUI is based on the representation of the schema as a tree structure which can be manipulated by the user.
+This tree structure has the following edges types.
+<DIV
+CLASS="FIGURE"
+><A
+NAME="FIGURE"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="schema_edit_baum.png"></P
+></DIV
+><P
+><B
+>Figure 1. </B
+></P
+></DIV
+>
+<P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>Table</P
+></LI
+><LI
+><P
+>Attribute</P
+></LI
+><LI
+><P
+>Associationcontainer</P
+></LI
+><LI
+><P
+>Assoziationtarget</P
+></LI
+><LI
+><P
+>Tables-Label</P
+></LI
+><LI
+><P
+>Attribute-groups (structured attributes)</P
+></LI
+></OL
+></P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN224"
+></A
+>Reverse engineering</H2
+><P
+>The relational model is strong value oriented.
+It knows no association (relationship) types.
+The association are represented as a foreign key.
+The tables can represent an Entities (Objects), relations-ship, partial objects (by subtypes modeling) or properties (e.g. , lists of the attributes).
+With reverse engineering the semantic meaning, also the information how the relational model is to be interpreted, are achieved.
+This information is coded only as the names of the attributes.
+Neither MySql nor Postgresql support the definition of foreign-keys.
+This is big disadvantage by the production of the forms.
+The reverse-engineering algorithms are based only on the relational schema, the data content is not evaluated.
+It were implemented three reverse-engineerings algorithms.
+The foreign-key-search is a basis for other algorithms (out of the subtype-search).
+<P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>Foreign key-search</DT
+><DD
+><P
+>Find all attributes with the same name as the primary keys of the other tables, however, the Prim-attributes are not Prim-attribute or are not a single Prim-attribute.
+Limitation: object tables consist only single prim-attribute.
+No Recursive relations! Action: a simple reference is constructed.
+Association-container gets the foreign key.
+Association-Target gets the primary key.
+It is a basis for the other algorithms.</P
+></DD
+><DT
+>Subtype-search</DT
+><DD
+><P
+>Search for the subtype.
+Find all tables having one primary keys of the same name.
+They(you) must determine the father's table themselves.
+With Multi-level inheritance (grandson's objects' the action must be executed repeatedly.
+Limitation: object tables consist only single prim-attribute.</P
+></DD
+><DT
+>Find association-tables</DT
+><DD
+><P
+>These reverse engineering technology is based on the step "foreign-key-search".
+The tables should be determined which model Relationship (e.g., n:m Relationship).
+Algorithm: Find all tables whose primary key exists(consists) of several foreign keys or several foreign keys and no unambiguous primary key have.
+Action: the Relationship-tables are particularly drawn.
+N:m or n:m:z.
+Relations are recognized.
+Relations may have own Attributes.</P
+></DD
+><DT
+>Suggest Aggregation</DT
+><DD
+><P
+>These reverse engineering technology is based on the step "foreign-key-search".
+Suggest the Aggregation (composition) of the tables (Embedded tables).
+The algorithm shows only the suggestions, the Aggregation-semantics can be determined only by used.
+Suggestions: 1.
+All tables only a foreign key have.
+It can exist still farther Aggregation.
+If they check 1:n associations</P
+></DD
+></DL
+></DIV
+></P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN244"
+></A
+>Define abstractions</H2
+><P
+>Three sorts can be defined by abstractions of the conceptual databases modeling: association, Aggregation (composition) specialization (subtypes).
+The definition takes place gradually with the help of assistants.
+<P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>Association</DT
+><DD
+><P
+>Is the most difficult to define.
+It corresponds to the Relationship of the ER-model.
+It are placed the following questions.
+<P
+></P
+><UL
+><LI
+><P
+>Is the association recursive? There are relations (Relationship) between the objects of the same type.</P
+></LI
+><LI
+><P
+>Is there a table with references?
+If the association with help had to be illustrated by additional tables what is relations always the case with the N:M, or how with 1:N relations there is only a reference in one of the table</P
+></LI
+><LI
+><P
+>Degree of the Relationship: with the N:M it is 2 with the N:M:O it is 3</P
+></LI
+><LI
+><P
+>Rolle-names: (not obligatorily)</P
+></LI
+><LI
+><P
+>Existence dependence: Do not become till present farther supported, however, can be defined here</P
+></LI
+></UL
+>
+For the n:m relationship must become clear: which objects (tables) participate in the relationship and which table contains the references?</P
+><P
+>An association is understood as container (collection) with references to objects.
+The collection can be modeled either as a separated table with references or as a reference in an object (1:n).
+Around an association become to model two new edeg-types added:<I
+CLASS="EMPHASIS"
+>Assozitaioncontainer</I
+>
+With references and <I
+CLASS="EMPHASIS"
+>Assoziationtarget</I
+>
+With objects.
+An association container and at least two Assoziatontargets belongs to every association (relationship).
+The associations (association container) possesses an unambiguous name.
+In this way can also be modeled complex association such as recursive 1:n and n:m relations and relations the higher Granularity n:m:s:r.
+Correspondence in ER-model<A
+HREF="x698.html#ER-ASSOZIATION"
+>Figure 8 in the Section called <I
+>Association (form-link)</I
+></A
+></P
+></DD
+><DT
+>Aggregation</DT
+><DD
+><P
+>Here it is about the possibly modeling of nested tables.
+They are shown as embedded (nested) forms  from <B
+CLASS="COMMAND"
+>FormServer</B
+>.
+One must specify: the container-table, which element-table and reference, foreign key in the element table which points at primary key in container-table.
+Correspondence in ER-model<A
+HREF="x698.html#ER-AGGREGATION"
+>Figure 10 in the Section called <I
+>Aggregation</I
+></A
+></P
+></DD
+><DT
+>Subtypes (inclusion dependency)</DT
+><DD
+><P
+>Also known as inheritance or generalization.
+There is always a father object and a child object which are modeled in two tables (primary key heritage).
+One must also give the inherited primary key.
+Correspondence in ER-model <A
+HREF="x698.html#ER-GENERALISIERUNG"
+>Figure 9 in the Section called <I
+>Specialization (inheritance)</I
+></A
+>.</P
+></DD
+></DL
+></DIV
+></P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN278"
+></A
+>DB-Schema create and modify</H2
+><P
+>Xdobry can be used for modellung  data base schema.
+Tables and columns can be created, modified and deleted.
+Xdobry  does not work directly Dictionary (schema) but has own data base system independent representation of the schema, which can be put down as XML file.
+It is possible to develop schema without connection data base and install many databases from one XML-repository.
+The Xdobry schema is based on ER-diagram and contains more semantic information than the Data-dictionary of data base.</P
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN281"
+></A
+>Creating new schema</H3
+><P
+>For that data base connection is not necessary.
+By the menu
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>New</B
+>
+new data base schema is created.
+Use context sensitive menus (select a leaf and right mouse button click) can be used to creat tables and columns.</P
+><P
+>Xdobry  own has data types system, in addition, which is set on Mysql data base system but supports other types (like Money or Boolean).
+<DIV
+CLASS="TABLE"
+><A
+NAME="AEN288"
+></A
+><P
+><B
+>Table 1. supported DB-Types and type conversion</B
+></P
+><TABLE
+BORDER="1"
+BGCOLOR="#E0E0E0"
+CELLSPACING="0"
+CELLPADDING="4"
+CLASS="CALSTABLE"
+><THEAD
+><TR
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Xdobry</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Mysql</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS Access</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS SQL</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Postgres</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Oracle</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>decimal</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Decimal, numeric</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Currency, money</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>monay</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>money</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>number</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>double</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>double </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>float</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>float</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>double</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>double</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>float</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>float </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>real</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>real</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>real</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>float</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>int</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>int</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Integer, int</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>int</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Integer, int</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>int</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>smallint</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Smallint, tinyint</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>smallint</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>smallint</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>smallint</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>smallint</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Boolean </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>smallint</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>boolean</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>boolean</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Boolean, bool</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Number(1)</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>text</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Text, mediumtext, tinytext</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Memo, LONGTEXT, LONGCHAR, MEMO, NOTE, NTEXT </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>image</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>text</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>clob</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>datetime</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Datetime, date, time </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>datetime</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>timestamp</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>timestamp</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>timestamp</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>timestamp</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>timestamp </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>datetime</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>datetime</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>timestamp</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>timestamp</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>enum</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>enum </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>set</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>set </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>varchar</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>varchar </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>TEXT(n), ALPHANUMERIC, CHARACTER, STRING, VARCHAR, CHARACTER VARYING, NCHAR, NATIONAL CHARACTER, NATIONAL CHAR, NATIONAL CHARACTER VARYING, NATIONAL CHAR VARYING </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>varchar</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>text</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>varchar2</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>char</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>char </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>char</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>char</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>char</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>char</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>longblob</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Longblob, mediumblob, tinyblob</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>IMAGE, LONGBINARY, GENERAL, OLEOBJECT, BINARY</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>image</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>bytea</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>blob</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+>
+
+<DIV
+CLASS="TABLE"
+><A
+NAME="AEN398"
+></A
+><P
+><B
+>Table 2. autoincrement rows</B
+></P
+><TABLE
+BORDER="1"
+BGCOLOR="#E0E0E0"
+CELLSPACING="0"
+CELLPADDING="4"
+CLASS="CALSTABLE"
+><THEAD
+><TR
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Database</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Kind</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS Acces</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Typ Counter</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS SQL</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Indent(1,1)</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>mysql</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>autoincrement</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Postgres</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Sequencer</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Oracle</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Sequencer</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Sqlite</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Not supported</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+>
+
+Xdobry can also create autoincrement rows or sequencer.
+<DIV
+CLASS="TABLE"
+><A
+NAME="AEN424"
+></A
+><P
+><B
+>Table 3. Autoincrement Spalten</B
+></P
+><TABLE
+BORDER="1"
+BGCOLOR="#E0E0E0"
+CELLSPACING="0"
+CELLPADDING="4"
+CLASS="CALSTABLE"
+><THEAD
+><TR
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Database</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Typ</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS Acces</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Typ Counter</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS SQL</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Indent(1,1)</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>mysql</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>autoincrement</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Postgres</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Sequencer</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Oracle</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Sequencer</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Sqlite</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Not supported</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+>
+MS database can with  [] maksing create tables with space.
+This would by converted to _.
+<DIV
+CLASS="TABLE"
+><A
+NAME="AEN450"
+></A
+><P
+><B
+>Table 4. Leerstelle in Tabellennamen</B
+></P
+><TABLE
+BORDER="1"
+BGCOLOR="#E0E0E0"
+CELLSPACING="0"
+CELLPADDING="4"
+CLASS="CALSTABLE"
+><THEAD
+><TR
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Datenbank</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Tabellenname</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS Access</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>[Order Details]</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS SQL</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>[Order Details]</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>mysql</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Order_Details</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>postgres</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Order_Details</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Sqlite</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>[Order Details]</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Oracle</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Order_Details</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+>&#13;</P
+><P
+>For create Schema on specific data base use menu
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Operations on Schema</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Create DB from Schema</B
+>.
+By the menu
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Operations on schema</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Show SQL definition for schema</B
+> 
+can you Create sql for the specific data base product.
+This SQL can be supplemented by data base-specific procedures, that Xdobry does  not support.
+The in such a way adapted SQL must be up-played with data base-own tools.</P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN485"
+></A
+>Data base schema modifing</H3
+><P
+>If you want to change the data base already existing, you must first create Xdobry  representation of schema.
+Use for it the menu
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>New from DB</B
+>.
+They must specify then the data base connection.
+The changes on that schema are transferred not immediately to the data base.
+By the menu
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Schema operations</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Apply Schema changes to DB</B
+> 
+the change on the data base are applied.
+By the menu 
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Schema operations</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Show schema changes</B
+>
+can you the see the corresponding DDL-SQL statments.
+<DIV
+CLASS="TIP"
+><P
+></P
+><TABLE
+CLASS="TIP"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>This SQL-Statments can be used to update many database synchron (development, Integration, production).</P
+></TD
+></TR
+></TABLE
+></DIV
+> </P
+><P
+> 
+If the Xdobry XML schema already exist load it first.
+SchemaEditor offers by loading XML-Schema automatically to connect source database.
+If another connection is desired or the schema was not developed from a data base, you can connect database with
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Connect with data base</B
+>
+In the case that schema of the data base is not consistently with that is schema of Xdobry
+e.g. the schema of the data base reworked on with other tools, you can with the function
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Operations on schema</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Synchronize schema with data base</B
+>
+synchronize XML-repository with data base schema.
+Afterwords the schema can being adapted like accustomed.
+<DIV
+CLASS="IMPORTANT"
+><P
+></P
+><TABLE
+CLASS="IMPORTANT"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/important.gif"
+HSPACE="5"
+ALT="Important"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>One cannot record the changes to schema between into several meetings.
+So the changes on the data base must be up-played, so that you are not lost through terminating the meeting.
+Schema editor does not possess a function for synchronizing that data base schema to Xdobry  Schema.</P
+></TD
+></TR
+></TABLE
+></DIV
+></P
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN511"
+></A
+>SchemaEditor and data migrate</H2
+><P
+>Schema editor possesses various possibilities to migrate the schema and the data between different data base system.
+Schema editor can keep at the same time 2 data base connections open and transport sentence by sentence the data from data base another.
+The range of the data too migrated can be adapted.
+Both tables can be excluded or also individual columns from the migration.</P
+><P
+>Accomplish the migration 
+<P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>Schema from the source data bank produce.
+ The connection with source data bank must be present</P
+></LI
+><LI
+><P
+>The tables or columns, which are not to be migrated, are to be removed from that schema (you are not actually deleted in source data bank)</P
+></LI
+><LI
+><P
+>The migration start by menu
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Migration</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Migrate to data base</B
+></P
+></LI
+><LI
+><P
+>Arise during the migration errors.
+These are indicated.
+The migration can be broken off or continued in this case.
+In the case of abort the target data bank is not deleted</P
+></LI
+></OL
+></P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN528"
+></A
+>SchemaEditor and data exporting and importing</H2
+><P
+>Schema editor knows the data on 2 points to export.
+As XML dump
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Migration</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Database to XML-SQL</B
+>
+the SQL dump
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Migration</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Database to XML-Dump</B
+>.
+ For SQL dump the type of target data bank must be indicated.
+<DIV
+CLASS="IMPORTANT"
+><P
+></P
+><TABLE
+CLASS="IMPORTANT"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/important.gif"
+HSPACE="5"
+ALT="Important"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The export or import of XML-dump is suitable only for smaller data bases.
+At now with XML-dumpe into the main memory the entire data base is illustrated at short notice (DOM-object).
+In this way the Xdobry can  with larger data sets fast overflow.
+An iterative production of XML is possible and becomes for the next version of Xdobry  planned.
+The SQL-dump is provided iterative and causes no excessive demand of main memory.</P
+></TD
+></TR
+></TABLE
+></DIV
+></P
+><P
+>With the function
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Migration</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>XML dump to SQL convert</B
+>
+one can convert a XML departure to SQL departure.</P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c167.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x546.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>User manual</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c167.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>FormEditor</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

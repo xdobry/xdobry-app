@@ -1,0 +1,377 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>Documentation of the Xdobry application</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="NEXT"
+TITLE="Xdobry Specification"
+HREF="c11.html"></HEAD
+><BODY
+CLASS="BOOK"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="BOOK"
+><A
+NAME="INDEX"
+></A
+><DIV
+CLASS="TITLEPAGE"
+><H1
+CLASS="TITLE"
+><A
+NAME="AEN2"
+></A
+>Documentation of the Xdobry application</H1
+><H3
+CLASS="AUTHOR"
+><A
+NAME="AEN4"
+></A
+>Artur Trzewik</H3
+><HR></DIV
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+><A
+HREF="c11.html"
+>Xdobry Specification</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c11.html#AEN14"
+>Principal purpose of the program</A
+></DT
+><DT
+><A
+HREF="x17.html"
+>Features and Benefits</A
+></DT
+><DT
+><A
+HREF="x33.html"
+>Characteristics</A
+></DT
+><DT
+><A
+HREF="x58.html"
+>Target user-group</A
+></DT
+><DT
+><A
+HREF="x69.html"
+>Technical data</A
+></DT
+><DT
+><A
+HREF="x72.html"
+>Version Changes Log</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="c167.html"
+>User manual</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c167.html#AEN169"
+>System components</A
+></DT
+><DT
+><A
+HREF="x181.html"
+>SchemaEditor</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="x181.html#AEN224"
+>Reverse engineering</A
+></DT
+><DT
+><A
+HREF="x181.html#AEN244"
+>Define abstractions</A
+></DT
+><DT
+><A
+HREF="x181.html#AEN278"
+>DB-Schema create and modify</A
+></DT
+><DT
+><A
+HREF="x181.html#AEN511"
+>SchemaEditor and data migrate</A
+></DT
+><DT
+><A
+HREF="x181.html#AEN528"
+>SchemaEditor and data exporting and importing</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="x546.html"
+>FormEditor</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="x546.html#AEN561"
+>GUI-Editor for forms</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="x630.html"
+>FormServer</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="x630.html#FORMULARLINKS"
+>Browsing Database with forms</A
+></DT
+><DT
+><A
+HREF="x630.html#AEN680"
+>user macros in form</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="x698.html"
+>Schema vs.Form appearances</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="x698.html#AEN701"
+>Representation of the foreign keys</A
+></DT
+><DT
+><A
+HREF="x698.html#AEN707"
+>Association (form-link)</A
+></DT
+><DT
+><A
+HREF="x698.html#AEN718"
+>Specialization (inheritance)</A
+></DT
+><DT
+><A
+HREF="x698.html#AEN729"
+>Aggregation</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="x740.html"
+>Missing functionality be Xdobry</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="x740.html#AEN761"
+>Program Options</A
+></DT
+></DL
+></DD
+></DL
+></DD
+><DT
+><A
+HREF="c814.html"
+>Tutorial</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c814.html#AEN817"
+>Relational schema</A
+></DT
+><DT
+><A
+HREF="x831.html"
+>Production of the Repositories</A
+></DT
+><DT
+><A
+HREF="x856.html"
+>Production of the forms</A
+></DT
+><DT
+><A
+HREF="x869.html"
+>Use of forms</A
+></DT
+><DT
+><A
+HREF="x874.html"
+>Other examples</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="c906.html"
+>Developer information</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c906.html#AEN908"
+>Programming tools</A
+></DT
+><DT
+><A
+HREF="x930.html"
+>XML</A
+></DT
+><DT
+><A
+HREF="x942.html"
+>TODO List</A
+></DT
+><DT
+><A
+HREF="x970.html"
+>Ideas for the future</A
+></DT
+><DT
+><A
+HREF="x991.html"
+>Supported Databases</A
+></DT
+><DT
+><A
+HREF="x1010.html"
+>WWW-Links for developers</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="c1038.html"
+>Productive use</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c1038.html#AEN1040"
+>License</A
+></DT
+><DT
+><A
+HREF="x1045.html"
+>Meaningful using of application</A
+></DT
+><DT
+><A
+HREF="x1048.html"
+>Advantages to opposite existing systems</A
+></DT
+><DT
+><A
+HREF="x1065.html"
+>Contact with author</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="c1071.html"
+>Support</A
+></DT
+><DT
+><A
+HREF="c1074.html"
+>Installation from Source code</A
+></DT
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="c11.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Xdobry Specification</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

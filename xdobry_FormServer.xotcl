@@ -1,0 +1,314 @@
+# automatically generated from XOTclIDE
+# script require component IDEBaseGUI
+package provide xdobry::FormServer 0.33
+package require IDEBaseGUI
+Class FormServerWin -superclass {::IDE::Browser ::IDE::GUICommands} -parameter {{need_save 0} {atHead 1}}
+@ ::FormServerWin idemeta categories {user-action menu-enablement init-release}
+@ ::FormServerWin idemeta categoriesMethods {{dbdisconnect saveForms seeXMLForms saveFormsAs dbconnect loadMacroFile readxmlforms executeForm} {hasConnection hasNoConnection hasForm} {specificInit getMenuStruct getTitle createSystemMenu fillMenuStruct}}
+@ ::FormServerWin idemeta component xdobry::FormServer
+FormServerWin instproc closeWindow {} {
+    my instvar need_save
+    if {[IDE::Dialog yesNo [mc "Do you want to terminate FormServer?"]]} { 
+        if {$need_save} {
+            if {[IDE::Dialog yesNo [mc "The Forms are Changed. Do you want to safe it?"]]} {
+                my saveFormsAs
+            }
+        }
+        my stopSystem
+        my destroy
+    }
+}
+FormServerWin instproc createSystemMenu {} {
+    my instvar win
+    if {[winfo toplevel $win]=="."} {
+        set twin {}
+    } else {
+        set twin $win
+    }
+    menu $twin.mb.help -tearoff 0
+    $twin.mb add cascade -label [mc "Help"] -menu $twin.mb.help  -underline 0
+    XDBase installHelpMenu $twin.mb.help FormServer
+    $twin.mb.help add separator
+    $twin.mb.help add command -label "view XML Forms"  -command [list [self] seeXMLForms]
+    
+    [winfo toplevel $win] configure -menu $twin.mb
+}
+FormServerWin instproc dbconnect {} {
+    my instvar sqlconnect
+    if {[info exists sqlconnect] && $sqlconnect!=""} {
+        IDE::Dialog message [mc "It exists already a DB connection.  If you a new need to disconnect first"]
+        return
+    }
+    set sqlconnect [ConnectCreator getconnect ""]
+    if {$sqlconnect==""} {
+        IDE::Dialog message [mc "The connection to the data base could not be made!"]
+    }
+
+}
+FormServerWin instproc dbdisconnect {} {
+    my instvar sqlconnect
+    if {[info exists sqlconnect] && $sqlconnect!=""} {
+        $sqlconnect destroy
+        set sqlconnect ""
+    }
+}
+FormServerWin instproc executeForm num {
+    my instvar win data_node form_nodelist sqlconnect 
+    set fname [Object autoname myFormEngine]
+    set form_node [lindex $form_nodelist $num]
+    set form_name [$form_node getAttribute name]
+    if {[$form_node nodeName] eq "form"} {
+        FormEngine createPerName $form_name $fname -form_node  $form_node -sqlconnect $sqlconnect 
+        $fname map
+        $fname reload
+    } else {
+        TableoverviewEngine new [Object autoname .tovw] -tableNode $form_node -sqlconnect $sqlconnect
+    }
+}
+FormServerWin instproc fillMenuStruct aMenuStruct {
+  $aMenuStruct enablementHandler [self]
+ 
+  $aMenuStruct addCommand [mc "Load Forms"] [list [self] readxmlforms]
+  $aMenuStruct addCommand2 [mc "Forms Safe"] [list [self] saveForms] hasForm
+  $aMenuStruct addCommand2 [mc "Forms Safe as"] [list [self] saveFormsAs] hasForm
+  $aMenuStruct addCommand2 [mc "Load Macros"]  [list [self] loadMacros] hasForm
+  $aMenuStruct addSeparator
+  $aMenuStruct addCommand2 [mc "DB connect"] [list [self] dbconnect] hasFormNoConnection 
+  $aMenuStruct addCommand2 [mc "DB disconnect"] [list [self] dbdisconnect] hasConnection
+  $aMenuStruct addSeparator
+  $aMenuStruct addCommand [mc "Exit"] [list [self] closeWindow]
+}
+FormServerWin instproc getMenuStruct {} {
+    IDE::MenuStruct create [self]::ms {Form Server} 0
+}
+FormServerWin instproc getTitle {} {
+    return "Form Server"
+}
+FormServerWin instproc handleOpts {} {
+    my instvar opts sqlconnect data_node form_nodelist
+    if {[FormServerWin set opts(xmlfile)]!=""} {
+        if {[my readxmlforms [FormServerWin set opts(xmlfile)]]} {
+            if {$opts(loadmacros)!=""} {
+                my loadMacroFile [FormServerWin set opts(loadmacros)]
+            }
+            if {$sqlconnect!="" && [FormServerWin set opts(openform)]!=""} {
+                set node [$data_node selectNodes child::form\[@name=\"[FormServerWin set opts(openform)]\"\]]
+                if {$node!=""} {
+                    my executeForm [lsearch $form_nodelist $node]
+                } else {
+                    IDE::Dialog error [format [mc "The form \"%s\" was not found."] [FormServerWin set opts(openform)]]
+                }
+            }
+        }
+    }
+}
+FormServerWin instproc hasConnection {} {
+    my instvar sqlconnect
+    expr {[info exists sqlconnect] && $sqlconnect!=""}
+}
+FormServerWin instproc hasForm {} {
+   my instvar data_node 
+   expr {[info exists data_node] && $data_node!=""}
+}
+FormServerWin instproc hasFormNoConnection {} {
+    expr {[my hasForm] && [my hasNoConnection]}
+}
+FormServerWin instproc hasNoConnection {} {
+    my instvar sqlconnect
+    expr {![info exists sqlconnect] || $sqlconnect==""}
+}
+FormServerWin instproc loadMacroFile mfile {
+    if {![file exists $mfile]} {
+        my instvar file
+        if {[file exists [file join [file dirname $file] $mfile]]} {
+            source [file join [file dirname $file] $mfile]
+        } else {
+            IDE::Dialog error [format [mc "Macro-File \"%s\" count not be found!"] $mfile]
+        }
+    } else {
+        source $mfile
+    }
+}
+FormServerWin instproc loadMacros {} {
+    set types {
+        {"tcl Files"                {.tcl}        }
+        {"All files"                *}
+    }
+    set file [IDE::Dialog getOpenFile $types]
+    if {$file == ""} { return }
+    my loadMacroFile $file
+}
+FormServerWin instproc readxmlforms {{ffile {}}} {
+    my instvar win data_node dom_doc db_name sqlconnect form_nodelist  file opts file_name
+    set file $ffile
+    set types {
+        {"XML Forms"                {.xmlforms}        }
+        {"All files"                *}
+    }
+    if {$file==""} {
+        set file [IDE::Dialog getOpenFile $types]
+        if {$file == ""} { return 0}
+    } else {
+        if {![file exists $file] || ![file isfile $file]} {
+            IDE::Dialog error [format [mc "the file \"%s\" not exist or can not be accessed"] $file]
+            return 0
+        }
+    }
+    if {[info exists dom_doc]} {
+        set alt_dom_doc $dom_doc
+    } else {
+        set alt_dom_doc {}
+    }
+    set flist [$win.list subwidget tlist]
+    set fileh [open $file]
+    fconfigure $fileh -encoding utf-8
+    set dom_doc [dom parse [read $fileh]]
+    close $fileh
+    set data_node [$dom_doc documentElement]
+    if {[$data_node nodeName]!="dbforms"} {
+        $dom_doc delete
+        set dom_doc ""
+        tk_messageBox -message [mc "False XML file. Expect one \".dbform\" XML file."] -icon error -type ok
+        return 0
+    }
+    set file_name $file
+    set db_name [$data_node getAttribute name]
+    set dbconnect_par {}
+    set form_nodelist {}
+    $flist delete 0 end
+    foreach node [$data_node childNodes] {
+        if {[$node nodeType]=="ELEMENT_NODE" && [$node nodeName]=="form"} {
+            $flist insert end -itemtype imagetext  -text [$node getAttribute name]  -image [tix getimage openfold]
+            lappend form_nodelist $node
+        } elseif {[$node nodeType]=="ELEMENT_NODE" && [$node nodeName]=="tableoverview"} {
+            $flist insert end -itemtype imagetext  -text [$node getAttribute name]  -image [tix getimage entry]
+            lappend form_nodelist $node
+        } elseif {[$node nodeType]=="PROCESSING_INSTRUCTION_NODE" && [$node target]=="dbconnect"} {
+            set dbconnect_par [$node data]
+        } elseif {[$node nodeType]=="PROCESSING_INSTRUCTION_NODE" && [$node target]=="macros"} {
+            if {!($ffile!="" && ($opts(ignorexmlpar) || $opts(loadmacros)!=""))} {
+                if {[tk_messageBox -message [format [mc "This form has an Macro-File \"%s\". Should it be loaded?"]  [$node data]] -icon question -type okcancel]=="ok"} {
+                    my loadMacroFile [$node data]
+                } 
+            }
+        }
+    }
+    # Alte Strukturen und SQL-Verbindung falls vorhanden Löschen
+    my dbdisconnect
+    if {$win==""} {
+       wm title . [file tail $file]:$db_name
+    } else {
+       wm title [winfo toplevel $win] [file tail $file]:$db_name
+    }
+    # überschreibe die xmlcodierte parameter mit program-option parameter
+    # wenn -xmlignore par dann xml parameter ganz löschen
+    if {$ffile!=""} {
+        if {$opts(ignorexmlpar)} {
+            set dbconnect_par {}
+        }
+        if {$opts(connect)!=""} {
+            set opts_connect $opts(connect)
+            foreach con [keylkeys opts_connect] {
+                keylset dbconnect_par $con [keylget opts_connect $con]
+            }
+        }
+        if {$opts(noconnectdialog)} {
+            set sqlconnect [ConnectCreator getconnect $dbconnect_par 0 1]
+        } else {
+        set sqlconnect [ConnectCreator getconnect $dbconnect_par]
+        }
+    } else {
+        set sqlconnect [ConnectCreator getconnect $dbconnect_par]
+    }
+    if {$sqlconnect==""} {
+        tk_messageBox -message [mc "The connection to the data base could not be made!"] -type ok -icon warning
+    }
+    if {$alt_dom_doc!=""} {
+        $alt_dom_doc delete
+    }
+    return 1
+}
+FormServerWin instproc saveForms {} {
+    my instvar file_name
+    if {![info exists file_name]} {
+        my saveFormsAs
+    } else {
+        my saveFormsAs $file_name
+    }
+}
+FormServerWin instproc saveFormsAs {{f_name {}}} {
+   my instvar data_node file_name db_name
+    if {![info exists data_node] || $data_node==""} return
+    set types {
+        {"XML files"         {.xmlforms}  }
+        {"All files"            *}
+    }
+    if {$f_name!=""} {
+        set file_name $f_name
+    } else {
+        if {![info exists file_name]} {
+            set file_name $db_name.xmlforms
+        }
+        set f_name [IDE::Dialog getSaveFile $file_name $types .xmlforms]
+        if {$f_name==""} return
+    }
+    set file_name $f_name
+    set fh [open $file_name w]
+    fconfigure $fh -encoding utf-8
+    puts $fh "<?xml version='1.0' encoding='utf-8'?>\n<!DOCTYPE dbforms SYSTEM \"xmlforms.dtd\">\n[$data_node asXML]\n"
+    close $fh
+    my needSave 0
+}
+FormServerWin instproc seeXMLForms {} {
+    my instvar data_node
+    set win .xmlview
+    if {![info exists data_node]} {
+        return
+    }
+    if {![winfo exist $win]} {
+          toplevel $win
+          text $win.text -yscroll [list $win.scroll set] -width 80 -height 24
+          scrollbar $win.scroll -command [list $win.text yview] -takefocus 0
+          
+          pack $win.scroll -side right -fill y
+          pack $win.text -expand yes -fill both
+    }
+   $win.text delete 1.0 end
+   $win.text insert 1.0 [$data_node asXML]
+}
+FormServerWin instproc specificInit {} {
+    my instvar win
+    tixScrolledTList $win.list  -options [list tlist.orient horizontal tlist.selectMode single tlist.command [list [self] executeForm]]
+    pack $win.list -expand yes -fill both
+    next
+}
+FormServerWin instproc stopSystem {} {
+    my instvar dom_doc
+    if {[info exists dom_doc]} {
+        $dom_doc delete
+    }
+    my dbdisconnect
+    XDBase stopSystem
+}
+FormServerWin proc initializeAfterLoad {} {
+   array set FormServerWin::opts {
+    xmlfile {} loadmacros {} viewonly 0 openform {} connect {} debug 0
+    noconnectdialog 0  ignorexmlpar 0
+   }
+}
+FormServerWin proc needSave bool {
+    foreach inst [my info instances] {
+        $inst needSave bool
+    }
+}
+FormServerWin proc startSystem {} {
+   XDBase initSystem
+   if {![Object isobject IDE::Component]} {
+        frame .formServer
+        pack .formServer -fill both -expand yes
+   }
+   set instance [my new .formServer]
+   $instance handleOpts
+}
+FormServerWin initializeAfterLoad
+

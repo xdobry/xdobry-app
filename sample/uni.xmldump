@@ -1,0 +1,576 @@
+<databaseexport>
+    <database name="xdobryuni">
+        <?dbconnect {interface mysql} {hostname localhost} {user root} {dbank xdobryuni}?>
+        <table name="Angestellte">
+            <label>
+                <valuelist>
+                    <item>Name</item>
+                </valuelist>
+            </label>
+            <attr name="PersNr" type="int" primary_key="1" default="0"/>
+            <attr name="Name" length="20" type="varchar" null="1"/>
+            <assoziationtarget name="AngestellteVorlesung" table="Vorlesung"/>
+            <assoziationtarget name="pruefen" table="pruefen"/>
+            <table name="Assistent" type="child" inheritkey="PersNr">
+                <attr name="PersNr" type="int" primary_key="1" default="0"/>
+                <attr name="Fachgebiet" length="20" type="varchar" null="1"/>
+                <attr name="Professor" type="int" null="1"/>
+            </table>
+            <table name="Professor" type="child" inheritkey="PersNr">
+                <attr name="PersNr" type="int" primary_key="1" default="0"/>
+                <attr name="Rang" length="20" type="varchar" null="1"/>
+                <attr name="Raum" type="int" null="1"/>
+            </table>
+        </table>
+        <table name="Student">
+            <label>
+                <valuelist>
+                    <item>Name</item>
+                </valuelist>
+            </label>
+            <attr name="MatrNr" type="int" primary_key="1" auto_increment="1"/>
+            <attr name="Name" length="20" type="varchar" null="1"/>
+            <attr name="Semester" type="int" null="1"/>
+            <assoziationtarget name="pruefen" table="pruefen"/>
+            <assoziationtarget name="hoeren" table="hoeren"/>
+        </table>
+        <table name="Vorlesung">
+            <label>
+                <valuelist>
+                    <item>Titel</item>
+                </valuelist>
+            </label>
+            <attr name="VorlesungNr" type="int" primary_key="1" auto_increment="1"/>
+            <attr name="Titel" length="20" type="varchar" null="1"/>
+            <attr name="SWS" type="int" null="1"/>
+            <attr name="PersNr" type="int" null="1"/>
+            <assoziationcollection name="AngestellteVorlesung" type="reference">
+                <participant reference="PersNr" table="Angestellte"/>
+            </assoziationcollection>
+            <assoziationtarget name="hoeren" table="hoeren"/>
+            <assoziationtarget name="pruefen" table="pruefen"/>
+            <table name="Termin" reference="VorlesungNr">
+                <attr name="VorlesungNr" type="int" default="0"/>
+                <attr name="Wochentag" type="enum" null="1">
+                    <valuelist>
+                        <item>Montag</item>
+                        <item>Dienstag</item>
+                        <item>Mittwoch</item>
+                        <item>Donnerstag</item>
+                        <item>Freitag</item>
+                    </valuelist>
+                </attr>
+                <attr name="Zeit" length="5" type="varchar" null="1"/>
+            </table>
+            <assoziationtarget name="vorgänger" table="voraussetzten"/>
+            <assoziationtarget name="nachfolger" table="voraussetzten"/>
+        </table>
+        <table name="hoeren" type="relationship">
+            <attr name="MatrNr" type="int" primary_key="1" default="0"/>
+            <attr name="VorlesungNr" type="int" primary_key="1" default="0"/>
+            <assoziationcollection name="hoeren" type="reftable">
+                <participant reference="VorlesungNr" table="Vorlesung"/>
+                <participant reference="MatrNr" table="Student"/>
+            </assoziationcollection>
+        </table>
+        <table name="pruefen" type="relationship">
+            <attr name="MatrNr" type="int" primary_key="1" default="0"/>
+            <attr name="VorlesungNr" type="int" primary_key="1" default="0"/>
+            <attr name="PersNr" type="int" primary_key="1" default="0"/>
+            <attr name="Pruefnote" type="enum" null="1">
+                <valuelist>
+                    <item>sehr gut</item>
+                    <item>gut</item>
+                    <item>befriedigend</item>
+                    <item>ausreichend</item>
+                    <item>mangelhaft</item>
+                </valuelist>
+            </attr>
+            <assoziationcollection name="pruefen" type="reftable">
+                <participant reference="MatrNr" table="Student"/>
+                <participant reference="PersNr" table="Angestellte"/>
+                <participant reference="VorlesungNr" table="Vorlesung"/>
+            </assoziationcollection>
+        </table>
+        <table name="voraussetzten">
+            <attr name="VorgaengerNr" type="int" primary_key="1" default="0"/>
+            <attr name="NachfolgerNr" type="int" primary_key="1" default="0"/>
+            <assoziationcollection name="vorgänger" type="reference" rolename="Vorgänger">
+                <participant reference="VorgaengerNr" table="Vorlesung" rolename=""/>
+            </assoziationcollection>
+            <assoziationcollection name="nachfolger" type="reference" rolename="nachfolger">
+                <participant reference="NachfolgerNr" table="Vorlesung" rolename=""/>
+            </assoziationcollection>
+        </table>
+    </database>
+    <data>
+        <Angestellte>
+            <PersNr dbtype="int">1</PersNr>
+            <Name dbtype="varchar">Trzewika</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>2</PersNr>
+            <Name>Wajda</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>3</PersNr>
+            <Name>Zanussi</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>4</PersNr>
+            <Name>Polanski</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>5</PersNr>
+            <Name>Sienkiewicz</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>6</PersNr>
+            <Name>Curie-Sklodowska</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>7</PersNr>
+            <Name>Reymont (Chlop)</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>8</PersNr>
+            <Name>Konopnicka</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>9</PersNr>
+            <Name>Zeromski</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>10</PersNr>
+            <Name>Mickiewicz</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>11</PersNr>
+            <Name>Slowacki</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>12</PersNr>
+            <Name>Olbryski</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>13</PersNr>
+            <Name>Sturr</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>14</PersNr>
+            <Name>Pazura</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>15</PersNr>
+            <Name>Kobuszewski</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>16</PersNr>
+            <Name>Tym</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>17</PersNr>
+            <Name>Linda</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>18</PersNr>
+            <Name>Cybulski</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>0</PersNr>
+            <Name>Michal Lesniak</Name>
+        </Angestellte>
+        <Angestellte>
+            <PersNr>21</PersNr>
+            <Name>Michal Krawczyk</Name>
+        </Angestellte>
+        <Assistent>
+            <PersNr dbtype="int">12</PersNr>
+            <Fachgebiet dbtype="varchar">Bionik</Fachgebiet>
+            <Professor dbtype="int">6</Professor>
+        </Assistent>
+        <Assistent>
+            <PersNr>13</PersNr>
+            <Fachgebiet>Kopierwissenschaft</Fachgebiet>
+            <Professor>10</Professor>
+        </Assistent>
+        <Assistent>
+            <PersNr>14</PersNr>
+            <Fachgebiet>Epistemologie</Fachgebiet>
+            <Professor>11</Professor>
+        </Assistent>
+        <Assistent>
+            <PersNr>15</PersNr>
+            <Fachgebiet>Glaziologie</Fachgebiet>
+            <Professor>6</Professor>
+        </Assistent>
+        <Assistent>
+            <PersNr>16</PersNr>
+            <Fachgebiet>Aeronomie</Fachgebiet>
+            <Professor>1</Professor>
+        </Assistent>
+        <Assistent>
+            <PersNr>17</PersNr>
+            <Fachgebiet>Alchemie</Fachgebiet>
+            <Professor>3</Professor>
+        </Assistent>
+        <Assistent>
+            <PersNr>18</PersNr>
+            <Fachgebiet>Limnologie</Fachgebiet>
+            <Professor>1</Professor>
+        </Assistent>
+        <Professor>
+            <PersNr dbtype="int">1</PersNr>
+            <Rang dbtype="varchar">A</Rang>
+            <Raum dbtype="int">1201</Raum>
+        </Professor>
+        <Professor>
+            <PersNr>2</PersNr>
+            <Rang>A</Rang>
+            <Raum>130</Raum>
+        </Professor>
+        <Professor>
+            <PersNr>3</PersNr>
+            <Rang>B</Rang>
+            <Raum>213</Raum>
+        </Professor>
+        <Professor>
+            <PersNr>4</PersNr>
+            <Rang>C</Rang>
+            <Raum>23</Raum>
+        </Professor>
+        <Professor>
+            <PersNr>5</PersNr>
+            <Rang>A</Rang>
+            <Raum>44</Raum>
+        </Professor>
+        <Professor>
+            <PersNr>6</PersNr>
+            <Rang>N</Rang>
+            <Raum>202</Raum>
+        </Professor>
+        <Professor>
+            <PersNr>7</PersNr>
+            <Rang>C</Rang>
+            <Raum>21</Raum>
+        </Professor>
+        <Professor>
+            <PersNr>8</PersNr>
+            <Rang>A</Rang>
+            <Raum>12</Raum>
+        </Professor>
+        <Professor>
+            <PersNr>9</PersNr>
+            <Rang>E</Rang>
+            <Raum>32</Raum>
+        </Professor>
+        <Professor>
+            <PersNr>10</PersNr>
+            <Rang>C</Rang>
+            <Raum>12</Raum>
+        </Professor>
+        <Professor>
+            <PersNr>11</PersNr>
+            <Rang>A</Rang>
+            <Raum>12</Raum>
+        </Professor>
+        <Student>
+            <MatrNr dbtype="int">2</MatrNr>
+            <Name dbtype="varchar">Preisner</Name>
+            <Semester dbtype="int">2</Semester>
+        </Student>
+        <Student>
+            <MatrNr>1</MatrNr>
+            <Name>Sojka</Name>
+            <Semester>4</Semester>
+        </Student>
+        <Student>
+            <MatrNr>3</MatrNr>
+            <Name>Killar</Name>
+            <Semester>2</Semester>
+        </Student>
+        <Student>
+            <MatrNr>5</MatrNr>
+            <Name>Turnau</Name>
+            <Semester>2</Semester>
+        </Student>
+        <Student>
+            <MatrNr>6</MatrNr>
+            <Name>Grechuta</Name>
+            <Semester>3</Semester>
+        </Student>
+        <Student>
+            <MatrNr>7</MatrNr>
+            <Name>Gorniak</Name>
+            <Semester>1</Semester>
+        </Student>
+        <Student>
+            <MatrNr>8</MatrNr>
+            <Name>Niemen</Name>
+            <Semester>3</Semester>
+        </Student>
+        <Student>
+            <MatrNr>9</MatrNr>
+            <Name>Bem</Name>
+            <Semester>5</Semester>
+        </Student>
+        <Vorlesung>
+            <VorlesungNr dbtype="int">1</VorlesungNr>
+            <Titel dbtype="varchar">Grundzüge der Inform</Titel>
+            <SWS dbtype="int">4</SWS>
+            <PersNr dbtype="int">2</PersNr>
+        </Vorlesung>
+        <Vorlesung>
+            <VorlesungNr>2</VorlesungNr>
+            <Titel>Physik</Titel>
+            <SWS>4</SWS>
+            <PersNr>3</PersNr>
+        </Vorlesung>
+        <Vorlesung>
+            <VorlesungNr>3</VorlesungNr>
+            <Titel>Mathematik</Titel>
+            <SWS>4</SWS>
+            <PersNr>5</PersNr>
+        </Vorlesung>
+        <Vorlesung>
+            <VorlesungNr>4</VorlesungNr>
+            <Titel>Chemie</Titel>
+            <SWS>4</SWS>
+            <PersNr>6</PersNr>
+        </Vorlesung>
+        <Vorlesung>
+            <VorlesungNr>5</VorlesungNr>
+            <Titel>BWL Crashkurs</Titel>
+            <SWS>4</SWS>
+            <PersNr>6</PersNr>
+        </Vorlesung>
+        <Vorlesung>
+            <VorlesungNr>6</VorlesungNr>
+            <Titel>Kybernetik</Titel>
+            <SWS>4</SWS>
+            <PersNr>7</PersNr>
+        </Vorlesung>
+        <Vorlesung>
+            <VorlesungNr>7</VorlesungNr>
+            <Titel>Floristik</Titel>
+            <SWS>4</SWS>
+            <PersNr>8</PersNr>
+        </Vorlesung>
+        <Vorlesung>
+            <VorlesungNr>8</VorlesungNr>
+            <Titel>Gott und die Welt</Titel>
+            <SWS>4</SWS>
+            <PersNr>9</PersNr>
+        </Vorlesung>
+        <Vorlesung>
+            <VorlesungNr>9</VorlesungNr>
+            <Titel>Eugenik</Titel>
+            <SWS>4</SWS>
+            <PersNr>10</PersNr>
+        </Vorlesung>
+        <Vorlesung>
+            <VorlesungNr>10</VorlesungNr>
+            <Titel>Monetarismus</Titel>
+            <SWS>4</SWS>
+            <PersNr>11</PersNr>
+        </Vorlesung>
+        <Vorlesung>
+            <VorlesungNr>11</VorlesungNr>
+            <Titel>Geschichte</Titel>
+            <SWS>4</SWS>
+            <PersNr>4</PersNr>
+        </Vorlesung>
+        <Termin>
+            <VorlesungNr dbtype="int">1</VorlesungNr>
+            <Wochentag dbtype="enum">Donnerstag</Wochentag>
+            <Zeit dbtype="varchar">10:12</Zeit>
+        </Termin>
+        <Termin>
+            <VorlesungNr>1</VorlesungNr>
+            <Wochentag>Donnerstag</Wochentag>
+            <Zeit>9:15</Zeit>
+        </Termin>
+        <Termin>
+            <VorlesungNr>2</VorlesungNr>
+            <Wochentag>Montag</Wochentag>
+            <Zeit>20:03</Zeit>
+        </Termin>
+        <Termin>
+            <VorlesungNr>3</VorlesungNr>
+            <Wochentag>Freitag</Wochentag>
+            <Zeit>16:15</Zeit>
+        </Termin>
+        <Termin>
+            <VorlesungNr>4</VorlesungNr>
+            <Wochentag>Mittwoch</Wochentag>
+            <Zeit>9:02</Zeit>
+        </Termin>
+        <Termin>
+            <VorlesungNr>5</VorlesungNr>
+            <Wochentag>Montag</Wochentag>
+            <Zeit>6:00</Zeit>
+        </Termin>
+        <Termin>
+            <VorlesungNr>5</VorlesungNr>
+            <Wochentag>Dienstag</Wochentag>
+            <Zeit>6:00</Zeit>
+        </Termin>
+        <Termin>
+            <VorlesungNr>6</VorlesungNr>
+            <Wochentag>Donnerstag</Wochentag>
+            <Zeit>12:15</Zeit>
+        </Termin>
+        <Termin>
+            <VorlesungNr>7</VorlesungNr>
+            <Wochentag>Dienstag</Wochentag>
+            <Zeit>11:05</Zeit>
+        </Termin>
+        <Termin>
+            <VorlesungNr>8</VorlesungNr>
+            <Wochentag>Montag</Wochentag>
+            <Zeit>13:04</Zeit>
+        </Termin>
+        <Termin>
+            <VorlesungNr>9</VorlesungNr>
+            <Wochentag>Freitag</Wochentag>
+            <Zeit>8:00</Zeit>
+        </Termin>
+        <Termin>
+            <VorlesungNr>10</VorlesungNr>
+            <Wochentag>Donnerstag</Wochentag>
+            <Zeit>9:00</Zeit>
+        </Termin>
+        <Termin>
+            <VorlesungNr>11</VorlesungNr>
+            <Wochentag>Montag</Wochentag>
+            <Zeit>14:00</Zeit>
+        </Termin>
+        <Termin>
+            <VorlesungNr>11</VorlesungNr>
+            <Wochentag>Montag</Wochentag>
+            <Zeit>14:00</Zeit>
+        </Termin>
+        <hoeren>
+            <MatrNr dbtype="int">1</MatrNr>
+            <VorlesungNr dbtype="int">1</VorlesungNr>
+        </hoeren>
+        <hoeren>
+            <MatrNr>1</MatrNr>
+            <VorlesungNr>5</VorlesungNr>
+        </hoeren>
+        <hoeren>
+            <MatrNr>1</MatrNr>
+            <VorlesungNr>10</VorlesungNr>
+        </hoeren>
+        <hoeren>
+            <MatrNr>2</MatrNr>
+            <VorlesungNr>9</VorlesungNr>
+        </hoeren>
+        <hoeren>
+            <MatrNr>3</MatrNr>
+            <VorlesungNr>5</VorlesungNr>
+        </hoeren>
+        <hoeren>
+            <MatrNr>4</MatrNr>
+            <VorlesungNr>1</VorlesungNr>
+        </hoeren>
+        <hoeren>
+            <MatrNr>5</MatrNr>
+            <VorlesungNr>11</VorlesungNr>
+        </hoeren>
+        <hoeren>
+            <MatrNr>6</MatrNr>
+            <VorlesungNr>4</VorlesungNr>
+        </hoeren>
+        <hoeren>
+            <MatrNr>7</MatrNr>
+            <VorlesungNr>3</VorlesungNr>
+        </hoeren>
+        <hoeren>
+            <MatrNr>7</MatrNr>
+            <VorlesungNr>8</VorlesungNr>
+        </hoeren>
+        <hoeren>
+            <MatrNr>8</MatrNr>
+            <VorlesungNr>7</VorlesungNr>
+        </hoeren>
+        <hoeren>
+            <MatrNr>8</MatrNr>
+            <VorlesungNr>10</VorlesungNr>
+        </hoeren>
+        <hoeren>
+            <MatrNr>9</MatrNr>
+            <VorlesungNr>1</VorlesungNr>
+        </hoeren>
+        <hoeren>
+            <MatrNr>9</MatrNr>
+            <VorlesungNr>7</VorlesungNr>
+        </hoeren>
+        <hoeren>
+            <MatrNr>9</MatrNr>
+            <VorlesungNr>8</VorlesungNr>
+        </hoeren>
+        <pruefen>
+            <MatrNr dbtype="int">1</MatrNr>
+            <VorlesungNr dbtype="int">5</VorlesungNr>
+            <PersNr dbtype="int">7</PersNr>
+            <Pruefnote dbtype="enum">befriedigend</Pruefnote>
+        </pruefen>
+        <pruefen>
+            <MatrNr>2</MatrNr>
+            <VorlesungNr>9</VorlesungNr>
+            <PersNr>10</PersNr>
+            <Pruefnote>sehr gut</Pruefnote>
+        </pruefen>
+        <pruefen>
+            <MatrNr>3</MatrNr>
+            <VorlesungNr>6</VorlesungNr>
+            <PersNr>8</PersNr>
+            <Pruefnote>gut</Pruefnote>
+        </pruefen>
+        <pruefen>
+            <MatrNr>5</MatrNr>
+            <VorlesungNr>7</VorlesungNr>
+            <PersNr>8</PersNr>
+            <Pruefnote>mangelhaft</Pruefnote>
+        </pruefen>
+        <pruefen>
+            <MatrNr>4</MatrNr>
+            <VorlesungNr>4</VorlesungNr>
+            <PersNr>3</PersNr>
+            <Pruefnote>befriedigend</Pruefnote>
+        </pruefen>
+        <voraussetzten>
+            <VorgaengerNr dbtype="int">1</VorgaengerNr>
+            <NachfolgerNr dbtype="int">2</NachfolgerNr>
+        </voraussetzten>
+        <voraussetzten>
+            <VorgaengerNr>3</VorgaengerNr>
+            <NachfolgerNr>4</NachfolgerNr>
+        </voraussetzten>
+        <voraussetzten>
+            <VorgaengerNr>5</VorgaengerNr>
+            <NachfolgerNr>10</NachfolgerNr>
+        </voraussetzten>
+        <voraussetzten>
+            <VorgaengerNr>6</VorgaengerNr>
+            <NachfolgerNr>1</NachfolgerNr>
+        </voraussetzten>
+        <voraussetzten>
+            <VorgaengerNr>8</VorgaengerNr>
+            <NachfolgerNr>7</NachfolgerNr>
+        </voraussetzten>
+        <voraussetzten>
+            <VorgaengerNr>8</VorgaengerNr>
+            <NachfolgerNr>11</NachfolgerNr>
+        </voraussetzten>
+        <voraussetzten>
+            <VorgaengerNr>9</VorgaengerNr>
+            <NachfolgerNr>2</NachfolgerNr>
+        </voraussetzten>
+        <voraussetzten>
+            <VorgaengerNr>11</VorgaengerNr>
+            <NachfolgerNr>9</NachfolgerNr>
+        </voraussetzten>
+    </data>
+</databaseexport>

@@ -1,0 +1,94 @@
+# automatically generated from XOTclIDE
+# script require component xdobry::Container
+package provide xdobry::Validate 0.22
+package require xdobry::Container
+Class Validator -parameter data
+@ ::Validator idemeta component xdobry::Validate
+Validator instproc asTDom asTDom {
+    # it can not works !!!
+    doc_elem2
+}
+Validator instproc isvalid value {
+    set ret [my isvalidPur $value]
+    if {!$ret} {
+        puts "Check Failed on Vaildator [my validInfo] by $value"
+    }
+    return $ret
+}
+Validator instproc validInfo {} {
+    my instvar data
+    # to sie ma
+    return "[namespace tail [my info class]] data: $data"
+}
+@ Validator proc createFromTDom {} {
+description {Konstruktor Methode aus tDOM
+z.B. <check validator="Regexp">^A</check>}
+}
+Validator proc createFromTDom {name check_node} {
+    return [Validator::[$check_node getAttribute validator] $name -data [$check_node text]]
+}
+Class Validator::Expr -superclass ::Validator
+@ ::Validator::Expr idemeta component xdobry::Validate
+Validator::Expr instproc isvalidPur x {
+    my instvar data
+    return [expr $data]
+}
+Class Validator::Length -superclass ::Validator
+@ ::Validator::Length idemeta component xdobry::Validate
+Validator::Length instproc isvalidPur value {
+    my instvar data
+    return [expr [string length $value]<=$data]
+}
+Class Validator::Regexp -superclass ::Validator
+@ ::Validator::Regexp idemeta component xdobry::Validate
+Validator::Regexp instproc isvalidPur value {
+    my instvar data
+    return [regexp $data $value]
+}
+@ Class ValidatorSet {
+description {Eine geordnete Menge von Validatoren}
+}
+Class ValidatorSet -superclass ::DoubleList
+@ ::ValidatorSet idemeta component xdobry::Validate
+ValidatorSet instproc addElem object {
+    my instvar checks_node mydoc_elem
+    $checks_node appendChild [$object asTDom mydoc_elem]
+}
+ValidatorSet instproc asTDom doc_elem {
+    my instvar checks_node mydoc_elem
+    set mydoc_elem
+    set checks_node [$doc_elem createElement checks]
+    # !!! it can not works
+    my foreach [self] addElem
+    return $checks_node
+}
+ValidatorSet instproc isvalid tvalue {
+    my instvar value
+    set value $tvalue
+    set res [my conform [self] validProc]
+    unset value
+    return $res
+}
+ValidatorSet instproc validProc object {
+    my instvar value
+    set ret [$object isvalid $value]
+    return $ret
+}
+@ ValidatorSet proc createFromTDom {} {
+description {Erzeugt eine ValidatorSet Instanz aus etwa
+<checks>
+<check validator="Regexp">[0-9].</checks>
+<check validator="Expr">$x<20</checks>
+<check validator="Length">10</checks>
+</checks>}
+}
+ValidatorSet proc createFromTDom {name checks_node} {
+    ValidatorSet $name
+    foreach check_node [$checks_node selectNodes child::check] {
+        set vname [Validator createFromTDom  ${name}::[Object autoname validator] $check_node]
+        if {$vname==""} continue
+        $name push_back $vname
+    }
+    return $name
+}
+

@@ -1,0 +1,373 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>Dokumentation des Programms Xdobry</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="NEXT"
+TITLE="Xdobry Spezifikation"
+HREF="c11.html"></HEAD
+><BODY
+CLASS="BOOK"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="BOOK"
+><A
+NAME="INDEX"
+></A
+><DIV
+CLASS="TITLEPAGE"
+><H1
+CLASS="TITLE"
+><A
+NAME="AEN2"
+></A
+>Dokumentation des Programms Xdobry</H1
+><H3
+CLASS="AUTHOR"
+><A
+NAME="AEN4"
+></A
+>Artur Trzewik</H3
+><HR></DIV
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+><A
+HREF="c11.html"
+>Xdobry Spezifikation</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c11.html#AEN14"
+>Hauptziel des Programms</A
+></DT
+><DT
+><A
+HREF="x17.html"
+>Besondere Merkmale</A
+></DT
+><DT
+><A
+HREF="x32.html"
+>Eigenschaften des Programms</A
+></DT
+><DT
+><A
+HREF="x58.html"
+>Zielgruppe</A
+></DT
+><DT
+><A
+HREF="x69.html"
+>Technische Daten</A
+></DT
+><DT
+><A
+HREF="x72.html"
+>Version Neuheiten</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="c163.html"
+>Benutzer Handbuch</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c163.html#AEN165"
+>Systemkomponenten</A
+></DT
+><DT
+><A
+HREF="x177.html"
+>SchemaEditor</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="x177.html#AEN219"
+>Reverse Engineering</A
+></DT
+><DT
+><A
+HREF="x177.html#AEN239"
+>Definieren von Abstraktionen</A
+></DT
+><DT
+><A
+HREF="x177.html#AEN273"
+>DB-Schema Anlegen und Verändern</A
+></DT
+><DT
+><A
+HREF="x177.html#AEN506"
+>DB-Schema und Daten migrieren</A
+></DT
+><DT
+><A
+HREF="x177.html#AEN523"
+>DB-Schema und Daten Exportieren und Importieren</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="x541.html"
+>FormEditor</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="x541.html#AEN556"
+>GUI Editor für Formulare</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="x639.html"
+>FormServer</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="x639.html#FORMULARLINKS"
+>Navigieren mit Formularen</A
+></DT
+><DT
+><A
+HREF="x639.html#AEN690"
+>Eigene Makros in Formularen</A
+></DT
+><DT
+><A
+HREF="x639.html#AEN716"
+>Programm-Parameter</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="x771.html"
+>Schema vs. Formularaussehen</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="x771.html#AEN774"
+>Darstellung der Fremdschlüssel</A
+></DT
+><DT
+><A
+HREF="x771.html#AEN780"
+>Assoziation (Formular-Links)</A
+></DT
+><DT
+><A
+HREF="x771.html#AEN791"
+>Spezialisierung (Vererbung)</A
+></DT
+><DT
+><A
+HREF="x771.html#AEN802"
+>Aggregation</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="x813.html"
+>Fehlende Funktionalitäten bei Xdobry</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="c834.html"
+>Tutorial</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c834.html#AEN837"
+>Relationales Schema</A
+></DT
+><DT
+><A
+HREF="x851.html"
+>Erstellung des Repositories</A
+></DT
+><DT
+><A
+HREF="x876.html"
+>Erstellung der Formulare</A
+></DT
+><DT
+><A
+HREF="x889.html"
+>Benutzung der Formularen</A
+></DT
+><DT
+><A
+HREF="x894.html"
+>Andere Beispiele</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="c925.html"
+>Entwickler Informationen</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c925.html#AEN927"
+>Programmierwerkzeuge</A
+></DT
+><DT
+><A
+HREF="x949.html"
+>XML</A
+></DT
+><DT
+><A
+HREF="x957.html"
+>Weiterentwicklung</A
+></DT
+><DT
+><A
+HREF="x985.html"
+>Ideen für die Zukunft</A
+></DT
+><DT
+><A
+HREF="x1001.html"
+>Datenbankanbindung</A
+></DT
+><DT
+><A
+HREF="x1020.html"
+>WWW-Verweise für Entwickler</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="c1048.html"
+>Produktiver Einsatz von Xdobry</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c1048.html#AEN1050"
+>Lizenz</A
+></DT
+><DT
+><A
+HREF="x1056.html"
+>Einsatz von Xdobry</A
+></DT
+><DT
+><A
+HREF="x1059.html"
+>Vorteile gegenüber bestehenden Systemen</A
+></DT
+><DT
+><A
+HREF="x1078.html"
+>Kontakt mit Autor</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="c1084.html"
+>Unterstützung</A
+></DT
+><DT
+><A
+HREF="c1087.html"
+>Xdobry aus Quelldateien installieren</A
+></DT
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="c11.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Xdobry Spezifikation</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,274 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>Schema vs.Form appearances</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Documentation of the Xdobry application"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="User manual"
+HREF="c167.html"><LINK
+REL="PREVIOUS"
+TITLE="FormServer"
+HREF="x630.html"><LINK
+REL="NEXT"
+TITLE="Missing functionality be Xdobry"
+HREF="x740.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Documentation of the Xdobry application</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x630.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>User manual</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x740.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN698"
+></A
+>Schema vs.Form appearances</H1
+><P
+>The system was developed after the motto: the appearance of the forms should correspond to data semantics.
+Here the examples how the drafts of the modelling have their(her) influence on the structure of the forms.
+The Screen shoots comes all from the Tutorial example.</P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN701"
+></A
+>Representation of the foreign keys</H2
+><P
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="foreignkeys.png"></P
+></DIV
+>
+The foreign keys attributes are represented as multi-column-listboxes.
+Here one can see on the first place the value of the primary key and an additional attribute (name) which has the role of the object-labels.</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN707"
+></A
+>Association (form-link)</H2
+><P
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="FormularLinks.png"></P
+></DIV
+>
+<DIV
+CLASS="FIGURE"
+><A
+NAME="ER-ASSOZIATION"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="er_assoziation.png"></P
+></DIV
+><P
+><B
+>Figure 8. Association in ER-model</B
+></P
+></DIV
+>
+The form-links function possibly like instruction: Open the form with all objects which are tied together with this object (a foreign key on it have).
+They are opposed to foreign key references</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN718"
+></A
+>Specialization (inheritance)</H2
+><P
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="FormularVererbung.png"></P
+></DIV
+>
+<DIV
+CLASS="FIGURE"
+><A
+NAME="ER-GENERALISIERUNG"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="er_generalisierung.png"></P
+></DIV
+><P
+><B
+>Figure 9. Generalization in ER-model</B
+></P
+></DIV
+>
+The specialization forms (children's forms' are embedded in a notebook Widget of the parents-Form.</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN729"
+></A
+>Aggregation</H2
+><P
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="EigebetettesFormular.png"></P
+></DIV
+>
+<DIV
+CLASS="FIGURE"
+><A
+NAME="ER-AGGREGATION"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="er_aggregation.png"></P
+></DIV
+><P
+><B
+>Figure 10. Aggregation in ER-model</B
+></P
+></DIV
+>
+Aggregation functions as embedded forms, besides, foreign keys are used as a linkage paths; unnoticed from the used.</P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x630.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x740.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>FormServer</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c167.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Missing functionality be Xdobry</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

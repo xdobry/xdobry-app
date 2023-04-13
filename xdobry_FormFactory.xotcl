@@ -1,0 +1,484 @@
+# automatically generated from XOTclIDE
+package provide xdobry::FormFactory 0.32
+Class FormFactory -parameter {
+    {hidedata {}}
+    {visitproc {}}
+}
+@ ::FormFactory idemeta categories {element-init element-generation frame-manager private}
+@ ::FormFactory idemeta categoriesMethods {{makeName setDescription} {makedom_frame standardCreate makedom_numeric makedom_list makedom_text makedom_reference makedom_boolean} {make_frame_pack make_frame_grid} extParameter}
+@ ::FormFactory idemeta component xdobry::FormFactory
+@ FormFactory instproc extParameter {} {
+description {Diese Prozedur extrahiert aus XML die Widget parameter und wandelt
+es in eine Liste.
+Es wird die metadata des Widget-Klassen benutzt}
+}
+FormFactory instproc extParameter {class node} {
+    set domattrs [$node attributes]
+    set attr [$class set attributes]
+    set par {}
+    foreach domattr [schnittMenge $domattrs $attr] {
+            lappend par -$domattr [$node getAttribute $domattr] 
+    }
+    return $par
+}
+@ FormFactory instproc makeName {} {
+description {Hilfsprozedur Erzeugt einem Name und initialisiert data}
+}
+FormFactory instproc makeName {dom_node parent} {
+    return [Object autoname myWidget]
+}
+FormFactory instproc make_frame_grid {frame_node parent} {
+
+    my createGridFrame $frame_node $parent parentc packer
+    # add variables (packer parentc)
+    foreach grid [$frame_node childNodes] {
+        if {[$grid nodeType]=="ELEMENT_NODE" && 
+            [$grid nodeName]=="grid"} {
+            set gridoptions {}
+            foreach opt [$grid attributes] {
+                lappend gridoptions -$opt [$grid getAttribute $opt]
+            }
+            foreach elem [$grid childNodes] {
+                if {[$elem nodeType]=="ELEMENT_NODE"} {
+                    #puts "packing by [self] [$elem nodeName]"
+                    set widget [my makedom_[$elem nodeName] $elem $parentc]
+                    if {$widget==""} continue
+                    $packer addwidget $widget $gridoptions
+                }
+            }
+        }        
+    }
+    return $packer
+}
+FormFactory instproc make_frame_pack {frame_node parent} {
+
+    my createPackFrame $frame_node $parent parentc packer
+
+    foreach pack [$frame_node childNodes] {
+        if {[$pack nodeType]=="ELEMENT_NODE" && 
+            [$pack nodeName]=="pack"} {
+            set packoptions {}
+            foreach opt [$pack attributes] {
+                lappend packoptions -$opt [$pack getAttribute $opt]
+            }
+            foreach elem [$pack childNodes] {
+                if {[$elem nodeType]=="ELEMENT_NODE"} {
+                    #puts "packing by [self] [$elem nodeName]"
+                    set widget [my makedom_[$elem nodeName] $elem $parentc]
+                    if {$widget==""} continue
+                    $packer addwidget $widget $packoptions
+                }
+            }
+        }        
+    }
+    return $packer
+}
+FormFactory instproc makedom_boolean {dom_node parent} {
+    my standardCreate OCheckButton $dom_node $parent
+}
+FormFactory instproc makedom_frame {frame_node parent} {
+    #puts "makedom_frame $frame_node $parent"
+    my make_frame_[$frame_node getAttribute manager] $frame_node $parent
+}
+FormFactory instproc makedom_list {dom_node parent} {
+    set domattrs [$dom_node attributes]
+    if {[lcontain $domattrs subtype] && [$dom_node getAttribute subtype]=="radiobuttons"} {
+        set wclass ORadioButtons
+    } else {
+        set wclass OComboBox
+    }
+    my standardCreate $wclass $dom_node $parent "-valuelist [list [tdom_getvaluelist $dom_node]]"
+}
+FormFactory instproc makedom_numeric {dom_node parent} {
+    my standardCreate OLabelControl $dom_node $parent
+}
+FormFactory instproc makedom_reference {dom_node parent} {
+    my instvar data editable sqlconnect hidedata
+    # Wenn zu Hidedate dehört dann ignoriere (Wichtig bei eigebeteten formularen)
+    if {[lcontain $hidedata [$dom_node getAttribute data]]} {
+        return
+    }
+    set name [my makeName $dom_node $parent]
+    # Bestimme Widget Klasse
+    if {$editable} {
+        set wclass EOSqlReferenceList
+    } else {
+        set wclass OSqlReferenceList
+    }
+    set domattrs [$dom_node attributes]
+    set attr [$wclass set attributes]
+    # Extrahiere Widgeteigene Attribute
+    foreach domattr [schnittMenge $domattrs $attr] {
+        if {!$editable && $domattr=="form"} {
+            lappend par -form_node [tdom_findpername $dom_node form [$dom_node getAttribute form]]
+        } else {
+            lappend par -$domattr [$dom_node getAttribute $domattr] 
+        }
+    }
+    #set par [my extParameter $wclass $dom_node]
+    lappend par -sqlquery [tdom_getpername $dom_node sqlquery]
+    if {$editable} {
+        eval $wclass ${parent}::$name $par
+    } else {
+        eval $wclass ${parent}::$name $par -sqlconnect [list $sqlconnect]
+    }
+    my setDataSource ${parent}::$name $dom_node 
+    return ${parent}::$name
+}
+FormFactory instproc makedom_text {dom_node parent} {
+    set domattrs [$dom_node attributes]
+    if {[lcontain $domattrs subtype] && [$dom_node getAttribute subtype]=="area"} {
+        set wclass OLabelText
+    } else {
+        set wclass OLabelEntry
+    }
+    my standardCreate $wclass $dom_node $parent
+}
+FormFactory instproc setDescription {object dom_node} {
+    # Suche Description Tag (benutzt für Hilfetexte)
+    foreach descr_node [$dom_node selectNodes child::description] {
+        $object set description [$descr_node text]
+        break
+    } 
+}
+FormFactory instproc sqlconnect args {
+  if {[llength $args] == 0} {
+    return [::set [self]::[self proc]]
+  } elseif {[llength $args] == 1} {
+    return [::set [self]::[self proc] [lindex $args 0]]
+  } else {
+    error "wrong # args: [self] [self proc] ?value?"
+  }
+}
+FormFactory instproc standardCreate {wclass dom_node parent {addpar {}}} {
+    my instvar hidedata
+    if {[lcontain $hidedata [$dom_node getAttribute data]]} {
+        return
+    }
+    set name [my makeName $dom_node $parent]
+    set par [my extParameter $wclass $dom_node]
+    my createWidget $wclass ${parent}::$name "$par $addpar"
+    my setDataSource ${parent}::$name $dom_node 
+    return ${parent}::$name
+}
+FormFactory proc create args {
+    error "[self] is a abstract class"
+}
+Class EditableFormFactory -superclass ::FormFactory
+@ ::EditableFormFactory idemeta component xdobry::FormFactory
+EditableFormFactory instproc createGridFrame {frame_node parent parentc_ref packer_ref} {
+    upvar $parentc_ref parentc
+    upvar $packer_ref packer
+
+    set wclass EGridFrame
+    set par [my extParameter $wclass $frame_node]
+    set packer [eval $wclass create ${parent}::[Object autoname my$wclass] $par]
+    set parentc $parent
+}
+EditableFormFactory instproc createPackFrame {frame_node parent parentc_ref packer_ref} {
+    upvar $parentc_ref parentc
+    upvar $packer_ref packer
+
+    set wclass EPackFrame
+    set par [my extParameter $wclass $frame_node]
+    set packer [eval $wclass create ${parent}::[Object autoname my$wclass] $par]
+    set parentc $parent
+}
+EditableFormFactory instproc createWidget {wclass name par} {
+   if {[Object isclass E${wclass}]} {
+       eval E${wclass} create $name $par
+   } else {
+       # sonderbehandlung für EInheritForm EFormLink EFormEngine
+       eval $wclass create $name $par
+   }
+}
+EditableFormFactory instproc generateFrame {dom_node guiedit} {
+    my instvar data editable
+    set editable 1
+    set rootframe {}
+    if {[info exists data]} { unset data }
+    foreach childnode [$dom_node childNodes] {
+        if {[$childnode nodeType]=="ELEMENT_NODE" && 
+            [$childnode nodeName]=="frame"} {
+            set rootframe [my makedom_frame $childnode $guiedit]
+            break
+        }
+    }
+    return $rootframe
+}
+EditableFormFactory instproc makedom_formlink {dom_node parent} {
+    # objlink auslesen
+    set apar {}
+    if {[$dom_node hasAttribute reftable]} {
+        set objlinks {}
+        foreach obj_node [$dom_node selectNodes child::objectlink] {
+            if {$objlinks==""} {
+                keylset objlinks form [$obj_node getAttribute form]
+                keylset objlinks refattribute [$obj_node getAttribute refattribute]
+                keylset objlinks label [$obj_node getAttribute label]
+            } else {
+                keylset objlinks form [concat [keylget objlinks form] [$obj_node getAttribute form]]
+                keylset objlinks refattribute [concat [keylget objlinks refattribute] [$obj_node getAttribute refattribute]]
+                keylset objlinks label [concat [keylget objlinks label] [$obj_node getAttribute label]]
+            }
+        }
+        lappend apar -objlinks $objlinks
+    } 
+    #puts "$par"
+    my standardCreate EFormLink $dom_node $parent $apar
+}
+EditableFormFactory instproc makedom_inheritform {dom_node parent} {
+    set list_label {}; set list_form {}; set list_inheritkey {}
+    foreach child [$dom_node selectNodes child::child] {
+        foreach attr {label form inheritkey} {
+            if {[$child hasAttribute $attr]} {
+               lappend list_$attr [$child getAttribute $attr]
+            } else {
+               lappend list_$attr {}
+            }
+        }
+    }
+    keylset childforms label $list_label
+    keylset childforms form $list_form
+    keylset childforms inheritkey $list_inheritkey
+    my standardCreate EInheritForm $dom_node $parent "-childforms [list $childforms]"
+}
+EditableFormFactory instproc makedom_nestedform {dom_node parent} {
+   my standardCreate EFormEngine $dom_node $parent
+}
+EditableFormFactory instproc makeeditable_fromdom {dom_node guiedit} {
+    my instvar data editable
+    set editable 1
+    set rootframe {}
+    if {[info exists data]} { unset data }
+    foreach childnode [$dom_node childNodes] {
+        if {[$childnode nodeType]=="ELEMENT_NODE" && 
+            [$childnode nodeName]=="frame"} {
+            set rootframe [my makedom_frame $childnode $guiedit]
+            break
+        }
+    }
+    return $rootframe
+}
+EditableFormFactory instproc setDataSource {object dom_node} {
+    my instvar editable def_values notnull_data data visitproc
+    set domattrs [$dom_node attributes]
+    set adata  [$dom_node getAttribute data]
+    # Extrahiere Datenherkunft relevante Attribute
+    foreach dataattr [schnittMenge $domattrs {data default notnull unbound dbtype}] {
+        keylset datakl $dataattr [$dom_node getAttribute $dataattr] 
+    }
+        $object set data $datakl
+        lappend data($adata) $object
+        if {[$object isCheckAble]} {
+            $object set checkData [OValidatorSet tDomToVariable $dom_node]
+        }
+}
+Class ServerFormFactory -superclass ::FormFactory -parameter sqlconnect
+@ ::ServerFormFactory idemeta component xdobry::FormFactory
+ServerFormFactory instproc createGridFrame {frame_node parent parentc_ref packer_ref} {
+    upvar $parentc_ref parentc
+    upvar $packer_ref packer
+
+    set wclass GridContainer
+    set par [my extParameter $wclass $frame_node]
+    if {$parent==""} {
+        set parentc [eval $wclass new $par]
+    } else {
+        set parentc [eval $wclass new -childof $parent $par]
+    }
+    set packer $parentc
+}
+ServerFormFactory instproc createPackFrame {frame_node parent parentc_ref packer_ref} {
+    upvar $parentc_ref parentc
+    upvar $packer_ref packer
+
+    set wclass FrameContainer
+    set par [my extParameter $wclass $frame_node]
+    if {$parent==""} {
+        set parentc [eval $wclass new $par]
+    } else {
+        set parentc [eval $wclass new -childof $parent $par]
+    }
+    set packer $parentc
+
+}
+ServerFormFactory instproc createWidget {wclass name par} {
+   eval $wclass create $name $par
+}
+ServerFormFactory instproc generateFrame {dom_node {parent {}}} {
+    my instvar data editable notnull_data def_values
+    set notnull_data {}
+    set def_values {}
+    set editable 0
+    set data {}
+    set dbtypes {}
+    foreach childnode [$dom_node childNodes] {
+        if {[$childnode nodeType]=="ELEMENT_NODE" && 
+            [$childnode nodeName]=="frame"} {
+            set name [my makedom_frame $childnode $parent]
+            break
+        }
+    }
+    return $name
+}
+ServerFormFactory instproc makedialog_fromdom {dom_node {parent {}}} {
+    my instvar data editable notnull_data def_values
+    set notnull_data {}
+    set def_values {}
+    set editable 0
+    set data {}
+    foreach childnode [$dom_node childNodes] {
+        if {[$childnode nodeType]=="ELEMENT_NODE" && 
+            [$childnode nodeName]=="frame"} {
+            set name [my makedom_frame $childnode $parent]
+            break
+        }
+    }
+    return $name
+}
+ServerFormFactory instproc makedom_formlink {dom_node parent} {
+    my instvar data editable sqlconnect
+    set name [my makeName $dom_node $parent]
+    set domattrs [$dom_node attributes]
+    # Bestimme Widget Klasse
+     set wclass FormLink
+    set attr [$wclass set attributes]
+    # Extrahiere Widgeteigene Attribute wie textwidth
+    foreach domattr [schnittMenge $domattrs $attr] {
+        if {!$editable && $domattr=="form"} {
+            lappend par -form_node [tdom_findpername $dom_node form [$dom_node getAttribute form]]
+        } else {
+            lappend par -$domattr [$dom_node getAttribute $domattr] 
+        }
+    }
+    # objlink auslesen
+    if {[$dom_node hasAttribute reftable]} {
+        set objlinks {}
+        foreach obj_node [$dom_node selectNodes child::objectlink] {
+            lappend objlinks [list [$obj_node getAttribute form] [$obj_node getAttribute refattribute] [$obj_node getAttribute label]]
+        }
+        lappend par -objlinks $objlinks
+    } 
+    eval $wclass ${parent}::$name $par -sqlconnect [list $sqlconnect]
+    my setDataSource ${parent}::$name $dom_node 
+    return ${parent}::$name
+}
+ServerFormFactory instproc makedom_inheritform {dom_node parent} {
+    my instvar data editable sqlconnect
+    set name [my makeName $dom_node $parent]
+    set domattrs [$dom_node attributes]
+    # Bestimme Widget Klasse
+    if {$editable} {
+        set wclass EInheritForm
+    } else {
+        set wclass InheritForm
+    }
+    set attr [$wclass set attributes]
+    # Extrahiere Widgeteigene Attribute wie textwidth
+    set par {}
+    foreach domattr [schnittMenge $domattrs $attr] {
+        lappend par -$domattr [$dom_node getAttribute $domattr] 
+    }
+        eval $wclass ${parent}::$name $par
+        # Die Unterstruktur des InheritForm bilden
+        set children [$dom_node selectNodes child::child]
+        if {[llength $children]>1} {
+            set notebook [NoteBookContainer ${parent}::${name}::notebook]
+            foreach child $children {
+                set formName [$child getAttribute form]
+                set newcard [NestedFormEngine ${notebook}::$formName -data [$dom_node getAttribute data] -sqlconnect $sqlconnect -form_node [$child selectNodes //child::form\[@name=\"$formName\"\]] -refattribute [$child getAttribute inheritkey] -oneobject 1]
+                $notebook addcard $newcard [list $formName [$child getAttribute label]]
+            }
+        } else {
+            set formName [$children getAttribute form]
+            NestedFormEngine ${parent}::${name}::form -nestedform 1 -sqlconnect $sqlconnect -form_node [$children selectNodes //child::form\[@name=\"$formName\"\]] -refattribute [$children getAttribute inheritkey] -oneobject 1 -border 1
+        }
+    # Behandle Datenhrekungf Attribute data, default, notnull
+    my setDataSource ${parent}::$name $dom_node 
+    return ${parent}::$name
+}
+ServerFormFactory instproc makedom_nestedform {dom_node parent} {
+   my instvar data editable sqlconnect
+    set name [my makeName $dom_node $parent]
+    set domattrs [$dom_node attributes]
+    # Bestimme Widget Klasse
+    set wclass FormEngine
+    set attr [$wclass set attributes]
+    # Extrahiere Widgeteigene Attribute wie textwidth
+    foreach domattr [schnittMenge $domattrs $attr] {
+        if {$domattr=="form"} {
+            lappend par -form_node [tdom_findpername $dom_node form [$dom_node getAttribute form]]
+        } else {
+            lappend par -$domattr [$dom_node getAttribute $domattr] 
+        }
+    }
+    # Extrahiere Datenherkunft relevante Attribute
+    eval FormEngine createPerNameForClass NestedFormEngine [$dom_node getAttribute form] ${parent}::$name $par -sqlconnect [list $sqlconnect]
+    my setDataSource ${parent}::$name $dom_node 
+    return ${parent}::$name
+}
+ServerFormFactory instproc setDataSource {object dom_node} {
+    my instvar editable def_values notnull_data data visitproc
+    set domattrs [$dom_node attributes]
+    set adata  [$dom_node getAttribute data]
+    # Extrahiere Datenherkunft relevante Attribute
+    foreach dataattr [schnittMenge $domattrs {data default dbtype notnull unbound}] {
+        keylset datakl $dataattr [$dom_node getAttribute $dataattr] 
+    }
+        if {![lcontain [keylkeys datakl] unbound] || ![keylget datakl unbound]} {
+            if {![lcontain $data $adata]} {
+                lappend data $adata
+                if {[$dom_node hasAttribute dbtype]} {
+                    my lappend dbtypes [$dom_node getAttribute dbtype]
+                } else {
+                    my lappend dbtypes {}
+                }
+            }
+        }
+        $object set data [keylget datakl data]
+        if {[lcontain $domattrs notnull]} {
+            lappend notnull_data  [keylget datakl data]
+        }
+        if {[lcontain $domattrs default]} {
+            keylset def_values [keylget datakl data] [keylget datakl default]
+        }
+        foreach checks_node [$dom_node selectNodes child::checks] {
+            ValidatorSet createFromTDom ${object}::validator $checks_node
+            break
+        }
+}
+Class FilterFormFactory -superclass ::ServerFormFactory
+@ ::FilterFormFactory idemeta component xdobry::FormFactory
+FilterFormFactory instproc extParameter {class node} {
+    set domattrs [$node attributes]
+    set attr [$class set attributes]
+    set par {}
+    foreach domattr [schnittMenge $domattrs $attr] {
+        if {$domattr=="state"} continue
+        lappend par -$domattr [$node getAttribute $domattr] 
+    }
+    return $par
+}
+FilterFormFactory instproc makedom_formlink {dom_node parent} {
+
+}
+FilterFormFactory instproc makedom_inheritform {dom_node parent} {
+
+}
+FilterFormFactory instproc makedom_list {dom_node parent} {
+    set domattrs [$dom_node attributes]
+    if {[lcontain $domattrs subtype] && [$dom_node getAttribute subtype]=="radiobuttons"} {
+        set wclass ORadioButtons
+    } else {
+        set wclass OComboBox
+    }
+    my standardCreate $wclass $dom_node $parent "-valuelist [list [concat {{}} [concat [tdom_getvaluelist $dom_node]]]]"
+}
+FilterFormFactory instproc makedom_nestedform {dom_node parent} {
+
+}
+FilterFormFactory instproc makedom_numeric {dom_node parent} {
+    my standardCreate OLabelEntry $dom_node $parent {-textwidth 5}
+}
+

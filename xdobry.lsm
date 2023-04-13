@@ -1,0 +1,37 @@
+Begin3
+Title:          xdobry
+Version:        0.43
+Entered-date:   2006-10-07
+Description:    Xdobry is a new approach database form generator for 
+                relational databases. The forms are generated not from 
+                relational-schema (by reading data dictionary) but from 
+                conceptional-schema made by using reverse engineering.
+                The forms supports rich semantic abstraction: 
+                association (relationship) as Form-Link, aggregation as 
+                nested Forms, object inheritance as Tab-Widget and
+                foreign-keys as multi-columns lists. 
+                Therefore form are not another representation of tables 
+                but object at higher abstractions level. 
+                You can use this forms to browse database like hypertext
+                documents.
+                There are three programs: SchemaEditor 
+                for making a conceptional schema, FormEditor GUI Drag&Drop 
+                Editor for DB-Form and FormServer.
+                The System is programmed in Tcl-Language 
+                (with extension Tk TclX Tix XOTcl tDOM), 
+                used XML as Format for 
+                describing Form-GUI and DB-Schema (Repository).
+                At this time there are interfaces to mysql and 
+                to postgresql databases.
+                (Homepage http://www.xdobry.de)
+Keywords:       Form-Generator for relational databases mysql
+Author:         Artur Trzewik <mail@xdobry.de>
+Maintained-by:  the author
+Primary-site:   sunsite.unc.edu /pub/Linux/apps/database/
+                2kB xdobry.lsm
+                514kB xdobry-0.43-0.tar.gz
+Original-site:  http://www.xdobry.de
+Platforms:      Linux/Unix
+Copying-policy: GPL
+End
+

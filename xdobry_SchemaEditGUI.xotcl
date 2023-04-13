@@ -1,0 +1,835 @@
+# automatically generated from XOTclIDE
+package provide xdobry::SchemaEditGUI 0.32
+Class SchemaEdit -parameter {
+    {domNode {}}
+}
+@ ::SchemaEdit idemeta component xdobry::SchemaEditGUI
+@ SchemaEdit instproc addElem {} {
+description {Zentrale prozeduren für Operationen (move, add, delete) der tDom Noden
+Die Prozeduren können per mixins angezappft werden und dir Opertationen
+etwa auf gui Übergehen
+
+Jetzt Allerdings werden die Operationen direkt zu ProgGui Objekt
+weitergegeben}
+}
+SchemaEdit instproc addElem {node posnode {append 1}} {
+    if {$append} {
+        $posnode appendChild $node
+    } else {
+        [$posnode parentNode] insertBefore $node $posnode
+    }
+    ProgGui addElem $node $posnode $append
+}
+@ SchemaEdit instproc applyChanges {} {
+description {Diese Prozedur Sammelt alle Veränderungen für die Einzelnen Eigenschaften
+und gibt sie weiter der vererbten Klasse zur Verarbeiteung}
+}
+SchemaEdit instproc applyChanges {} {
+    my instvar inputframe domNode
+    $inputframe update_values
+    set changes [$inputframe get_changes]
+    #puts "Changes $changes"
+    if {$changes!=""} {
+        set mes [my modifyProp $changes]
+        if {$mes!=""} {
+            return $mes
+        }
+    }
+    my specialUpdate
+    return
+}
+SchemaEdit instproc deleteElem node {
+    [$node parentNode] removeChild $node
+    ProgGui deleteElem $node
+}
+SchemaEdit instproc getDBSchemaAttributes {} {
+    list name type length default valuelist null auto_increment
+}
+SchemaEdit instproc getProgGui {} {
+    return ProgGui
+}
+@ SchemaEdit instproc handleNewNode {} {
+description {Eine Standart Prozedur nimmt an es sind alle Eigenschaften
+als Attributten gespeichert}
+}
+SchemaEdit instproc handleNewNode node {
+    my instvar domNode framelist
+    if {$domNode==$node} {return}
+    set domNode $node
+    foreach prop [[my info class] set prop] {
+        set pframe [keylget framelist [lindex $prop 0]]
+        set klist {}
+         foreach attr [lindex $prop 1] {
+            if {[$domNode hasAttribute $attr]} {
+                keylset klist $attr [$domNode getAttribute $attr]
+            } else {
+                keylset klist $attr {}
+            }
+         }
+        $pframe set_defaults $klist
+    }
+}
+SchemaEdit instproc initNameMap {} {
+   if {[SchemaEdit exists labelArr]} return
+   SchemaEdit array set labelArr [list  name [mc "Name"]  type [mc "Type"]  value [mc "Value"]  valuelist [mc "Valuelist"]  length [mc "Length"]  null [mc "NULL value admissible"]  primary_key [mc "Primary key"]  auto_increment [mc "AutoIncrement"]  default [mc "Default value"]  notvisible [mc "Invisible"]  noteditable [mc "not editable"]  constrain [mc "Condition"]  description [mc "Description"]  mimetype [mc "MIME type"]  schowpref [mc "OUTPUT prefs"]  outformat [mc "Output format"]  importance [mc "importance"]  elements [mc "Members"]  id-relationship [mc "ID relationship"]  maxOccurs [mc "max Occurs"]  minOccurs [mc "min Occurs"]  ondelete [mc "on delete"]  onupdate [mc "on update"]  rolename [mc "Role name"] precision [mc "precision"]] 
+}
+@ SchemaEdit instproc map {} {
+description {Die Abgeleitete Klassen sollten in metadata proc und proc spec beschreiben
+Welche Eigenschaften sie haben
+
+framelist ist eine keydlist (tclx) mit Aufbau
+(name FrameObjekt)
+gedacht für setzen und auslesen von Argumenten}
+}
+SchemaEdit instproc map window {
+    my instvar  win framelist inputframe
+    my initNameMap
+    # Hier werden die Eigenschaft Listen Vorbereitet
+    set propspec [[my info class] set propspec]
+    foreach prop [[my info  class] set prop] {
+        # Das zweite sollte die Übersetztung werden
+        set cardattr [list [lindex $prop 0] [lindex $prop 0]] 
+        set alist {}
+        foreach attr [lindex $prop 1] {
+            set klist [keylget propspec $attr]
+            # Label sprachspezifisch setzten
+            keylset klist label [SchemaEdit set labelArr($attr)]
+            # Name setzen genau so wie die Attribut Name
+            keylset klist name $attr
+            lappend alist $klist
+        }
+        lappend inputspec [list $cardattr $alist]        
+    }
+    set win $window
+    if {![info exists inputspec]} { error "Internal Error: keine Specifikationen für Edit"}
+    if {[llength $inputspec]==1} {
+        # Hier wenn nur ein Optionsblatt also kein Notebook
+        set inputframe [self]::inputframeobj
+        WidgetFactory make_inputs_keylist $inputframe [lindex [lindex $inputspec 0] 1]
+        lappend framelist [list [lindex [lindex [lindex $inputspec 0] 0] 0] $inputframe]
+    } else {
+        set inputframe [NoteBookContainer [self]::notebook]
+        foreach card $inputspec {
+            set cardattr [lindex $card 0]
+            set input [lindex $card 1]
+            set inputname ${inputframe}::[Object autoname bookcard]
+            WidgetFactory make_inputs_keylist $inputname $input
+            lappend framelist [list [lindex $cardattr 0] $inputname]
+            $inputframe addcard $inputname $cardattr
+            set card_arr([lindex $cardattr 0]) $inputname
+        }
+    }
+    $inputframe map $win
+    #puts "inputframe $inputframe"
+}
+@ SchemaEdit instproc modifyProp {} {
+description {Eine Standart Prozedur, geht davon aus, daß alle Eigenschaften als
+Tag-Attribute geschrieben werden}
+}
+SchemaEdit instproc modifyProp changes {
+    my instvar domNode
+    foreach key [keylkeys changes] {
+        $domNode setAttribute $key [keylget changes $key]
+    }
+    return
+}
+SchemaEdit instproc moveElem {node posnode {append 1}} {
+    [$node parentNode] removeChild $node
+    if {$append} {
+        $posnode appendChild $node
+    } else {
+        [$posnode parentNode] insertBefore $node $posnode
+    }
+    ProgGui moveElem $node $posnode $append
+}
+SchemaEdit instproc newName {node {name {}}} {
+    if {$name==""} {
+        ProgGui newName $node [$node getAttribute name]
+    } else {
+        $node setAttribute name $name
+        ProgGui newName $node $name
+    }
+}
+@ SchemaEdit instproc showChanges {} {
+description {Übertreg die Änderung des Node Types auf GUI
+(attribut->primary_key, table->type}
+}
+SchemaEdit instproc showChanges node {
+    #puts "check $node"
+    ProgGui applyChanges $node
+}
+SchemaEdit instproc specialUpdate {} {
+
+}
+SchemaEdit instproc unmap {} {
+    my instvar win
+    destroy $win
+}
+@ Class SchemaEditAttribute {
+description {Attribute Eigenschaften
+Specializierung Editieren von Attributen
+der Tablele (Spalten) Eigenschaften}
+}
+Class SchemaEditAttribute -superclass ::SchemaEdit
+@ ::SchemaEditAttribute idemeta add prop
+@ ::SchemaEditAttribute idemeta component xdobry::SchemaEditGUI
+@ ::SchemaEditAttribute idemeta prop {
+    {primary 
+	{name type length null primary_key auto_increment default}}
+    {secundary
+	{valuelist notvisible noteditable constrain}}
+    {metadata
+	{mimetype schowpref outformat importance description}}
+}
+@ ::SchemaEditAttribute idemeta propspec {
+    {name {{type OLabelEntry} {textwidth 20} {state disabled}}}
+    {type {{type OComboBox} {valuelist 
+	{
+	    blob char data datetime double enum float int longblob longtext set text timestamp tinyblob tinytext varchar   
+	}
+    } {state disabled}}}
+    {valuelist {{type OEditList} {state disabled} }}
+    {length {{type OLabelControl} {state disabled} }}
+    {null {{type OCheckButton} {state disabled}}}
+    {primary_key {{type OCheckButton} }}
+    {auto_increment {{type OCheckButton} {state disabled}}}
+    {default {{type OLabelEntry} {textwidth 20} {state disabled}}}
+    {notvisible {{type OCheckButton} }}
+    {noteditable {{type OCheckButton} }}
+    {constrain {{type OValidatorSet} }}
+    {description {{type OLabelText} }}
+    {mimetype {{type OLabelEntry} {textwidth 20}}}
+    {schowpref {{type OLabelEntry} {textwidth 20}}}
+    {outformat {{type OLabelEntry} {textwidth 20}}}
+    {importance {{type ORadioButtons} {valuelist {primary secundary extra}} }}
+}
+@ ::SchemaEditAttribute idemeta typespec {
+    {
+	{char varchar text blob longtext longblob tinyblob tinytext mediumblob mediumtext longblob}
+	{length primary_key notvisible noteditable constrain description importance mimetype showpref}
+    }
+    {
+	{int tinyint smallint mediumint bigint decimal float double}
+	{primary_key null notvisible noteditable constrain description importance outformat}
+    }
+    {
+	{enum set}
+	{notvisible noteditable description importance valuelist}
+    }
+    {
+	{date timestamp datetime time}
+	{notvisible noteditable description importance outformat}
+    }
+}
+SchemaEditAttribute instproc getTagAtttibutes {} {
+    list mimetype schowpref outformat importance description
+}
+SchemaEditAttribute instproc handleNewNode node {
+    my instvar domNode framelist validatorWin
+    [my info class] instvar propspec
+    set domNode $node
+    # Suche Alle sinnvollen Elemente für den bestimmten Attribut-Type
+    set type [$domNode getAttribute type]
+    foreach typelist [[self class] set typespec] {
+        if {[lsearch [lindex $typelist 0] $type]!=-1} {
+            set proplist [lindex $typelist 1]
+            break
+        }
+    }
+    lappend proplist name null default type
+    # Wenn primary_key==1 dann auto_increament hat auch sinn
+    if {[$domNode hasAttribute primary_key] &&
+        [$domNode getAttribute primary_key]=="1"} {
+        lappend proplist auto_increment
+    }
+    # Lese alle Eigenschaften
+    set actprop [tdom_attr2keyl $domNode]
+    # only enum and set has valuelist
+    if {[keylget actprop type] eq "enum" ||  [keylget actprop type] eq "set"} {
+        keylset actprop valuelist [tdom_getvaluelist $domNode]
+    }
+    # check more metadata
+    set meta_node [$domNode getElementsByTagName metadata]
+    if {$meta_node!=""} {
+        foreach metaattr [my getTagAtttibutes] {
+            if {[set value [tdom_getpername $meta_node $metaattr]]!=""} {
+                keylset actprop $metaattr $value             
+            }
+        }
+    }
+    set actkey [keylkeys actprop]
+    # Initialisiere die Elemente in den Kategorieen (Notebook)
+    foreach prop [[self class] set prop] {
+        set pframe [keylget framelist [lindex $prop 0]]
+        set klist {}
+        set slist {}
+        foreach attr [lindex $prop 1] {
+            if {[lcontain $actkey $attr]} {
+                keylset klist $attr [keylget actprop $attr]
+            } else {
+                # Die ungebrauchte Attribute werden hier auf {} gesetzt
+                # Probleme bei Zahlenwidget (LabelControl) da ist
+                # ein leeres Wert 0
+                keylset klist $attr {}
+            }
+        }
+        $pframe set_defaults $klist
+        # Ausblende die unwichtigen Attribute
+        $pframe hide [minusMenge [lindex $prop 1] $proplist]
+        # Zeige die wichtigen
+        $pframe show [schnittMenge [lindex $prop 1] $proplist]
+    }
+    # ValidatorSet Window braucht eigene spezialisierung
+    $validatorWin initFromTDom $domNode
+}
+SchemaEditAttribute instproc map window {
+    next
+    my instvar validatorWin inputframe
+    set validatorWin [$inputframe detect_deep [self] searchValidatorWin]
+}
+@ SchemaEditAttribute instproc modifyProp {} {
+description {Diese Prozedur soll die Eigenschaft-Veränderungen in den tDom
+Struktur abbilden, Es werden hier die Kontrollen durchgefügt
+und unnötige Attribute und Tags entfernt}
+}
+SchemaEditAttribute instproc modifyProp propchanges {
+    my instvar domNode
+    set ch_attr [keylkeys propchanges]
+    if {[lcontain $ch_attr name]>0} {
+        set sv [[my getProgGui] set schemaVisitor]
+        set mes [$sv checkNameWithMessage [keylget propchanges name]]
+        if {$mes!=""} {return $mes}
+    }
+    set attribute_prop {name type length null primary_key auto_increment default notvisible noteditable constrain precision}
+    set meta_data [my getTagAtttibutes]
+    if {[llength [schnittMenge $ch_attr [my getDBSchemaAttributes]]]>0} {
+        [my getProgGui] changeAttribute $domNode
+    }
+    tdom_keyl2attr $domNode $propchanges {
+        {primary_key 0} {auto_increment 0}
+        {default {}} {null 0} {notvisible 0} {noteditable 0} 
+        {constrain {}}
+    } $attribute_prop
+    set rdom_doc [$domNode ownerDocument]
+    if {[lcontain $ch_attr valuelist]} {
+        tdom_setvaluelist $domNode [keylget propchanges valuelist]
+    }
+    set metach [schnittMenge $ch_attr $meta_data]
+    # Jedes Metadata wird als ein Tag abgebildet
+    if {$metach!=""} {
+        set meta_node [$domNode getElementsByTagName metadata]
+        if {$meta_node==""} {
+            set meta_node [$rdom_doc createElement metadata]
+            $domNode appendChild $meta_node
+        }
+        foreach metaitem $metach {
+            set item_node [$domNode getElementsByTagName $metaitem]
+            set newtext [string trim [keylget propchanges $metaitem]]
+            if {$item_node==""} {
+                set item_node [$rdom_doc createElement $metaitem]
+                $meta_node appendChild $item_node
+            } else {
+                if {$newtext==""} {
+                    # kein Text also Node Löschen
+                    $meta_node removeChild $item_node
+                    break
+                }
+                # Alter Text Löschen
+                # vorausgesetzt es ist das erste Child
+                $item_node removeChild [$item_node firstChild]
+            }
+            set item_text [$rdom_doc createTextNode $newtext]
+            $item_node appendChild $item_text            
+        }
+    }
+    # Hat sich primary_key geändert
+    if {[lcontain $ch_attr primary_key]} {
+        my showChanges $domNode
+    }
+    if {[lcontain $ch_attr name]} {
+        my newName $domNode [$domNode getAttribute name]
+    }
+    if {[lcontain $ch_attr type]>0} {
+        set sv [[my getProgGui] set schemaVisitor]
+        $sv addaptByTypeChange $domNode
+    }
+
+    return
+}
+SchemaEditAttribute instproc searchValidatorWin object {
+    return [$object istype OValidatorSet]
+}
+SchemaEditAttribute instproc specialUpdate {} {
+    my instvar domNode validatorWin
+    $validatorWin updateToTDom $domNode
+}
+SchemaEditAttribute proc initializeAfterLoad {} {
+my set propspec {
+    {name {{type OLabelEntry} {textwidth 20} }}
+    {type {{type OComboBox} {valuelist 
+	{
+	    decimal double int timestamp smallint text datetime enum float varchar longblob set char money boolean
+	}
+    }}}
+    {valuelist {{type OEditList} }}
+    {length {{type OLabelControl} {min 0} {max 1073741824}}}
+    {precision {{type OLabelControl} {min 0} {max 1073741824}}}
+    {null {{type OCheckButton} }}
+    {primary_key {{type OCheckButton} }}
+    {auto_increment {{type OCheckButton} }}
+    {default {{type OLabelEntry} {textwidth 20} }}
+    {notvisible {{type OCheckButton} }}
+    {noteditable {{type OCheckButton} }}
+    {constrain {{type OValidatorSet} }}
+    {description {{type OLabelText} }}
+    {mimetype {{type OLabelEntry} {textwidth 20}}}
+    {schowpref {{type OLabelEntry} {textwidth 20}}}
+    {outformat {{type OLabelEntry} {textwidth 20}}}
+    {importance {{type ORadioButtons} {valuelist {primary secundary extra}} }}
+}
+my set prop {
+    {primary 
+	{name type length precision null primary_key auto_increment default}}
+    {secundary
+	{valuelist notvisible noteditable constrain}}
+    {metadata
+	{mimetype schowpref outformat importance description}}
+}
+my set typespec {
+    {
+	{char varchar}
+	{length primary_key notvisible noteditable constrain description importance mimetype showpref}
+    }
+    {
+	{decimal}
+	{length precision primary_key notvisible noteditable constrain description importance mimetype showpref}
+    }
+    {
+	{int smallint float double boolean text longblob money}
+	{primary_key null notvisible noteditable constrain description importance outformat}
+    }
+    {
+	{enum set}
+	{notvisible noteditable description importance valuelist}
+    }
+    {
+	{timestamp datetime}
+	{notvisible noteditable description importance outformat}
+    }
+}
+}
+Class SchemaEditCollection -superclass ::SchemaEdit
+@ ::SchemaEditCollection idemeta add prop
+@ ::SchemaEditCollection idemeta component xdobry::SchemaEditGUI
+@ ::SchemaEditCollection idemeta prop {
+    {primary 
+	{name minOccurs}}
+}
+@ ::SchemaEditCollection idemeta propspec {
+    {name {{type OLabelEntry} {textwidth 20} }}
+    {minOccurs {{type ORadioButtons} {valuelist {0 1}} }}
+}
+SchemaEditCollection instproc handleNewNode node {
+    my instvar domNode framelist
+    set domNode $node
+    set pframe [keylget framelist primary]
+    set defval [tdom_attr2keyl $node {name minOccurs}]
+    tdom_setdefaults defval {
+        {minOccurs 0}
+    }
+    $pframe set_defaults $defval
+    if {[$node getAttribute type]=="reference"} {
+        $pframe show minOccurs
+    } else {
+        $pframe hide minOccurs
+    }
+
+}
+SchemaEditCollection instproc map window {
+    next
+}
+SchemaEditCollection instproc modifyProp propchanges {
+    my instvar domNode
+    tdom_keyl2attr $domNode $propchanges {
+        {minOccurs 0}
+    } {minOccurs}
+    if {[lcontain [keylkeys propchanges] name]} {
+        set name [keylget propchanges name]
+        if {[$domNode selectNodes /descendant::assoziationtarget\[@name=\"$name\"\]]!=""} {
+            IDE::Dialog error [mc "This name is already used?"]
+            return
+        }
+        set oldname [$domNode getAttribute name]
+        foreach node [$domNode selectNodes /descendant::assoziationtarget\[@name=\"$oldname\"\]] {
+            my newName $node $name
+        }
+        # Suche assoztioncontainer. Es sollte eigentlich nur einen geben
+        foreach node [$domNode selectNodes /descendant::assoziationcollection\[@name=\"$oldname\"\]] {
+            my newName $node $name
+        }
+    }
+    return
+}
+SchemaEditCollection proc initializeAfterLoad {} {
+my set propspec {
+    {name {{type OLabelEntry} {textwidth 20} }}
+    {minOccurs {{type ORadioButtons} {valuelist {0 1}} }}
+}
+my set prop {
+    {primary 
+	{name minOccurs}}
+}
+}
+@ Class SchemaEditDatabase {
+description {Specializierung Editieren von Database Eigenschaften}
+}
+Class SchemaEditDatabase -superclass ::SchemaEdit
+@ ::SchemaEditDatabase idemeta add prop
+@ ::SchemaEditDatabase idemeta component xdobry::SchemaEditGUI
+@ ::SchemaEditDatabase idemeta prop {
+    {primary {name type}}
+}
+@ ::SchemaEditDatabase idemeta propspec {
+    {name {{type OLabelEntry} {textwidth 20} {state disabled}}}
+    {type {{type OLabelEntry} {textwidth 20} {state disabled}}}
+}
+SchemaEditDatabase instproc handleNewNode node {
+    next
+}
+SchemaEditDatabase instproc map win {
+    next
+}
+SchemaEditDatabase proc initializeAfterLoad {} {
+my set propspec {
+    {name {{type OLabelEntry} {textwidth 20} }}
+    {type {{type OLabelEntry} {textwidth 20} }}
+}
+my set prop {
+    {primary {name type}}
+}
+}
+@ Class SchemaEditGroup {
+description {Attribute Group Eigenschaften}
+}
+Class SchemaEditGroup -superclass ::SchemaEdit
+@ ::SchemaEditGroup idemeta add prop
+@ ::SchemaEditGroup idemeta component xdobry::SchemaEditGUI
+@ ::SchemaEditGroup idemeta prop {
+    {primary 
+	{name elements}}
+}
+@ ::SchemaEditGroup idemeta propspec {
+    {name {{type OLabelEntry} {textwidth 20} }}
+    {elements {{type OMultiList} {valuelist {}} }}
+}
+SchemaEditGroup instproc handleNewNode node {
+    my instvar domNode framelist translist lgroup
+    next
+    set pframe [keylget framelist primary]
+    # Suche welche Attribute gehören zur Gruppe
+    set lgroup {}
+    foreach attr_node [$domNode selectNodes child::attr] {
+        set name [$attr_node getAttribute name]
+        lappend lgroup $name
+        set translist($name) $attr_node
+    }
+    # Welche Attribute gibt es über die Gruppe
+    # keine mitglieder von weiteren Gruppen
+    set plist {}
+    foreach attr_node [[$domNode parentNode] selectNodes child::attr] {
+        set name [$attr_node getAttribute name]
+        lappend plist $name
+        set translist($name) $attr_node
+    }
+    #puts "LG $lgroup PL $plist S [addMenge $lgroup $plist]"
+    ${pframe}::elements setvaluelist [lsort [addMenge $lgroup $plist]]
+    $pframe set_defaults [list [list elements $lgroup]]
+}
+SchemaEditGroup instproc map window {
+    next
+}
+@ SchemaEditGroup instproc modifyProp {} {
+description {Diese Prozedur soll die Eigenschaft veränderungen in den tDom
+Struktur abbilden, Es werden hier die Kontrollen durchgefügt
+und unnötige Attribute und Tags entfernt}
+}
+SchemaEditGroup instproc modifyProp propchanges {
+    my instvar domNode lgroup translist
+    set ch_attr [keylkeys propchanges]
+    if {[lcontain $ch_attr name]} {
+        $domNode setAttribute name [keylget propchanges name]
+        my newName $domNode
+    }
+    if {[lcontain $ch_attr elements]} {
+        set elements [keylget propchanges elements]
+        #  Welche Attribute gehören nicht mehr zu Gruppe
+        set posnode [$domNode nextSibling]
+        foreach elem [minusMenge $lgroup $elements] {
+            # Nach außen transportieren
+            my moveElem $translist($elem) $posnode 0
+        }
+        foreach elem [minusMenge $elements $lgroup] {
+            my moveElem $translist($elem) $domNode 1
+        }
+    }
+    return
+}
+SchemaEditGroup proc initializeAfterLoad {} {
+my set propspec {
+    {name {{type OLabelEntry} {textwidth 20} }}
+    {elements {{type OMultiList} {valuelist {}} }}
+}
+my set prop {
+    {primary 
+	{name elements}}
+}
+}
+@ Class SchemaEditLabel {
+description {SchemaEditGroup instproc removeElem node {
+puts "rmElem $node"
+set parent [$node parentNode]
+$parent removeChild $node
+Vor der gruppe plazieren
+[$parent parentNode] insertBefore $node $parent
+}
+SchemaEditGroup instproc addElem node {
+puts "addElem $node"
+[self] instvar domNode
+[$node parentNode] removeChild $node
+$domNode appendChild $node
+}
+
+
+
+Label Eigenschaften (Tabellen Etikette)}
+}
+Class SchemaEditLabel -superclass ::SchemaEdit
+@ ::SchemaEditLabel idemeta add prop
+@ ::SchemaEditLabel idemeta component xdobry::SchemaEditGUI
+@ ::SchemaEditLabel idemeta prop {
+    {primary 
+	{elements id-relationship}}
+}
+@ ::SchemaEditLabel idemeta propspec {
+    {elements {{type OMultiList} {valuelist {}} }}
+    {id-relationship {{type OCheckButton} }}
+}
+SchemaEditLabel instproc handleNewNode node {
+    my instvar domNode framelist
+    set domNode $node
+    set pframe [keylget framelist primary]
+    set labellist [tdom_getvaluelist $node]
+    set attributen [concat [[$node parentNode] selectNodes child::attr/attribute::name] [[$node parentNode] selectNodes child::attrgroup/descendant::attr/attribute::name]]
+    set attributen [tdom_extractAttributes $attributen]
+    ${pframe}::elements setvaluelist $attributen
+    keylset defvalue elements $labellist
+    if {[[$node parentNode] hasAttribute reference]} {
+        $pframe show id-relationship
+        if {[$node hasAttribute id-relationship]} {
+            keylset defvalue id-relationship [$node getAttribute id-relationship]
+        }
+    } else {
+        $pframe hide id-relationship
+    }
+    $pframe set_defaults $defvalue
+
+}
+SchemaEditLabel instproc map window {
+    next
+}
+@ SchemaEditLabel instproc modifyProp {} {
+description {Diese Prozedur soll die Eigenschaft veränderungen in den tDom
+Struktur abbilden, Es werden hier die Kontrollen durchgefügt
+und unnötige Attribute und Tags entfernt}
+}
+SchemaEditLabel instproc modifyProp propchanges {
+    my instvar domNode
+    tdom_keyl2attr $domNode $propchanges {{id-relationship 0}} id-relationship
+    if {[lcontain [keylkeys propchanges] elements]} {
+        set elements [keylget propchanges elements]
+        if {$elements==""} {
+            serviceSEdit deleteElem $domNode
+        } else {
+            tdom_setvaluelist $domNode $elements
+        }
+    }
+    return
+}
+SchemaEditLabel proc initializeAfterLoad {} {
+my set propspec {
+    {elements {{type OMultiList} {valuelist {}} }}
+    {id-relationship {{type OCheckButton} }}
+}
+my set prop {
+    {primary 
+	{elements id-relationship}}
+}
+}
+@ Class SchemaEditTable {
+description {Specializierung Editieren von Table Eigenschaften}
+}
+Class SchemaEditTable -superclass ::SchemaEdit
+@ ::SchemaEditTable idemeta add prop
+@ ::SchemaEditTable idemeta component xdobry::SchemaEditGUI
+@ ::SchemaEditTable idemeta prop {
+    {primary {name type description}}
+}
+@ ::SchemaEditTable idemeta propspec {
+    {name {{type OLabelEntry} {textwidth 20} {state disabled}}}
+    {type {{type OLabelEntry} {textwidth 20} {state disabled}}}
+    {description {{type OLabelText} }}
+}
+SchemaEditTable instproc handleNewNode node {
+    my instvar domNode framelist
+    set domNode $node
+    foreach prop [[my info class] set prop] {
+        set pframe [keylget framelist [lindex $prop 0]]
+        set klist {}
+        foreach attr [lindex $prop 1] {
+            if {[$domNode hasAttribute $attr]} {
+                keylset klist $attr [$domNode getAttribute $attr]
+            } else {
+                keylset klist $attr {}
+            }
+        }
+        keylset klist description [tdom_getpername $domNode description]
+        $pframe set_defaults $klist
+    }
+}
+SchemaEditTable instproc map win {
+    next
+}
+SchemaEditTable instproc modifyProp changes {
+    my instvar domNode
+    set ch_attr [keylkeys changes]
+    if {[lcontain $ch_attr name]>0} {
+        set sv [[my getProgGui] set schemaVisitor]
+        set mes [$sv checkTableName [keylget changes name]]
+        if {$mes!=""} {return $mes}
+    }
+    if {[lcontain [keylkeys changes] description]} {
+        tdom_setpername $domNode description [keylget changes description]
+    }
+    if {[lcontain $ch_attr name]>0} {
+        [my getProgGui] changeTable $domNode
+        my newName $domNode [keylget changes name]
+    }
+    foreach key $ch_attr {
+        if {$key eq "description"} continue
+        if {$key eq "name"} continue
+        $domNode setAttribute $key [keylget changes $key]
+    }
+    return
+}
+SchemaEditTable proc initializeAfterLoad {} {
+my set propspec {
+    {name {{type OLabelEntry} {textwidth 20} }}
+    {type {{type OLabelEntry} {textwidth 20} }}
+    {description {{type OLabelText} }}
+}
+my set prop {
+    {primary {name type description}}
+}
+}
+@ Class SchemaEditTarget {
+description {Editieren von assoziationtarget Nodes
+Partielle Assoziation Editierung}
+}
+Class SchemaEditTarget -superclass ::SchemaEdit
+@ ::SchemaEditTarget idemeta add prop
+@ ::SchemaEditTarget idemeta component xdobry::SchemaEditGUI
+@ ::SchemaEditTarget idemeta prop {
+    {primary 
+	{name rolename minOccurs maxOccurs ondelete onupdate}}
+}
+@ ::SchemaEditTarget idemeta propspec {
+    {name {{type OLabelEntry} {textwidth 20} }}
+    {rolename {{type OLabelEntry} {textwidth 20} }}
+    {maxOccurs {{type OLabelEntry} {textwidth 20}}}
+    {minOccurs {{type OLabelEntry} {textwidth 20}}}
+    {ondelete {{type OComboBox} {valuelist {nothing delete setnull}} {default nothing}}}
+    {onupdate {{type OComboBox} {valuelist {nothing update setnull}} {default nothing}}}
+}
+SchemaEditTarget instproc handleNewNode node {
+    my instvar domNode framelist
+    set domNode $node
+    set pframe [keylget framelist primary]
+    set defval [tdom_attr2keyl $node {name rolename minOccurs maxOccurs ondelete onupdate}]
+    tdom_setdefaults defval {
+        {minOccurs {}} {maxOccurs {}} {ondelete nothing} {onupdate nothing}
+        {rolename {}}
+    }
+    $pframe set_defaults $defval
+
+}
+SchemaEditTarget instproc map window {
+    next
+}
+SchemaEditTarget instproc modifyProp propchanges {
+    my instvar domNode
+    tdom_keyl2attr $domNode $propchanges {
+        {minOccurs {}} {maxOccurs {}} {ondelete nothing} {onupdate nothing}
+    } {minOccurs maxOccurs ondelete onupdate}
+    if {[lcontain [keylkeys propchanges] name]} {
+        set name [keylget propchanges name]
+        if {[$domNode selectNodes /descendant::assoziationtarget\[@name=\"$name\"\]]!=""} {
+            return [mc "This name is already used?"]
+        }
+        set oldname [$domNode getAttribute name]
+        foreach node [$domNode selectNodes /descendant::assoziationtarget\[@name=\"$oldname\"\]] {
+            my newName $node $name
+        }
+        # Suche assoztioncontainer. Es sollte eigentlich nur einen geben
+        foreach node [$domNode selectNodes /descendant::assoziationcollection\[@name=\"$oldname\"\]] {
+            my newName $node $name
+        }
+    }
+    # Änderung der Rolenname muß auf zwei Stellen geschehen
+    # Target und Container->Participant
+    if {[lcontain [keylkeys propchanges] rolename]} {
+        set rolename [keylget propchanges rolename]
+        # finde die Collection
+        set ac_node [$domNode selectNodes /descendant::assoziationcollection\[@name=\"[$domNode getAttribute name]\"\]]
+        # existiet dieses rolename
+        if {[$ac_node selectNodes child::participant\[@rolename=\"$rolename\"\]]!=""} {
+            IDE::Dialog error [mc "This name is already used?"]
+            return
+        }
+        if {[$domNode hasAttribute rolename]} {
+            set p_node [$ac_node selectNodes child::participant\[@rolename=\"[$domNode getAttribute rolename]\"\]]
+        } else {
+            set table [lindex [$domNode selectNodes ancestor::table] 0]
+            set p_node [$ac_node selectNodes child::participant\[@table=\"[$table getAttribute name]\"\]]
+        }
+        if {$rolename!=""} {
+            $p_node setAttribute rolename $rolename
+            $domNode setAttribute rolename $rolename
+        } else {
+            $p_node removeAttribute rolename
+            $p_node removeAttribute rolename
+        }
+    }
+    return
+}
+SchemaEditTarget proc initializeAfterLoad {} {
+my set propspec {
+    {name {{type OLabelEntry} {textwidth 20} }}
+    {rolename {{type OLabelEntry} {textwidth 20} }}
+    {maxOccurs {{type OLabelEntry} {textwidth 20}}}
+    {minOccurs {{type OLabelEntry} {textwidth 20}}}
+    {ondelete {{type OComboBox} {valuelist {nothing delete setnull}} {default nothing}}}
+    {onupdate {{type OComboBox} {valuelist {nothing update setnull}} {default nothing}}}
+}
+my set prop {
+    {primary 
+	{name rolename minOccurs maxOccurs ondelete onupdate}}
+}
+}
+SchemaEditAttribute initializeAfterLoad
+SchemaEditCollection initializeAfterLoad
+SchemaEditDatabase initializeAfterLoad
+SchemaEditGroup initializeAfterLoad
+SchemaEditLabel initializeAfterLoad
+SchemaEditTable initializeAfterLoad
+SchemaEditTarget initializeAfterLoad
+

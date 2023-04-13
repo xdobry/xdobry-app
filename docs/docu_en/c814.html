@@ -1,0 +1,257 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>Tutorial</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Documentation of the Xdobry application"
+HREF="book1.html"><LINK
+REL="PREVIOUS"
+TITLE="Missing functionality be Xdobry"
+HREF="x740.html"><LINK
+REL="NEXT"
+TITLE="Production of the Repositories"
+HREF="x831.html"></HEAD
+><BODY
+CLASS="CHAPTER"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Documentation of the Xdobry application</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x740.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x831.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="TUTORIAL"
+></A
+>Tutorial</H1
+><P
+>Here it a example of using the system.
+A school-book-databases was chosen, so that all qualities of the system can be shown.
+The step consequence corresponds possibly to the production by real DB-applications.
+First a ER-diagram of the system is constructed and is illustrated in relational schema.
+Then this schema is converted with the help of reverse engineering colleges of technology into a XML-Repository.</P
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN817"
+></A
+>Relational schema</H1
+><P
+>Accepted a databases-schema with the help of ER-model design.
+This schema gets 5 Entities.
+Besides, is specialized office workers to assistant and professor.
+With appointment it is about a Weak-Entity.
+It is here the modeling the Aggregation (better composition) from sets-attribute of the object.
+There is also different take from relations.
+Examine a connection(affair) the degree 3 with own attribute is a mark(note).
+<DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="uni_er_diagramm.png"></P
+></DIV
+>
+This ER-diagram is converted to a relational schema.
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>Angestellte   {PersNr,Name}
+Professor     {PersNr,Rang,Raum}
+Assistent     {PersNr,Rang,Raum,Professor}
+Student       {MatrNr,Name,Semester}
+Vorlesung     {VorlesungNr,Titel,SWS,PersNr}
+hoeren        {MatrNr,VorlesungNr}
+voraussetzten {VorgaengerNr,NachfolgerNr}
+pruefen       {MatrNr},VorlesungNr,PersNr,Note}
+Termin        {VorlesungNr,Wochentag,Zeit}</PRE
+></TD
+></TR
+></TABLE
+>
+File<TT
+CLASS="FILENAME"
+>Unibank.sql</TT
+> In the directory <TT
+CLASS="FILENAME"
+>sample</TT
+> of the program contains the SQL-instructions for MySql databases for the creation of the databases.
+To put on the databases one must first <SPAN
+CLASS="DATABASE"
+>University</SPAN
+>
+databases create.
+<DIV
+CLASS="WARNING"
+><P
+></P
+><TABLE
+CLASS="WARNING"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The MySql databases have to be installed on your system.
+It runs and you have to put on corresponding rights the databases and tables.</P
+></TD
+></TR
+></TABLE
+></DIV
+>
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>[User@localhost] mysql mysql 
+&#62;CREATE DATABASE university</PRE
+></TD
+></TR
+></TABLE
+>
+Attach from tables
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>&#62;cat sample/unibank.sql | mysql-u username university</PRE
+></TD
+></TR
+></TABLE
+></P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x740.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x831.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Missing functionality be Xdobry</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Production of the Repositories</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

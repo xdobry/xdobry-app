@@ -1,0 +1,165 @@
+<!ELEMENT dbforms (form+)>
+<!ATTLIST dbforms
+ name CDATA #REQUIRED
+>
+<!ELEMENT form (frame,(filters?|templates?)*)>
+<!ATTLIST form
+ primarykey CDATA #REQUIRED
+ table CDATA #REQUIRED
+ name ID #REQUIRED
+ insertonly (0 | 1) "0"
+ nodelete (0 | 1) "0"
+ noinsert (1 | 0) "0"
+ noupdate (0 | 1) "0"
+>
+<!ELEMENT frame (pack+|grid+|description?)>
+<!ATTLIST frame
+ manager (pack | grid) #REQUIRED
+ label CDATA #IMPLIED
+ border CDATA #IMPLIED
+>
+<!ELEMENT pack (boolean|frame|nestedform|formlink|inheritform|reference|numeric|list|text)*>
+<!ATTLIST pack
+ anchor (ne | n | e | se | sw | w | nw | center | s) "center"
+ expand (1 | 0) "0"
+ fill (x | y | both | none) "none"
+ side (top | bottom | left | right) "top"
+>
+<!ELEMENT grid (frame|numeric|list|formlink|inheritform|nestedform|boolean|reference|text)*>
+<!ATTLIST grid
+ column CDATA #IMPLIED
+ row CDATA #IMPLIED
+ rowspan CDATA #IMPLIED
+ columnspan CDATA #IMPLIED
+ sticky CDATA #IMPLIED
+>
+<!ELEMENT numeric (checks?|description?)*>
+<!ATTLIST numeric
+ default CDATA #IMPLIED
+ label CDATA #IMPLIED
+ textwidth CDATA #IMPLIED
+ state (normal | disabled) "normal"
+ data CDATA #REQUIRED
+ notnull (1 | 0) "0"
+ dbdefault CDATA #IMPLIED
+ min CDATA #IMPLIED
+ max CDATA #IMPLIED
+ unbound (1 | 0) #IMPLIED
+>
+<!ELEMENT list (valuelist,(checks?,description?)*)>
+<!ATTLIST list
+ state (normal | disabled) "normal"
+ data CDATA #REQUIRED
+ subtype (radiobuttons | combobox) #IMPLIED
+ default CDATA #IMPLIED
+ label CDATA #IMPLIED
+ notnull (0 | 1) "0"
+ dbdefault CDATA #IMPLIED
+ dropdown (0 | 1) "1"
+ onbound (0 | 1) "0"
+>
+<!ELEMENT valuelist (item+)>
+<!ELEMENT item (#PCDATA)>
+<!ELEMENT formlink (objectlink,description?)*>
+<!ATTLIST formlink
+ refattribute CDATA #REQUIRED
+ form IDREF #REQUIRED
+ label CDATA #IMPLIED
+ data CDATA #REQUIRED
+ reftable CDATA #IMPLIED
+>
+<!ELEMENT objectlink EMPTY>
+<!ATTLIST objectlink
+ form CDATA #REQUIRED
+ label CDATA #REQUIRED
+ refattribute CDATA #REQUIRED
+>
+<!ELEMENT inheritform (child+|description?)>
+<!ATTLIST inheritform
+ data CDATA #REQUIRED
+>
+<!ELEMENT child EMPTY>
+<!ATTLIST child
+ inheritkey CDATA #REQUIRED
+ form IDREF #REQUIRED
+ label CDATA #IMPLIED
+>
+<!ELEMENT nestedform (description?)>
+<!ATTLIST nestedform
+ refattribute CDATA #REQUIRED
+ form IDREF #REQUIRED
+ label CDATA #IMPLIED
+ data CDATA #REQUIRED
+>
+<!ELEMENT boolean (description)>
+<!ATTLIST boolean
+ data CDATA #REQUIRED
+ label CDATA #IMPLIED
+ onvalue CDATA "1"
+ offvalue CDATA "0"
+ default CDATA #IMPLIED
+ state (normal | disabled) "disabled"
+ notnull (1 | 0) "0"
+ dbdefault CDATA #IMPLIED
+ unbound (0 | 1) "0"
+>
+<!ELEMENT reference (sqlquery|description?)>
+<!ATTLIST reference
+ dropdown (0 | 1) "0"
+ height CDATA #IMPLIED
+ label CDATA #IMPLIED
+ state (normal | disabled) "normal"
+ showfirst (0 | 1) "1"
+ data CDATA #REQUIRED
+ columnslabel CDATA #IMPLIED
+ columns CDATA #IMPLIED
+ columnswidth CDATA #IMPLIED
+ notnull (1 | 0) "0"
+ form CDATA #IMPLIED
+ unbound (1 | 0) "0"
+>
+<!ELEMENT sqlquery (#PCDATA)>
+<!ELEMENT text (checks?|description?)*>
+<!ATTLIST text
+ data CDATA #REQUIRED
+ default CDATA #IMPLIED
+ state (normal | disabled) #IMPLIED
+ width CDATA #IMPLIED
+ height CDATA #IMPLIED
+ show (0 | 1) "0"
+ textwidth CDATA #IMPLIED
+ dbdefault CDATA #IMPLIED
+ label CDATA #IMPLIED
+ subtype (area | textfield) "textfield"
+ unbound (0 | 1) "0"
+ notnull (1 | 0) #IMPLIED
+ New_Attribute2 CDATA #IMPLIED
+>
+<!ELEMENT checks (check+)>
+<!ELEMENT check (#PCDATA)>
+<!ATTLIST check
+ validator (Regexpr | Expr | Length) #REQUIRED
+>
+<!ELEMENT description (#PCDATA)>
+<!ELEMENT filters (filter+)>
+<!ELEMENT filter (attribute+)>
+<!ATTLIST filter
+ name CDATA #REQUIRED
+ filtermode CDATA #IMPLIED
+ logmode CDATA #IMPLIED
+>
+<!ELEMENT attribute (#PCDATA)>
+<!ATTLIST attribute
+ name CDATA #REQUIRED
+>
+<!ELEMENT templates (template+)>
+<!ELEMENT template (attrstamp+)>
+<!ATTLIST template
+ name CDATA #REQUIRED
+>
+<!ELEMENT attrstamp (#PCDATA)>
+<!ATTLIST attrstamp
+ name CDATA #REQUIRED
+ overwrite (0 | 1) #IMPLIED
+>
+

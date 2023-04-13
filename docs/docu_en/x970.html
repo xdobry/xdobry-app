@@ -1,0 +1,222 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>Ideas for the future</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Documentation of the Xdobry application"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Developer information"
+HREF="c906.html"><LINK
+REL="PREVIOUS"
+TITLE="TODO List"
+HREF="x942.html"><LINK
+REL="NEXT"
+TITLE="Supported Databases"
+HREF="x991.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Documentation of the Xdobry application</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x942.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Developer information</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x991.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN970"
+></A
+>Ideas for the future</H1
+><P
+>First task is to fix all bugs and improve user usability.
+The other is to develop really new ideas.
+Xdobry could serve as a basis for the development of different DB-applications.
+With XOTcl development too Xdobry can be customized and extended for own needs.&#13;</P
+><P
+>As the smallest denominator for relational databases standard SQL-92 and mysql was chosen.
+Many of the problems were solved in SQL99 standard.
+It remains for the moment to wait to the available RDBMS support this standard.
+Interesting the implementing of object-relational qualities of the popular databases Postgres could be.
+Many of those cover themselves with standard SQL3.
+<P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>Array attributes</P
+></LI
+><LI
+><P
+>Tuple can be identified by OID (Objectidentifier)</P
+></LI
+><LI
+><P
+>Versioning</P
+></LI
+><LI
+><P
+>databases-rule</P
+></LI
+></OL
+>
+2 interesting projects also exist to the description of the GUI interface as XML-documents.
+One comes of it as a by-product of the development of Open Source Netscape (Mozilla).
+It is XPToolkit (<A
+HREF="http://www.mozilla.org/xpfe"
+TARGET="_top"
+>http://www.mozilla.org/xpfe</A
+>
+), the user's interface can independent of platform as XML-documents (user's interface XUL XMl Language).
+Another project comes with the editor for the development of GUIs GLADE<A
+HREF="http://glade.pn.org/"
+TARGET="_top"
+>http://glade.pn.org</A
+>.
+It is a part of the GNOME project, free desktop Enivronment for LINUX.
+The idea with both projects is that the appearance of the GUI is not party-coded in the program, but is always present as a XML-document.
+This could allow a better and flexible configuring of the interface by the used without must to recompile the program.
+Both projects are all the more valuable that the complete source are free and can be applied the available components also with foreign projects.
+The development of <B
+CLASS="COMMAND"
+>FormEditor</B
+> and <B
+CLASS="COMMAND"
+>FormServer</B
+> could profit from it.</P
+><P
+>There also exist other interesting colleges of technology which are connected with XML-standard.
+By the Extensible Stylesheet Language (XSL) the transformation can be automated by XML-documents in other XML-classes or other formats.
+So one could realize transformation of the Repository in specific SQL-instructions (the type CREATE TABLE) easily.</P
+><P
+>The main disadvantage the DTD (Document Type Defintion) is no context-systex can be covered.
+With DTD can not be guaranteed a well-shaped Repository also a valid relational schema represents.
+The newer developments like XML-schema allow a more exact definition of the document-types and overcoming such disadvantages.</P
+><P
+>Another direction for the advancement of the system would be the support of other abstractions and semantics in <B
+CLASS="COMMAND"
+>SchemaEditor</B
+> and afterwords with the form-server.
+Two cases are conceivable here: 1.
+the system an interface offers for the addition functions the DBMS like versioning, new data types, DB-rule (Trigger) 2.
+The system implements even new functional characters like versioning, Authentiefizierung, integrity rule, cascading delete.
+For the conceptual model the support of other abstractions would be possible: derived attributes, derived relations, dependent relations (e.
+g.
+, an assistant can only in the project participant if he the special qualifications has).
+, representation and manipulation of the tree structures which are filed as tables.</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x942.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x991.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>TODO List</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c906.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Supported Databases</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

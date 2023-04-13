@@ -1,0 +1,394 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>FormServer</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Documentation of the Xdobry application"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="User manual"
+HREF="c167.html"><LINK
+REL="PREVIOUS"
+TITLE="FormEditor"
+HREF="x546.html"><LINK
+REL="NEXT"
+TITLE="Schema vs.Form appearances"
+HREF="x698.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Documentation of the Xdobry application</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x546.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>User manual</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x698.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN630"
+></A
+>FormServer</H1
+><P
+>It is a program with which the real end user of the databases has to do.
+This program can evaluate the form descriptions which come from form-editor, display the forms and connect to database.
+This program must give a receipt for the manipulations on the forms correctly in in the instructions SQL to the databases.
+Following functions are supported:
+<P
+></P
+><UL
+><LI
+><P
+>Data View</P
+></LI
+><LI
+><P
+>Data modifying (update)</P
+></LI
+><LI
+><P
+>Data create</P
+></LI
+><LI
+><P
+>filter or search Data</P
+></LI
+><LI
+><P
+>order, sort Data</P
+></LI
+><LI
+><P
+>(new feature) data navigating (Browsing)</P
+></LI
+></UL
+>
+By the form-links a navigation is also possible by data contents along the linkage paths (relationship-path).
+The user can navigate like in hypertext-documents and reach every information.
+The user must not know the schema to work with FormServer.</P
+><P
+>The forms themselves support directly higher abstraction concepts like association, Aggregation and specialization.
+The knowledge about the concepts of the relational modeling like foreign key and primary key must not exist by user.
+<DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="formserver.png"></P
+></DIV
+></P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FORMULARLINKS"
+></A
+>Browsing Database with forms</H2
+><P
+>With Form-Links you can brows the database like hypertext-documents.
+<DIV
+CLASS="FIGURE"
+><A
+NAME="STUDENTPRUEFENER"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="student_pruefen_er.png"></P
+></DIV
+><P
+><B
+>Figure 6. Association der Kardinalität 3 mit einem Attribut</B
+></P
+></DIV
+>
+Consider following association <A
+HREF="x630.html#STUDENTPRUEFENER"
+>Figure 6</A
+>.
+There are three objects (Student, Vorlesung (eng. lesson), Professor) in the relationship Prüfung (eng. exam).
+The result tables structure.
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>Professor     {PersNr,Rang,Raum}
+Student       {MatrNr,Name,Semester}
+Vorlesung     {VorlesungNr,Titel,SWS,PersNr}
+pruefen       {MatrNr},VorlesungNr,PersNr,Note}</PRE
+></TD
+></TR
+></TABLE
+>
+With form-links man can brows or navigate throw Database Information.
+From Student form you can reach per one click the information which exams he must do.</P
+><P
+>The Problem: Association has reacher semantic the hyper-links.
+The Association is transitive. 
+Hyper-Links are only one-way references.
+The association can have more then 2 object (the degree of association can be greater than 2).
+One object can be associated with more than one another objects.
+<DIV
+CLASS="FIGURE"
+><A
+NAME="FORMNAVIGATION"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="form_navigation.png"></P
+></DIV
+><P
+><B
+>Figure 7. navigate (browse) with forms-links</B
+></P
+></DIV
+>
+<A
+HREF="x630.html#FORMNAVIGATION"
+>Figure 7</A
+> shows all form-links types, they correspond to Relationship-Types from Er-model.
+<P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>1:N</DT
+><DD
+><P
+>The Association is displayed as choose-list.
+This is exactly the same as foreign-keys attributes.
+You can trigger the link by double-click on the reference-list title.</P
+></DD
+><DT
+>N:1</DT
+><DD
+><P
+>The Association is displayed as action-button.
+This is just another site of 1:N relationship.</P
+></DD
+><DT
+>N:N oder N:M:O:...</DT
+><DD
+><P
+>The Association is displayed as menu-button.
+This is just another site of 1:N relationship.
+The first menu-item is an N:1 Relationship and it link to the relationship-table. 
+The next item links to objects.</P
+></DD
+></DL
+></DIV
+>
+After open the linking form, the linking are conserved.
+This mean, the form are chained.</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN680"
+></A
+>user macros in form</H2
+><P
+>There are simple API to extend the form-server with user-procedures (macros).
+The FormServer is implemented in Tcl and it allow very ease to dynamic change
+of program-code.</P
+><P
+>The macros are loaded as Tcl-scripts and they become a part of FormServer.
+The are some simply designed API to control some main function of
+program.
+You can change the behavior of some form like (delete checking, update checking ...).
+The idea; you create new XOTcl class derived from FormEngine class and you
+overwrite some empty methods.
+This are empty macros for myform form.</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+> 
+Class myform -superclass FormEngine
+myform instproc update_check klvalues_ref {
+    return 1
+}
+myform instproc delete_check {} {
+    return 1
+}
+myform instproc insert_check klvalues_ref {
+    return 1
+}
+myform instproc after_delete {} {
+}
+myform instproc reload_form {} {
+}
+myform instproc position_check {pos} {
+    return 1
+}
+FormEngine instproc filling_form klvalues_ref {
+}</PRE
+></TD
+></TR
+></TABLE
+><P
+>See the example <I
+CLASS="EMPHASIS"
+>accountancy</I
+> how to write your macros.
+The are such er-schema.
+<DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="accountancy_er.png"></P
+></DIV
+>
+The macros are used to build following functionality.
+<P
+></P
+><UL
+><LI
+><P
+>A Customer (Klient) can be not deleted if he has order he has not paid.
+By deleting customer set all foreign-keys by cust_order table to NULL</P
+></LI
+><LI
+><P
+>The macro compute a derivated attribute total price for oder and sum price for oder item</P
+></LI
+><LI
+><P
+>Check if the date format is 2000-01-01</P
+></LI
+></UL
+>
+see the file <TT
+CLASS="FILENAME"
+>sample/accountancy.tcl</TT
+>
+how to buid such macros (for example how to buil sql-queries in Xdobry).</P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x546.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x698.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>FormEditor</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c167.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Schema vs.Form appearances</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,342 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>Missing functionality be Xdobry</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Documentation of the Xdobry application"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="User manual"
+HREF="c167.html"><LINK
+REL="PREVIOUS"
+TITLE="Schema vs.Form appearances"
+HREF="x698.html"><LINK
+REL="NEXT"
+TITLE="Tutorial"
+HREF="c814.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Documentation of the Xdobry application</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x698.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>User manual</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="c814.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN740"
+></A
+>Missing functionality be Xdobry</H1
+><P
+>I also want to name the possible tarps and pitfalls with the use of the the program.
+<P
+></P
+><UL
+><LI
+><P
+>With the Aggregation, Subtypes and foreign-key only one-attribute-primary-key per object are supported.
+An object is identified only by one attribute.</P
+></LI
+><LI
+><P
+>With empty tables the insertion of the first Tuples is possible only with the command buttons save (diskettes-icon).</P
+></LI
+><LI
+><P
+>The data in a form are sent only after the change the Tipple-position (with navigation buttons) or by the command button save.</P
+></LI
+><LI
+><P
+>There are problems with operations (Delete, Change, Create), they become only a visible after the action reload.
+The condition that the data will not could be current by the red-colored command button reload indicated.</P
+></LI
+><LI
+><P
+>The number of open SQL-connections is limited system-specifically.</P
+></LI
+><LI
+><P
+>Only once the Widget (Multi-Column-Listbox) for the announcement of foreign key are initialized while opening the form.
+If the condition of the objects should change at which the foreign keys point, it is not indicated.</P
+></LI
+><LI
+><P
+>The forms which can be used with Aggregation separately are opened, however, the foreign keys are indicated as a normal Widget.
+This can manually in<B
+CLASS="COMMAND"
+>FormEditor</B
+>
+Are changed, however, it is not shown by form assistants automatic.</P
+></LI
+><LI
+><P
+>Form-links functioning if one does not point at the root-form, the foreign key, however, in a children's form is.
+See Tutorial (form Professor link on assistant).
+Such FormulaLinks need a special treatment which was not programmed yet.</P
+></LI
+></UL
+>
+If you have similar problem or if you have consider to other functional ways, let me about it know.
+How the next version will look, depends on you.</P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN761"
+></A
+>Program Options</H2
+><P
+>You can specify some options by starting FormServer.
+<P
+><B
+CLASS="COMMAND"
+>FormServer</B
+>  --  [-help] [-debug] [-viewonly] [-ignorexmlpar | -noconnectdialog | -connect <TT
+CLASS="REPLACEABLE"
+><I
+>connectpar</I
+></TT
+> | -loadmacros <TT
+CLASS="REPLACEABLE"
+><I
+>macrofile</I
+></TT
+> | -openform <TT
+CLASS="REPLACEABLE"
+><I
+>formname</I
+></TT
+> | <TT
+CLASS="REPLACEABLE"
+><I
+>xmlfile</I
+></TT
+>]</P
+>                                                                 
+
+<P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>-debug</DT
+><DD
+><P
+>Activate some menus for debugging: SQL-Monitor, XOtcl class-browser, Tk-Window Browser, interactive mods</P
+></DD
+><DT
+>-viewonly</DT
+><DD
+><P
+>The database contens can be only viewed. No delete, modify or insert operation are allowed.</P
+></DD
+><DT
+>-ignorexmlpar</DT
+><DD
+><P
+>Ignore all parameters codded in XML file.</P
+></DD
+><DT
+>-noconnectdialog</DT
+><DD
+><P
+>Do not show database connect dialog. All parameters for database connection should be specified in XML file or by -connect option.</P
+></DD
+><DT
+>-loadmacros</DT
+><DD
+><P
+>load a Tcl-script after initializations.</P
+></DD
+><DT
+>-connect</DT
+><DD
+><P
+>Specify database connect parameter.
+The parameters are codded as TclX keyed list.
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="90%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>-connect "{interface mysql} {user root} {dbank test} {password geheim} {socket /var/lib/mysql/mysql.sock}"</PRE
+></TD
+></TR
+></TABLE
+></P
+></DD
+><DT
+>-openform</DT
+><DD
+><P
+>Open a form after initialising.</P
+></DD
+></DL
+></DIV
+>
+<DIV
+CLASS="WARNING"
+><P
+></P
+><TABLE
+CLASS="WARNING"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>All option must be tipped after --.</P
+></TD
+></TR
+></TABLE
+></DIV
+>
+Example usage.
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>./FormServer -- -debug -viewonly
+ -connect "{interface mysql} {dbank uni} 
+           {user root} {socket /var/lib/mysql/mysql.sock}" 
+ -noconnectdialog -openform Student uni.xmlforms</PRE
+></TD
+></TR
+></TABLE
+></P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x698.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="c814.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Schema vs.Form appearances</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c167.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Tutorial</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

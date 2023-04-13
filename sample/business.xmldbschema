@@ -1,0 +1,134 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE database SYSTEM "dbschema.dtd">
+<database name="business">
+    <?dbconnect {interface mysql} {hostname localhost} {user root} {dbank business}?>
+    <table name="Can_produce">
+        <attr name="DEPTNO" type="int" primary_key="1" default="0"/>
+        <attr name="PRODID" type="int" primary_key="1" default="0"/>
+        <attr name="unit_cost" type="int" null="1"/>
+        <assoziationcollection name="PriceCan_produce" type="reference">
+            <participant reference="PRODID" table="Price"/>
+        </assoziationcollection>
+        <assoziationcollection name="DepartamentCan_produce" type="reference">
+            <participant reference="DEPTNO" table="Departament"/>
+        </assoziationcollection>
+    </table>
+    <table name="Carrier">
+        <label>
+            <valuelist>
+                <item>name</item>
+            </valuelist>
+        </label>
+        <attr name="CARRIERID" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="name" length="20" type="varchar" null="1"/>
+        <attr name="address" length="20" type="varchar" null="1"/>
+        <assoziationtarget name="CarrierShipment" table="Shipment"/>
+    </table>
+    <table name="CusOrder">
+        <attr name="ORDID" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="order_date" type="datetime" null="1"/>
+        <attr name="PRODID" type="int" null="1"/>
+        <attr name="CUSTID" type="int" null="1"/>
+        <assoziationcollection name="PriceCusOrder" type="reference">
+            <participant reference="PRODID" table="Price"/>
+        </assoziationcollection>
+        <assoziationtarget name="CusOrderShipment" table="Shipment"/>
+        <assoziationcollection name="CustomerCusOrder" type="reference">
+            <participant reference="CUSTID" table="Customer"/>
+        </assoziationcollection>
+    </table>
+    <table name="Customer">
+        <label>
+            <valuelist>
+                <item>name</item>
+            </valuelist>
+        </label>
+        <attr name="CUSTID" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="name" length="20" type="varchar" null="1"/>
+        <attr name="credit" type="int" null="1"/>
+        <assoziationtarget name="CustomerCusOrder" table="CusOrder"/>
+    </table>
+    <table name="Departament">
+        <label>
+            <valuelist>
+                <item>dept_name</item>
+            </valuelist>
+        </label>
+        <attr name="DEPTNO" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="dept_name" length="20" type="varchar" null="1"/>
+        <attr name="location" length="20" type="varchar" null="1"/>
+        <assoziationtarget name="DepartamentProject" table="Project"/>
+        <assoziationtarget name="Work_for" table="Work_for"/>
+        <assoziationtarget name="DepartamentCan_produce" table="Can_produce"/>
+        <assoziationtarget name="DepartamentManager" table="Manager"/>
+    </table>
+    <table name="Employee">
+        <label/>
+        <attr name="SSN" type="int" primary_key="1" default="0"/>
+        <attr name="name" length="20" type="varchar" null="1"/>
+        <attr name="salary" type="int" null="1"/>
+        <attr name="hired_date" type="datetime" null="1"/>
+        <assoziationtarget name="Work_for" table="Work_for"/>
+        <table name="Person" type="child" inheritkey="SSN">
+            <attr name="SSN" type="int" primary_key="1" auto_increment="1"/>
+            <attr name="name" length="20" type="varchar" null="1"/>
+            <attr name="address" length="25" type="varchar" null="1"/>
+        </table>
+        <table name="Manager" type="child" inheritkey="SSN">
+            <attr name="SSN" type="int" primary_key="1" default="0"/>
+            <attr name="rank" type="int" null="1"/>
+            <attr name="promotion_date" type="datetime" null="1"/>
+            <attr name="DEPTNO" type="int" null="1"/>
+            <assoziationcollection name="DepartamentManager" type="reference">
+                <participant reference="DEPTNO" table="Departament"/>
+            </assoziationcollection>
+        </table>
+    </table>
+    <table name="Price">
+        <attr name="PRODID" type="int" primary_key="1" default="0"/>
+        <attr name="minprice" type="int" null="1"/>
+        <attr name="maxprice" type="int" null="1"/>
+        <assoziationtarget name="PriceCusOrder" table="CusOrder"/>
+        <assoziationtarget name="PriceCan_produce" table="Can_produce"/>
+    </table>
+    <table name="Product">
+        <label>
+            <valuelist>
+                <item>description</item>
+            </valuelist>
+        </label>
+        <attr name="PRODID" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="description" length="20" type="varchar" null="1"/>
+    </table>
+    <table name="Project">
+        <attr name="PROJNAME" length="20" type="varchar" primary_key="1"/>
+        <attr name="DEPTNO" type="int" primary_key="1" default="0"/>
+        <attr name="budget" type="int" null="1"/>
+        <assoziationcollection name="DepartamentProject" type="reference">
+            <participant reference="DEPTNO" table="Departament"/>
+        </assoziationcollection>
+    </table>
+    <table name="Shipment">
+        <attr name="PACKID" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="ORDID" type="int" primary_key="1" default="0"/>
+        <attr name="ship_date" type="datetime" null="1"/>
+        <attr name="CARRIERID" type="int" null="1"/>
+        <attr name="unit_cost" type="int" null="1"/>
+        <assoziationcollection name="CarrierShipment" type="reference">
+            <participant reference="CARRIERID" table="Carrier"/>
+        </assoziationcollection>
+        <assoziationcollection name="CusOrderShipment" type="reference">
+            <participant reference="ORDID" table="CusOrder"/>
+        </assoziationcollection>
+    </table>
+    <table name="Work_for" type="relationship">
+        <attr name="SSN" type="int" primary_key="1" default="0"/>
+        <attr name="DEPTNO" type="int" primary_key="1" default="0"/>
+        <attr name="start_data" type="datetime" null="1"/>
+        <assoziationcollection name="Work_for" type="reftable">
+            <participant reference="DEPTNO" table="Departament"/>
+            <participant reference="SSN" table="Employee"/>
+        </assoziationcollection>
+    </table>
+</database>
+

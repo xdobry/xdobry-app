@@ -1,0 +1,1468 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>SchemaEditor</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Dokumentation des Programms Xdobry"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Benutzer Handbuch"
+HREF="c163.html"><LINK
+REL="PREVIOUS"
+TITLE="Benutzer Handbuch"
+HREF="c163.html"><LINK
+REL="NEXT"
+TITLE="FormEditor"
+HREF="x541.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Dokumentation des Programms Xdobry</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c163.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Benutzer Handbuch</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x541.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN177"
+></A
+>SchemaEditor</H1
+><P
+>Die
+Hauptaufgabe des Schema-Editor ist eine XML-Repository zu schaffen und zu verwalten.
+Weiterhin kann das Schema-Editor benutzt werden um Daten zwischen verschiedenen Datenbanken zu migrieren und Datenabzüge als XML oder SQL zu erstellen.
+Es wird ein Benutzer des Schema-Editor als ein Datenbank-Administrator oder auch ein Daten-Verwalter vorausgesetzt. 
+Der Benutzer hat Kenntnisse über die Struktur der Daten und ihrer Repräsentation im relationalem Modell.
+Das Schema-Editor besitzt folgende Funktionalitäten:
+<P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>Die Data Dictionary (Schema) einer relationalen Datenbank auslesen und in XML-Repository umzuwandeln.</P
+></LI
+><LI
+><P
+>Hinzufügen von semantische Informationen zum Repository. Dabei werden die
+Reverse Engineering Techniken (siehe. 3.3) benutzt, die entweder ganz automatisch oder durch Befragung des Benutzers verlaufen. Der Benutzer kann auch die
+semantische Informationen selber hinzufügen .</P
+></LI
+><LI
+><P
+>Hinzufügen und Editieren der Meta-Informationen der Attributen.</P
+></LI
+><LI
+><P
+>Anlegen oder Löschen von Tabellen</P
+></LI
+><LI
+><P
+>Anlegen oder Löschen von Taballenspalten</P
+></LI
+><LI
+><P
+>Anlegen einer DB-Schema aus Xdobry-Repository</P
+></LI
+><LI
+><P
+>Generieren von XML, SQL Datenbankabzügen</P
+></LI
+><LI
+><P
+>Importieren und Exportieren von DB-Schema für alle unterstütze Datenbank</P
+></LI
+><LI
+><P
+>Automatische Migration der Daten und Datenschema zwischen allen unterstützten Datenbanken</P
+></LI
+></OL
+>
+
+<DIV
+CLASS="IMPORTANT"
+><P
+></P
+><TABLE
+CLASS="IMPORTANT"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/important.gif"
+HSPACE="5"
+ALT="Wichtig"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Im Gegenteil zu Anderen DB-Manager-Programmen arbeitet Schema-Editor nicht direkt auf einer Datenbankschema. Das Datenbankschema wird ausgelesen und in eigene Datenstruktur (Repository) umgewandelt, die auch als XML Datei (.xmlschema) gespeichert und wieder geladen werden kann.
+Diese Struktur unabhängig von dem Datenbanksystem.
+Auf diese weise ist eine Verbindungslose Bearbeitung des Schemas möglich.Aus diesem Schema können DDL-Sql für jedes Datenbanksystem erzeugt werden.
+Auch die Änderungen des Schemas können als DDL-Sql generiert werden.</P
+></TD
+></TR
+></TABLE
+></DIV
+>
+
+Die Idee der graphischer Oberfläche basiert auf der Darstellung des Schema als
+einer Baumstruktur, die von dem Benutzer manipuliert werden kann.
+Diese Baumstruktur hat folgende Knotentypen.
+<DIV
+CLASS="FIGURE"
+><A
+NAME="FIGURE"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="schema_edit_baum.png"></P
+></DIV
+><P
+><B
+>Abbildung 1. Anzeige von DB-Schema als ein Baum</B
+></P
+></DIV
+>
+<P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>Tabelle (Knoten)</P
+></LI
+><LI
+><P
+>Attribut (Blatt)</P
+></LI
+><LI
+><P
+>Assoziationcontainer</P
+></LI
+><LI
+><P
+>Assoziationtarget</P
+></LI
+><LI
+><P
+>Tabellen-Etikette</P
+></LI
+><LI
+><P
+>Attribut-Gruppen (strukturierte Attribute)</P
+></LI
+></OL
+></P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN219"
+></A
+>Reverse Engineering</H2
+><P
+>Das relationale Modell ist streng wertorientiert.
+Es kennt keine Verknüpfungstypen.
+Die Verknüpfungen werden als Fremdschlüssel repräsentiert.
+Die Tabellen können als Entities, Relationen, Teilobjekte (bei Generalisierung) oder Eigenschaften (z.B Listen der Attributen) verwendet werden.
+Bei Reverse Engineering wird die semantische Bedeutung, also die Information, wie das relationale Modell zu interpretieren ist, wiedergewonnen.
+Diese Informationen werden durch die Namensgebung der Attribute wiedergespiegelt.
+Weder MySql noch Postgresql unterstützen die Definition von Fremdschlüssel was bei der Erstellung der Formulare großes Nachteil ist.
+Die Reverse-Engineering Algorithmen basieren bei Xdobry nur auf den relationalen Schema, der Dateninhalt wird nicht ausgewertet.
+Es wurden drei Reverse-Engineering Algorithmen implementiert.
+Die Fremdschlüssel-Findung ist eine Basis für andere Algorithmen (außer des Spezialisierung-Findung).
+<P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>Fremdschlüssel-Findung</DT
+><DD
+><P
+>Finde alle Attributen die genau so heißen wie die Primärschlüssel der anderen Tabellen aber nicht die Prim-Attributen sind oder nicht einziges Prim-Attribut sind oder den Namen als id mit Präfix der Tabellennamen haben.
+Beschränkung: Schüssel der Objekttabellen bestehen aus einzigen Attribut. 
+Keine Rekursive Beziehungen! Aktion: Es wird eine einfache Referenz erstellt. 
+Assoziation-Container erhält den Fremdschlüssel. 
+Assoziation-Target erhält den Primärschlüssel.
+Es ist eine Basis für die weitere Algorithmen.</P
+></DD
+><DT
+>Spezialisierung-Findung</DT
+><DD
+><P
+>Suche die Spezialisierung. 
+Finde alle Tabellen die einen gleichnamigen
+ Primärschlüssel haben.
+Sie müssen die Vatertabelle selbst ermitteln.
+Bei Mehrstufiger Vererbung (Enkelobjekte) muss die Aktion mehrfach durchgeführt werden. 
+Beschränkung: Schüssel der Objekttabellen bestehen aus einzigen Attribut.</P
+></DD
+><DT
+>Finde Assoziation-Tabellen</DT
+><DD
+><P
+>Dieses Reverse Engineering Technik basiert auf dem Schritt "Finde Fremdschlüssel".
+Es sollten die Tabellen ermittelt werden, die Relationship modellieren (z.B n:m Beziehung). 
+Algorithmus: Finde alle Tabellen, dessen Primärschlüssel aus mehreren Fremdschlüssel besteht oder mehrere Fremdschlüssel und kein eindeutiges Primärschlüssel haben. 
+Aktion: Die Relationship-Tabellen werden besonders gezeichnet. 
+Die n:m oder n:m:z.. Beziehungen werden erkannt. 
+Beziehungen dürfen eigene Attribute haben.</P
+></DD
+><DT
+>Aggregation Vorschlagen</DT
+><DD
+><P
+>Dieses Reverse Engineering Technik basiert auf dem Schritt "Finde Fremdschlüssel". 
+Schlage die Aggregation (Komposition) der Tabellen vor. (eingebettete Tabellen). 
+Das Algorithmus zeigt nur die Vorschläge, die Aggregation-Semantik kann nur von Benutzter bestimmt werden. Vorschläge: Alle Tabellen die nur einen Fremdschlüssel haben. 
+Es können noch weiter Aggregation existieren. Überprüfen sie die 1:n Assoziationen</P
+></DD
+></DL
+></DIV
+></P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN239"
+></A
+>Definieren von Abstraktionen</H2
+><P
+>Es können drei Arten von Abstraktionen der konzeptionellen Datenbankmodellierung definiert werden: Assoziation, Aggregation uns Spezialisierung.
+Die Definition erfolgt stufenweise mit Hilfe von Assistenten.
+<P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>Assoziation</DT
+><DD
+><P
+>ist am schwierigsten zu definieren.
+Es entspricht den Relationship des ER-Modells.
+Es werden folgende Fragen gestellt.
+<P
+></P
+><UL
+><LI
+><P
+>Ist die Assoziation rekursiv? Es gibt Beziehungen (Relationship) zwischen den Objekten des gleichen Typs.</P
+></LI
+><LI
+><P
+>Gibst es eine Tabelle mit Referenzen? Musste die Assoziation mit Hilfen von zusätzlichen Tabellen abgebildet werden, was beim N:M Beziehungen immer der Fall ist, oder wie bei 1:N Beziehungen gibt es nur ein Verweis in einer der Tabelle</P
+></LI
+><LI
+><P
+>Granularität der Beziehung: beim N:M ist es 2 beim N:M:O ist es 3</P
+></LI
+><LI
+><P
+>Rollennamen: Ein Objekt Student bekommt durch die Beziehung zu Objekt Prüfung einen Rolennamen Prüfling; (nicht obligatorisch)</P
+></LI
+><LI
+><P
+>Existenz Abhängigkeit: Werden bis jetzt nicht weiter unterstützt können aber hier definiert werden</P
+></LI
+></UL
+>
+Beim n:m Beziehungen muss klar werden: welche Objekte (Tabellen) nehmen an der Beziehung teil, welche Tabelle beinhaltet die Verweise.</P
+><P
+>Eine Assoziation wird als Container (Sammlung) mit Verweisen auf Objekte aufgefasst.
+Die Sammlung kann entweder als getrennte Tabelle mit Verweisen oder als ein Verweis in einem Objekt (1:n) modelliert werden.
+Um eine Assoziation zu modellieren werden zwei neue Knotentypen hinzugefügt: <I
+CLASS="EMPHASIS"
+>Assozitaioncontainer</I
+> bei Verweisen und <I
+CLASS="EMPHASIS"
+>Assoziationtarget</I
+> bei Objekten.
+Zu jeder Assoziation gehört ein Assoziationcontainer und mindestens zwei Assoziatontargets.
+Die Assoziationen (Assoziationcontainer) besitzen einen eindeutigen Namen.
+Auf diese weise können auch komplexe Assoziation modelliert werden wie: rekursive 1:n und n:m Beziehungen und Beziehungen der höheren Granularität n:m:s:r.
+Entsprechung in ER-Modell <A
+HREF="x771.html#ER-ASSOZIATION"
+>Abbildung 8 in Abschnitt namens <I
+>Assoziation (Formular-Links)</I
+></A
+></P
+></DD
+><DT
+>Aggregation</DT
+><DD
+><P
+>Hier handelt es sich um etwa die Modellierung von eingebetteten oder geschachtelten Tabellen.
+Sie werden naher von <B
+CLASS="COMMAND"
+>FormServer</B
+> als eingebettete Formulare dargestellt.
+Man muss spezifizieren: die Behälter Tabelle, die Element Tabelle und Referenz, Fremdschlüssel in Elementtabelle, das auf Primärschlüssel in Container-Tabelle zeigt.
+Entsprechung in ER-Modell <A
+HREF="x771.html#ER-AGGREGATION"
+>Abbildung 10 in Abschnitt namens <I
+>Aggregation</I
+></A
+></P
+></DD
+><DT
+>Spezialisierung</DT
+><DD
+><P
+>Auch als Vererbung oder Generalisierung bekannt.
+Es gibt immer einen Vater Objekt und ein Kind Objekt, die in zwei Tabellen modelliert werden.
+Man muss auch den vererbten Primärschlüssel angeben.
+Entsprechung in ER-Modell <A
+HREF="x771.html#ER-GENERALISIERUNG"
+>Abbildung 9 in Abschnitt namens <I
+>Spezialisierung (Vererbung)</I
+></A
+>.</P
+></DD
+></DL
+></DIV
+></P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN273"
+></A
+>DB-Schema Anlegen und Verändern</H2
+><P
+>Xdobry kann benutzt werden um Datenbank zu modellieren.
+Es können Tabellen und Tabellenspalten angelegt, verändert und gelöscht werden.
+Xdobry arbeitet nicht direkt auf der Datenbank Dictionary (Schema) sondern hat eigene Datenbanksystem unabhängige Repräsentation des Schemas, die als XML-Datei abgelegt werden kann.
+Durch diesen Einsatz ist es möglich eine Schema ohne Datenbank zu entwickeln und auf mehrere unterschiedliche Datenbanksystem aufzuspielen.
+Die Xdobry spezifisches Schema basiert auf ER-Diagramm und enthält mehr semantische Information als die Datadictionary einer Datenbank.</P
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN276"
+></A
+>Anlegen einer neuen Schema</H3
+><P
+>Für das einlegen einer neuen Schema ist keine Datenbankverbindung nötig.
+Durch das Menü
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Neu</B
+>
+wird neues Datenbankschema angelegt.
+Benutzten Sie die kontextsensitive Menüs (einen Knoten selektieren und rechte Maustaste klicken) um
+neue Tabellen und Spalten anzulegen.</P
+><P
+>Xdobry hat eigenes Datentypen System, der an Mysql-Datenbanksystem angelegt ist aber auch andere Typen (wie Money oder Boolean) unterstützt.
+<DIV
+CLASS="TABLE"
+><A
+NAME="AEN283"
+></A
+><P
+><B
+>Tabelle 1. Unterstützte Typen und Typenkonventierung</B
+></P
+><TABLE
+BORDER="1"
+BGCOLOR="#E0E0E0"
+CELLSPACING="0"
+CELLPADDING="4"
+CLASS="CALSTABLE"
+><THEAD
+><TR
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Xdobry</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Mysql</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS Access</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS SQL</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Postgres</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Oracle</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>decimal</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Decimal, numeric</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Currency, money</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>monay</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>money</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>number</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>double</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>double </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>float</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>float</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>double</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>double</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>float</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>float </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>real</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>real</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>real</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>float</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>int</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>int</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Integer, int</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>int</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Integer, int</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>int</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>smallint</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Smallint, tinyint</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>smallint</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>smallint</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>smallint</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>smallint</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Boolean </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>smallint</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>boolean</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>boolean</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Boolean, bool</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Number(1)</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>text</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Text, mediumtext, tinytext</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Memo, LONGTEXT, LONGCHAR, MEMO, NOTE, NTEXT </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>image</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>text</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>clob</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>datetime</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Datetime, date, time </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>datetime</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>timestamp</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>timestamp</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>timestamp</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>timestamp</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>timestamp </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>datetime</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>datetime</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>timestamp</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>timestamp</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>enum</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>enum </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>set</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>set </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Varchar(50)</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>varchar</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>varchar </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>TEXT(n), ALPHANUMERIC, CHARACTER, STRING, VARCHAR, CHARACTER VARYING, NCHAR, NATIONAL CHARACTER, NATIONAL CHAR, NATIONAL CHARACTER VARYING, NATIONAL CHAR VARYING </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>varchar</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>text</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>varchar2</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>char</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>char </TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>char</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>char</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>char</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>char</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>longblob</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Longblob, mediumblob, tinyblob</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>IMAGE, LONGBINARY, GENERAL, OLEOBJECT, BINARY</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>image</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>bytea</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>blob</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+>
+
+<DIV
+CLASS="TABLE"
+><A
+NAME="AEN393"
+></A
+><P
+><B
+>Tabelle 2. Autoincrement Spalten</B
+></P
+><TABLE
+BORDER="1"
+BGCOLOR="#E0E0E0"
+CELLSPACING="0"
+CELLPADDING="4"
+CLASS="CALSTABLE"
+><THEAD
+><TR
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Database</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Kind</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS Acces</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Typ Counter</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS SQL</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Indent(1,1)</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>mysql</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>autoincrement</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Postgres</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Sequencer</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Oracle</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Sequencer</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Sqlite</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Not supported</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+>
+Xdobry kann auch die autoincrement-Spalten entsprechend der Datenbank anlegen.
+Falls kein Autoincrement-Typ vorhanden ist wird ein Sequencer angelegt.
+<DIV
+CLASS="TABLE"
+><A
+NAME="AEN419"
+></A
+><P
+><B
+>Tabelle 3. Autoincrement Spalten</B
+></P
+><TABLE
+BORDER="1"
+BGCOLOR="#E0E0E0"
+CELLSPACING="0"
+CELLPADDING="4"
+CLASS="CALSTABLE"
+><THEAD
+><TR
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Database</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Typ</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS Acces</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Typ Counter</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS SQL</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Indent(1,1)</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>mysql</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>autoincrement</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Postgres</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Sequencer</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Oracle</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Sequencer</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Sqlite</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Not supported</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+>
+MS Datenbank können auch mit [] Maskierung Tabellen mit Leerzeichen anlegen.
+(Wird oft in Beispieldatenbank der Firma verwendet).
+Diese werden falls nötig zu _ konventiert.
+<DIV
+CLASS="TABLE"
+><A
+NAME="AEN445"
+></A
+><P
+><B
+>Tabelle 4. Leerstelle in Tabellennamen</B
+></P
+><TABLE
+BORDER="1"
+BGCOLOR="#E0E0E0"
+CELLSPACING="0"
+CELLPADDING="4"
+CLASS="CALSTABLE"
+><THEAD
+><TR
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Datenbank</TH
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+>Tabellenname</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS Access</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>[Order Details]</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>MS SQL</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>[Order Details]</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>mysql</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Order_Details</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>postgres</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Order_Details</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Sqlite</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>[Order Details]</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Oracle</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Order_Details</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+>
+&#13;</P
+><P
+>Um das Schema auf konkreten Datenbank anzulegen benutzten Sie das Menü
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Operationen auf Schema</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>DB aus Schema anlegen</B
+>.
+Durch das Menü
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Operationen auf Schema</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Zeige SQL-Definition für Schema</B
+>
+können Sie die CREATE-SQL für die spezifische Datenbank erzeugen.
+Dieses SQL kann durch datenbankspezifische Prozeduren ergänzt werden, die
+von Xdobry nicht unterstützt werden.
+Die so angepasste SQL muss mit datenbankeigenen Werkzeugen aufgespielt werden.</P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN480"
+></A
+>Datenbankschema Ändern</H3
+><P
+>Falls Sie die bereits existierende Datenbank verändern wollen, müssen Sie zuerst die Xdobry Repräsentation der Schema erzeugen.
+Benutzen Sie dafür das Menü
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Neu aus DB</B
+>.
+Sie müssen dann die Datenbankverbindung spezifizieren.
+Die Änderungen auf der Schema werden nicht sofort auf die Datenbank übertragen.
+Durch das Menü
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Schema Operationen</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Änderungen auf DB aufspielen</B
+>
+werden die Änderung auf die Datenbank aufgespielt.
+Durch das Menü
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Schema Operationen</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Zeige Schema Änderungen</B
+>
+können Sie sich die Änderung-SQL anschauen.
+<DIV
+CLASS="TIP"
+><P
+></P
+><TABLE
+CLASS="TIP"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/tip.gif"
+HSPACE="5"
+ALT="Tipp"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Sie können die Änderung-SQL benutzten um die Änderungsskript für mehrere Datenbanken (Entwicklung, Intergration, Produktion) zu erzeugen.</P
+></TD
+></TR
+></TABLE
+></DIV
+></P
+><P
+>Falls die Xdobry XML-Schema bereits existiert, soll Sie als erstes geladen werden.
+Schema-Editor bietet an nach dem Laden der Schema automatisch sich mit der Datenbank zu verbinden, aus dem das Schema entstanden ist.
+Falls eine andere Verbindung gewünscht ist oder das Schema nicht aus einer Datenbank entstanden ist, kann
+mit der Funktion
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Verbinde mit Datenbank</B
+>
+die Verbindung erstellt werden.
+Ist das Schema der Datenbank mit der Schema von Xdobry nicht konsistent.
+Z.B wurde das Schema der Datenbank mit anderen Werkzeugen bearbeitet, kann man
+mit der Funktion
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Operationen auf Schema</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Synchronisiere Schema mit Datenbank</B
+>
+Das Xdobry Schema mit der Datenbank synchronisieren.
+Danach kann das Schema wie gewöhnt angepasst werden.
+<DIV
+CLASS="IMPORTANT"
+><P
+></P
+><TABLE
+CLASS="IMPORTANT"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/important.gif"
+HSPACE="5"
+ALT="Wichtig"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Man kann die Änderungen an Schema nicht zwischen in mehrere Sitzungen festhalten.
+So müssen die Änderungen auf der Datenbank aufgespielt werden, damit Sie nicht durch das Beenden der Sitzung verloren gehen.
+Schema Editor besitzt keine Funktion für das Synchronisieren der Datenbankschema an Xdobry Schema.</P
+></TD
+></TR
+></TABLE
+></DIV
+></P
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN506"
+></A
+>DB-Schema und Daten migrieren</H2
+><P
+>Schema-Editor besitzt vielfältige Möglichkeiten das Schema und die Daten zwischen verschiedenen Datenbanksystem zu migrieren.
+Schema-Editor kann gleichzeitig 2 Datenbankverbindungen offen halten und die Daten satzweise von einen Datenbank auf eine andere zu transponieren.
+Dabei kann der Umfang der zu migrierten Daten angepasst werden.
+Es können sowohl Tabellen oder auch einzelne Spalten aus der Migration ausgeschlossen werden.</P
+><P
+>Durchführen der Migration
+<P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>Eine Schema aus der Quelldatenbank erzeugen. Die Verbindung mit Quelldaten Bank muss vorhanden sein</P
+></LI
+><LI
+><P
+>Die Tabellen oder Spalten, die nicht migriert werden sollen, sollen aus der Schema entfernt werden (Sie werden nicht tatsächlich im Quelldatenbank gelöscht)</P
+></LI
+><LI
+><P
+>Die Migration starten durch Menü
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Migration</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Migriere Datenbank</B
+></P
+></LI
+><LI
+><P
+>Treten während der Migration Fehler auf. Werden diese angezeigt. Die Migration kann in diesem Fall abgebrochen oder fortgesetzt werden. Bei Abbruch wird die Zieldatenbank nicht gelöscht</P
+></LI
+></OL
+></P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN523"
+></A
+>DB-Schema und Daten Exportieren und Importieren</H2
+><P
+>Schema-Editor kann die Daten auf 2 weisen exportieren.
+Als XML-Abzug
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Migration</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Datenbank als XML dumpen</B
+> 
+der SQL-Abzug 
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Migration</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Datenbank als XML dumpen</B
+>.
+Bei SQL-Abzug muss der Zieldatenbank-Typ angegeben werden.
+<DIV
+CLASS="IMPORTANT"
+><P
+></P
+><TABLE
+CLASS="IMPORTANT"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/important.gif"
+HSPACE="5"
+ALT="Wichtig"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Der Export oder Import mittels XML-Abzug ist nur für kleinere Datenbanken geeignet.
+Bei XML-Abzug wird in den Arbeitsspeicher kurzfristig die gesamte Datenbank abgebildet (DOM-Objekt).
+Auf diese Weise kann das Xdobry bei größeren Datenmengen schnell überlaufen.
+Eine Iterative Erzeugung von XML ist möglich und wird für die nächste Version von Xdobry geplant.
+Der SQL-Abzug wird iterativ erstellt und verursacht keine übermäßige Beanspruchung von Arbeitsspeicher.</P
+></TD
+></TR
+></TABLE
+></DIV
+></P
+><P
+>Mit der Funktion
+<B
+CLASS="GUIMENU"
+>Schema</B
+>-&gt;<B
+CLASS="GUISUBMENU"
+>Migration</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>XML-Dump zu SQL umwandeln</B
+>
+kann man ein XML-Abzug zu SQL-Abzug konvertieren.</P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c163.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Zum Anfang</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x541.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Benutzer Handbuch</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c163.html"
+ACCESSKEY="U"
+>Nach oben</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>FormEditor</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,538 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>FormEditor</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Documentation of the Xdobry application"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="User manual"
+HREF="c167.html"><LINK
+REL="PREVIOUS"
+TITLE="SchemaEditor"
+HREF="x181.html"><LINK
+REL="NEXT"
+TITLE="FormServer"
+HREF="x630.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Documentation of the Xdobry application</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x181.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>User manual</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x630.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN546"
+></A
+>FormEditor</H1
+><P
+>The purpose of the component is to generate a collection of the forms to a databases and secondly an user's interface for the adaptation of these forms.
+The product of the form-editor is a description of the forms as a XML-document.
+Associations (Relationship) and other abstractions are supported in the forms directly.
+The user of the form-editor (application-developer) must not know the schema of the data.
+His task is only to adapt the automatically produced forms under the formative face point or to specify the input fields of the form.</P
+><P
+>A form becomes as a collection of different input fields, their placement, and their correspondence to objects in the databases (rows in a table).
+The following types of the input fields were realized:<P
+></P
+><TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+>Frames. Frames for the placement of the elements</TD
+></TR
+><TR
+><TD
+>Simple text fields (one-line)</TD
+></TR
+><TR
+><TD
+>Input fields for whole numbers with control arrows</TD
+></TR
+><TR
+><TD
+>Listsbox</TD
+></TR
+><TR
+><TD
+>Radiobuttons</TD
+></TR
+><TR
+><TD
+>Checkbox fields (Yes / No  switches)</TD
+></TR
+><TR
+><TD
+>Text fields consisting of several lines</TD
+></TR
+><TR
+><TD
+>Multicolumn Listboxes for the representation of the foreign key (references)</TD
+></TR
+><TR
+><TD
+>FormLinks</TD
+></TR
+><TR
+><TD
+>Object for the nesting forms</TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+>
+The embedded forms and the formlinks belong to special elements of the forms.
+Both are a different visualization of the relationship.
+The FormLinks appearing along corresponding paths (association or also Aggregation).
+Besides, one can reach from a form a form of the object which has a foreign key on the first form.
+Besides, the foreign key is faded out with the tied up form (the value is determined by the first form) and the files are filtered after the foreign key.
+It are shown by the filtering only the objects which are in touch with the shown object in the first form.
+With embedded forms the tied up form is a part of the parent's form.
+With form-links a command button is inserted, only to open of the tied up form serves.
+The foreign keys are not treated as normal attributes but are represented as special diagrammatic elements.
+First the domain of the foreign key is limited by integrity conditions on the amount of primary key values in the corresponding table.
+This can be represented by a list-box.
+Then the user knows that he has only a certain number of possibilities at which he can look and select.
+Secondly the values of the key are often statement-empty for the user or unsuitably for the identification of the object.
+For it the user expects other attributes (e.g. name and first name besides of the PersonalIDs).
+The Aggregation can be realized as the embedded forms.
+The association is realized as form-links.
+The specialization can also be realized as a linkage by forms.
+Besides, a form is applied for a parent's object (high type) and one form for the children's object (under type).</P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN561"
+></A
+>GUI-Editor for forms</H2
+><P
+>An GUI-Editor is opened by the double click on a form in main window.
+With it the appearance of the form and the linkages to table-columns in the database can be specified.
+<DIV
+CLASS="FIGURE"
+><A
+NAME="GUIEDITOR"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="guieditor.png"></P
+></DIV
+><P
+><B
+>Figure 2. GUI Editor</B
+></P
+></DIV
+>
+The Properties of the elements are slitted to three types<P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>Widget</DT
+><DD
+><P
+>The Properties, which belong to GUI-object such length, width (visual appearance).</P
+></DD
+><DT
+>Data</DT
+><DD
+><P
+>Linkage with tables-column.
+Default value and not-null</P
+></DD
+><DT
+>Packer</DT
+><DD
+><P
+>Information to placement of the element</P
+></DD
+></DL
+></DIV
+>
+The placement of the elements is not indicated definitely (with coordinates), however, under use by Geometry-manager.
+
+Most standards-Widget are displayed like they are (WYSIWYG).
+The other special Widget like (Nested Form, form link, SQLReference) are indicated with editor GUI by the representatives.
+Their size does not correspond to the reality (caution with the NestedForm).
+If one wants to see the real appearance of the forms, one must use <B
+CLASS="COMMAND"
+>FormServer</B
+>, the DB-connection is not necessary for such purposes.</P
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN583"
+></A
+>Drag and Drop in FormEditor</H3
+><P
+>The GUI-Editor is slitted in 3 area.
+<P
+></P
+><TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+>Widget set</TD
+></TR
+><TR
+><TD
+>Workbench with your edited form</TD
+></TR
+><TR
+><TD
+>scratch depository</TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+>
+The 3 drag &#38; drop operations are shown in <A
+HREF="x546.html#DRAGANDDROP"
+>Figure 3</A
+> .
+The Drag &#38; Drop is signalized by special mouse-pointer-icon.
+The object will be not really moved.
+All catted objects are moved to depository.
+The depository can contain many objects
+<DIV
+CLASS="TIP"
+><P
+></P
+><TABLE
+CLASS="TIP"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>By inserting new widget, choose one widget in widget-set (the background is displayed colored) window and drop it on workbench.</P
+></TD
+></TR
+></TABLE
+></DIV
+>
+<DIV
+CLASS="FIGURE"
+><A
+NAME="DRAGANDDROP"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="draganddrop_en.png"></P
+></DIV
+><P
+><B
+>Figure 3. Drag and Drop operations</B
+></P
+></DIV
+></P
+><H1
+CLASS="BRIDGEHEAD"
+><A
+NAME="AEN598"
+></A
+>work with Pack-Frame</H1
+><P
+>The elements are places in Frames  (also nested).
+The order of the elements in a frame is crucial.
+The pack-geometry-manager takes one after another the elements and places them(her) in the frame the remaining place it is applied for the next elements.
+The following qualities specify the placement:
+<P
+></P
+><TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+>Side - in which page(side) of the frames the object should be added</TD
+></TR
+><TR
+><TD
+>Anchor - anchor to which page side</TD
+></TR
+><TR
+><TD
+>Fill</TD
+></TR
+><TR
+><TD
+>Expand - the object should be adapted by change of the window size</TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+>
+<DIV
+CLASS="TIP"
+><P
+></P
+><TABLE
+CLASS="TIP"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>One can see the current pack options in the status bar, after pointing the Widgets with mouse's pointer.</P
+></TD
+></TR
+></TABLE
+></DIV
+>
+The position of new drooped object is computed related to the object you have target.
+When no object are targeted, the widget will be added at last pack position with standard option (-side top -anchor center -fill none -expand 0).
+The exact position can be specify by target the object, which is already in the frame.
+
+<DIV
+CLASS="FIGURE"
+><A
+NAME="DROPPACK"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="droppack.png"></P
+></DIV
+><P
+><B
+>Figure 4. Positioning in  Pack-Frame (schematic)</B
+></P
+></DIV
+>
+<A
+HREF="x546.html#DROPPACK"
+>Figure 4</A
+> show an example of Pack-Geometry-Manager composition.
+The are a part of Tk pack manual.</P
+><P
+>For each master the packer maintains an ordered list of slaves called the packing list. The -in, -after, and -before configuration
+options are used to specify the master for each slave and the slave's position in the packing list. If none of these options is given for
+a slave then the slave is added to the end of the packing list for its parent. 
+
+The packer arranges the slaves for a master by scanning the packing list in order. At the time it processes each slave, a rectangular
+area within the master is still unallocated. This area is called the cavity; for the first slave it is the entire area of the master. 
+
+For each slave the packer carries out the following steps: 
+<P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>     The packer allocates a rectangular parcel for the slave along the side of the cavity given by the slave's -side option. If the side
+     is top or bottom then the width of the parcel is the width of the cavity and its height is the requested height of the slave plus
+     the -ipady and -pady options. For the left or right side the height of the parcel is the height of the cavity and the width is the
+     requested width of the slave plus the -ipadx and -padx options. The parcel may be enlarged further because of the -expand
+     option (see ``EXPANSION'' below) </P
+></LI
+><LI
+><P
+>     The packer chooses the dimensions of the slave. The width will normally be the slave's requested width plus twice its -ipadx
+     option and the height will normally be the slave's requested height plus twice its -ipady option. However, if the -fill option is
+     x or both then the width of the slave is expanded to fill the width of the parcel, minus twice the -padx option. If the -fill
+     option is y or both then the height of the slave is expanded to fill the width of the parcel, minus twice the -pady option. </P
+></LI
+><LI
+><P
+>     The packer positions the slave over its parcel. If the slave is smaller than the parcel then the -anchor option determines
+     where in the parcel the slave will be placed. If -padx or -pady is non-zero, then the given amount of external padding will
+     always be left between the slave and the edges of the parcel. </P
+></LI
+></OL
+>
+Once a given slave has been packed, the area of its parcel is subtracted from the cavity, leaving a smaller rectangular cavity for the
+next slave. If a slave doesn't use all of its parcel, the unused space in the parcel will not be used by subsequent slaves. If the cavity
+should become too small to meet the needs of a slave then the slave will be given whatever space is left in the cavity. If the cavity
+shrinks to zero size, then all remaining slaves on the packing list will be unmapped from the screen until the master window
+becomes large enough to hold them again. </P
+><H1
+CLASS="BRIDGEHEAD"
+><A
+NAME="AEN621"
+></A
+>working with Grid-Frame</H1
+><P
+>The row and column are computed dynamic.
+<DIV
+CLASS="FIGURE"
+><A
+NAME="DROPGRID"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="dropgrid.png"></P
+></DIV
+><P
+><B
+>Figure 5. Grid-Frame</B
+></P
+></DIV
+>
+<A
+HREF="x546.html#DROPGRID"
+>Figure 5</A
+> show one Grid-Frame.
+The cells A2,B2,B3,C1,C3 are occupied.
+By dropping in the free cell this cell will be used for placement.
+If you target one occupied cell one row or column will be added.
+See Example.
+If you target on cell B2, area d one row above the cell will be added.</P
+><P
+>The another grid option as sticky or rowspan can be edited by widget-propries dialog.</P
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x181.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x630.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>SchemaEditor</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c167.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>FormServer</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

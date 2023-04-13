@@ -1,0 +1,613 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>FormEditor</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Dokumentation des Programms Xdobry"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Benutzer Handbuch"
+HREF="c163.html"><LINK
+REL="PREVIOUS"
+TITLE="SchemaEditor"
+HREF="x177.html"><LINK
+REL="NEXT"
+TITLE="FormServer"
+HREF="x639.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Dokumentation des Programms Xdobry</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x177.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Benutzer Handbuch</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x639.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN541"
+></A
+>FormEditor</H1
+><P
+>Der Zweck der Komponente ist es zuerst eine Sammlung der Formulare zu einer Datenbank zu generieren und zweitens eine Benutzerschnittstelle für die Anpassung der Formulare zu liefern.
+Das Produkt des Formular-Editor eine Beschreibung der Formulare als ein XML-Dokument.
+Dabei wird es im Gegenteil zu vorhanden ähnlichen Systemen nicht einzeln zu jedem Tabellen ein Formular generiert, vielmehr wird eine ganze Sammlung der Formularen in einem Schritt generiert.
+Dabei werden die Assoziationen im Datenbank in der Formularen direkt unterstützt.
+Der Benutzer des Formular-Editor (Applikation-Entwickler) muss das Schema der Daten nicht kennen.
+Seine Aufgabe ist es höchstens die automatisch erzeugte Formulare unter dem gestalterischen Gesichtspunkten anzupassen oder die Eingabefelder des Formulars noch weiter zu spezifizieren.</P
+><P
+>Ein Formular wird als eine Sammlung von verschiedenen Eingabefelder, ihrer Platzierung, und ihrer Entsprechung zu Objekten in der Datenbank verstanden.
+Folgende Typen der Eingabefelder wurden realisiert:
+<P
+></P
+><TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+>Frames. Rahmen für die Platzierung der Elemente</TD
+></TR
+><TR
+><TD
+>einfache Textfelder (einzeilig)</TD
+></TR
+><TR
+><TD
+>Eingabefelder für Ganzzahlen mit Steuerungspfeilen</TD
+></TR
+><TR
+><TD
+>Listenfelder</TD
+></TR
+><TR
+><TD
+>Radiobuttons</TD
+></TR
+><TR
+><TD
+>Checkbox Felder (Ja/Nein Schalter)</TD
+></TR
+><TR
+><TD
+>mehrzeilige Textfelder</TD
+></TR
+><TR
+><TD
+>Mehrspaltige Auswahllisten für die Darstellung der Fremdschlüssel (Referenzen)</TD
+></TR
+><TR
+><TD
+>Formular Links</TD
+></TR
+><TR
+><TD
+>Objekt für die Einbettung von Formularen</TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+>
+Zu speziellen Elementen der Formulare gehören die eingebettete Formulare und die Formular Links.
+Beide sind verschiedene Visualisierung der Formularverknüpfungen.
+Die Verknüpfungen entstehend entlang der Beziehung Pfaden (Assoziation oder auch Aggregation).
+Dabei kann man aus einem Formular ein Formular des Objekts erreichen der ein Fremdschlüssel auf das erste Formular hat.
+Dabei wird bei dem verknüpften Formular der Fremdschlüssel ausgeblendet (Der Wert wird von ersten Formular bestimmt) und die Dateien werden nach dem Fremdschlüssel gefiltert.
+Es werden durch die Filterung nur die Objekte gezeigt, die mit dem gezeigten Objekt in dem ersten Formular in Verbindung stehen.
+Bei eingebetteten Formularen ist der verknüpfte Formular ein Teil des Elternformulars.
+Bei Formular-Links wird eine Schaltfläche eingebaut, die erst zum öffnen des verknüpften Formulars dient.
+Die Fremdschlüssel werden nicht als normale Attribute behandelt sondern als spezielle graphische Elemente dargestellt.
+Dabei sind zwei Tatsachen zu berücksichtigen.
+Zuerst ist das Wertebereich des Fremdschlüssel durch Integritätsbedingungen auf die Menge von Primärschlüsselwerte in der korrespondierenden Tabelle begrenzt.
+Das kann durch eine Auswahlliste repräsentiert werden.
+Der Benutzer weiß dann, dass er nur eine bestimmte Anzahl von Möglichkeiten hat, die er ansehen und auswählen kann.
+Zweitens sind die Werte des Schlüssel oft für den Benutzer aussageleer oder ungeeignet für die Identifizierung des Objektes.
+Dafür erwartet der Benutzer weitere Attribute (z.B Name und Vorname außer des PersonalIDs).
+Die Aggregation kann als die eingebetteten Formulare realisiert werden.
+Die Assoziation wird als Formular-Links umgesetzt.
+Die Spezialisierung kann auch als eine Verknüpfung von Formularen realisiert werden.
+Dabei wird ein Formular für ein Elternobjekt (Ober-Typ) und je ein Formular für den Kindobjekt (Unter-Typ) verwendet.</P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN556"
+></A
+>GUI Editor für Formulare</H2
+><P
+>Durch das Doppelklick auf ein Formular in Hauptfenster wird ein GUI Editor für Formulare geöffnet.
+Damit kann das Aussehen des Formulars und die Verknüpfungen der einzelnen Elemente zum Datenbank spezifiziert werden.
+<DIV
+CLASS="FIGURE"
+><A
+NAME="GUIEDITOR"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="guieditor.png"></P
+></DIV
+><P
+><B
+>Abbildung 2. GUI-Form-Editor (screenshoot)</B
+></P
+></DIV
+>
+Die Eigenschaften der Elemente werden auf drei Typen
+<P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>Widget</DT
+><DD
+><P
+>Die Eigenschaften, die zu eigentlichen GUI-Objekt gehören wie: Länge, Art.</P
+></DD
+><DT
+>Data</DT
+><DD
+><P
+>Verknüpfung mit Tabellen-Spalte.
+Defaultwert und NotNULL</P
+></DD
+><DT
+>Packer</DT
+><DD
+><P
+>Angaben zu Platzierung des Elements</P
+></DD
+></DL
+></DIV
+>
+Die Platzierung der Elemente wird nicht absolut (also mit Koordinaten) aber unter Verwendung von s.g Geometry-Manager angegeben.
+Es werden der Pack-Geomentry-Manager und Grid-Widget-Manager der Tk-Widgetset unterstützt.
+Die Elementen können in s.g. Frames (Rahmen) gestellt werden (auch geschachtelt).
+<DIV
+CLASS="TIP"
+><P
+></P
+><TABLE
+CLASS="TIP"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/tip.gif"
+HSPACE="5"
+ALT="Tipp"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Die aktuellen Pack Optionen kann man in der Statusleiste nach dem Anzeigen des Widgets mit Mauszeiger auslesen.</P
+></TD
+></TR
+></TABLE
+></DIV
+>
+Die meisten Standard-Widget werden angezeigt wie sie sind.
+Die anderen speziellen Widget wie (NestedForm, FormLink, SQLReference) werden bei GUI Editor durch die Vertreter angezeigt.
+Ihre Größe entspricht nicht der Wirklichkeit (Vorsicht beim NestedForm).
+Will man das tatsächlich Aussehen der Formulare haben, muss man den <B
+CLASS="COMMAND"
+>FormServer</B
+> benutzten, die DB-Anbindung ist für solche Zwecke nicht nötig.</P
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN580"
+></A
+>Drag and Drop im FormEditor</H3
+><P
+>Die Fläche der FormEditor wird im drei Flächen geteilt.
+<P
+></P
+><TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+>Widget Sammlung</TD
+></TR
+><TR
+><TD
+>Arbeitsfläche mit dem gezeigten Formular</TD
+></TR
+><TR
+><TD
+>Ablage (untere Bereich)</TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+>
+Die Mögliche Drag &#38; Drop Operationen werden in  <A
+HREF="x541.html#DRAGANDDROP"
+>Abbildung 3</A
+> gezeigt.
+Die Drag &#38; Drop wird gezeigt durch das veränderte Maus-Zeiger Icon.
+Das Objekt wird selbst nicht bewegt.
+Die Ablage ist hier etwas neues und ungewohntes.
+Meist verschwindet ein Objekt bei Ausschneiden in einen unsichtbaren
+Puffer. 
+Hier wird es einfach in die Ablage bewegt.
+Das gleiche kann man mit Drag &#38; Drop auf die Ablage erreichen.
+Die Ablage kann mehrere Objekte beinhalten.
+Deswegen gibt es auch keine Einfüge-Operation.
+<DIV
+CLASS="TIP"
+><P
+></P
+><TABLE
+CLASS="TIP"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/tip.gif"
+HSPACE="5"
+ALT="Tipp"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Bei Einfügen der Widget zu Formular wird immer das Typ genommen der in Widgetsammlung ausgewählt wurde, also durch dunkles Hintergrund markiert ist.</P
+></TD
+></TR
+></TABLE
+></DIV
+>
+<DIV
+CLASS="FIGURE"
+><A
+NAME="DRAGANDDROP"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="draganddrop.png"></P
+></DIV
+><P
+><B
+>Abbildung 3. Drag and Drop Operationen (schematisch)</B
+></P
+></DIV
+></P
+><H1
+CLASS="BRIDGEHEAD"
+><A
+NAME="AEN595"
+></A
+>Platzieren in einem Pack-Frame</H1
+><P
+>Die Reihenfolge der Elemente in einem Frame ist entscheidend.
+Der Pack-Geomentry-Manager nimmt nacheinander die Elemente und stellt sie in den Rahmen der restliche Platz wird für nächste Elemente verwendet.
+Folgende Eigenschaften spezifizieren die Platzierung:
+<P
+></P
+><TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+>side - An welcher Seite der Rahmen soll der Objekt hinzugefügt werden</TD
+></TR
+><TR
+><TD
+>anchor - Anker zu welcher Seite</TD
+></TR
+><TR
+><TD
+>fill - Soll der Objekt in eine Richtung zu den verbleibenden Platz ausgefüllt werden</TD
+></TR
+><TR
+><TD
+>expand - Soll bei Änderung der Fenstergröße der Objekt angepasst werden</TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+>
+Wichtig in diesem Zusammenhang ist die Vorgehensweise wie beim Drag and Drop die Platzierung der Elemente vorgenommen wird.
+Zeigt man auf ein Frame allgemein wird das Element in das Frame an letzten Stelle mit Standard Optionen angefügt (-side top -anchor center -fill none -expand 0).
+Die genauere Platzierung wird durch das Anzeigen (Drop) auf ein Element, das bereits in der Frame ist ermöglicht.
+Die Reihenfolge wird relativ zu dem Angezeigten Element ermittelt, die -side Option wird von dem Element übernommen.
+Andere Optionen können nur im Eigenschaftenfenster verändert werden.
+<DIV
+CLASS="FIGURE"
+><A
+NAME="DROPPACK"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="droppack.png"></P
+></DIV
+><P
+><B
+>Abbildung 4. Platzieren in einem Pack-Frame (schematisch)</B
+></P
+></DIV
+>
+Die <A
+HREF="x541.html#DROPPACK"
+>Abbildung 4</A
+> Zeigt an einem Beispiel das Prinzip wie der Pack-Geometry-Manager arbeitet und wie bei einen Drag &#38; Drop Operation die Platzierung des Widget ermittelt wird .
+Die Widget haben folgende Platzierung-Optionen.
+Die Reihen Folge ist wichtig.
+Der Algorithmus platziert zuerst das erste Widget (markiert mit 1), der Bereich A wird besetzt und kann weiter nicht mehr verwendet werden.
+Die Optionen der weiteren Widget.
+<P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>-side left</P
+></LI
+><LI
+><P
+>-side top</P
+></LI
+><LI
+><P
+>-side bottom -anchor e</P
+></LI
+><LI
+><P
+>-side right</P
+></LI
+></OL
+>
+Wie das Widget in seinem Bereich platziert wird hängt von -anchor Attribut.
+Standardmäßig wird es zentriert (-anchor center).
+Will man ein neues Widget in das Frame einfügen, muss man die Position 
+relativ zu bestehenden 4 Widget angeben.
+Zeigt man in den Raum (Blau) zwischen den Widget, wird aus am Ende der Packliste (Position 5) mit Standardoptionen eingefügt (-side top -anchor center).
+Also das blaue Raum in der Mitte.
+Zeigt man auf ein Widget, wird der -side Attribut von dem Widget übernommen,
+die Pasten wird relativ zu dem gezeigten weidest ermittelt.
+Zeigt man auf die Fläche (a) des ersten Widget wird die Position auf 0 gewählt.
+Man kann auf diese Weise die Widget schnell aneinander reihen.
+Die speziellen Optionen können erst in einem Dialog spezifiziert werden.</P
+><H1
+CLASS="BRIDGEHEAD"
+><A
+NAME="AEN617"
+></A
+>Platzieren in einem Grid-Frame</H1
+><P
+>Das Grid-Manager platziert die Widget in einem Gitter (Tabelle).
+Die Zellen-Größen werden entsprechen der Bedürfnissen der einzelnen Widget ermittelt.
+Ein Widget kann auch mehrere benachbarte Zellen besetzen (-columnspan -rowspan).
+Im Gegenteil zu anderen GUI-Editoren werden die Spalten und Zeilen dynamisch gebildet.
+Man muss also die Zeilen- und Spaltenzahl nicht angeben oder keine neuen Zeilen oder Spalten einfügen.
+<DIV
+CLASS="FIGURE"
+><A
+NAME="DROPGRID"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="dropgrid.png"></P
+></DIV
+><P
+><B
+>Abbildung 5. Platzieren in einem Grid-Frame (schematisch)</B
+></P
+></DIV
+>
+Die <A
+HREF="x541.html#DROPGRID"
+>Abbildung 5</A
+> Zeigt ein beispielhaftes Grid-Frame.
+Die Zellen A2,B2,B3,C1,C3 sind bereits besetzt.
+Beim Drag&#38;Drop Operation wird es zuerst ermittelt ob eine Zelle frei ist.
+Ist das der Fall wird sie einfach besetzt.
+Wird auf eine besetzte Zelle gezeigt (z.B. B2), wird angenommen, dass
+eine neue Spalte oder Zeile hinzugefügt werden soll um eine neue Zelle zu schaffen.
+Wird (siehe Zelle B2) der Bereich d (oben) angezeigt wird eine Zeile 
+über der Zelle B3 hinzugefügt.
+Das neue Widget wird über das Widget im Zelle B2 platziert.</P
+><P
+>Die speziellen Optionen wie Spaltenbreite und Zeilenhöhe der Zelle können erst in einem Dialog spezifiziert werden.</P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN626"
+></A
+>Pack Geometry Manager</H3
+><P
+>Es wurden zwei geometry Manager pack und grid für die Platzierung der
+Widget benutzt.
+Beide sind sehr mächtig und erlauben sehr gute Feststellung von Windows
+Platzierung auch beim wechselnden Windowsgroßen.
+Ähnliche oder gleiche Geometrymanager werden auch bei Java, Gtk und Qt benutzt.
+Grid ist am schnellsten zu verstehen und entspricht etwa der Tabelle.</P
+><P
+>Mehr dazu Lesen Sie in Tk-Dokumantation <I
+CLASS="EMPHASIS"
+>man pack, man grid</I
+>
+Hier ein Ausschnitte aus pack Man-Dokumentation.</P
+><P
+>For each master the packer maintains an ordered list of slaves called the packing list. The -in, -after, and -before configuration
+options are used to specify the master for each slave and the slave's position in the packing list. If none of these options is given for
+a slave then the slave is added to the end of the packing list for its parent. 
+
+The packer arranges the slaves for a master by scanning the packing list in order. At the time it processes each slave, a rectangular
+area within the master is still unallocated. This area is called the cavity; for the first slave it is the entire area of the master. 
+
+For each slave the packer carries out the following steps: 
+<P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>     The packer allocates a rectangular parcel for the slave along the side of the cavity given by the slave's -side option. If the side
+     is top or bottom then the width of the parcel is the width of the cavity and its height is the requested height of the slave plus
+     the -ipady and -pady options. For the left or right side the height of the parcel is the height of the cavity and the width is the
+     requested width of the slave plus the -ipadx and -padx options. The parcel may be enlarged further because of the -expand
+     option (see ``EXPANSION'' below) </P
+></LI
+><LI
+><P
+>     The packer chooses the dimensions of the slave. The width will normally be the slave's requested width plus twice its -ipadx
+     option and the height will normally be the slave's requested height plus twice its -ipady option. However, if the -fill option is
+     x or both then the width of the slave is expanded to fill the width of the parcel, minus twice the -padx option. If the -fill
+     option is y or both then the height of the slave is expanded to fill the width of the parcel, minus twice the -pady option. </P
+></LI
+><LI
+><P
+>     The packer positions the slave over its parcel. If the slave is smaller than the parcel then the -anchor option determines
+     where in the parcel the slave will be placed. If -padx or -pady is non-zero, then the given amount of external padding will
+     always be left between the slave and the edges of the parcel. </P
+></LI
+></OL
+>
+Once a given slave has been packed, the area of its parcel is subtracted from the cavity, leaving a smaller rectangular cavity for the
+next slave. If a slave doesn't use all of its parcel, the unused space in the parcel will not be used by subsequent slaves. If the cavity
+should become too small to meet the needs of a slave then the slave will be given whatever space is left in the cavity. If the cavity
+shrinks to zero size, then all remaining slaves on the packing list will be unmapped from the screen until the master window
+becomes large enough to hold them again. </P
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x177.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Zum Anfang</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x639.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>SchemaEditor</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c163.html"
+ACCESSKEY="U"
+>Nach oben</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>FormServer</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

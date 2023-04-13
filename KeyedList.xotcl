@@ -1,0 +1,61 @@
+# automatically generated from XOTclIDE
+package provide KeyedList 0.2
+
+@ tclproc keyldel idemeta struct KeyedList keyedlist
+proc keyldel {listvar key} {
+    upvar $listvar list
+    set index 0
+    set clist $list
+    foreach elem $clist {
+        if {[lindex $elem 0]==$key} {
+            set list [lreplace $list $index $index]
+            return
+        }
+        incr index
+    }
+}
+@ tclproc keylget idemeta struct KeyedList keyedlist
+proc keylget {listvar key} {
+    upvar $listvar list
+    foreach elem $list {
+        if {[lindex $elem 0]==$key} {
+            return [lindex $elem 1]
+        }
+    }
+    error "key $key not found in keyedlist"
+}
+@ tclproc keylkeys idemeta struct KeyedList keyedlist
+proc keylkeys listvar {
+    upvar $listvar list
+    set ret [list]
+    foreach elem $list {
+        lappend ret [lindex $elem 0]
+    }
+    return $ret
+}
+@ tclproc keylset idemeta struct KeyedList keyedlist
+proc keylset {listvar key value} {
+    upvar $listvar list
+    if {![info exists list]} {
+        set list [list]
+    }
+    set clist $list
+    set index 0
+    foreach elem $clist {
+        if {[lindex $elem 0]==$key} {
+            lset list $index [list $key $value]
+            return
+        }
+        incr index
+    }
+    lappend list [list $key $value]
+}
+@ tclproc lcontain idemeta struct KeyedList keyedlist
+proc lcontain {list elem} {
+   return [expr [lsearch -exact $list $elem]>=0]
+}
+@ tclproc lempty idemeta struct KeyedList keyedlist
+proc lempty list {
+   expr  {[llength $list]==0}
+}
+

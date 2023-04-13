@@ -1,0 +1,526 @@
+# automatically generated from XOTclIDE
+package provide xdobry::Base 0.34
+
+@ tclproc addMenge idemeta struct xdobry::Base utils
+proc addMenge {list1 list2} {
+    set la1(0) {} ; unset la1(0)
+    foreach v $list1 {
+        set la1($v) {}
+    }
+    foreach v $list2 {
+        set la1($v) {}
+    }
+    return [array names la1]
+}
+@ tclproc keylequal idemeta struct xdobry::Base utils
+@ tclproc keylequal idemeta comment {Überprüft zwei tclx keylist auf Gleicheit
+Übergabe per Referenc}
+proc keylequal {kl1 kl2} {
+    upvar $kl1 mykl1 $kl2 mykl2
+    #puts "$mykl1 $mykl2"
+    # Überprüfen der gleichheit der schlüssel
+    if {[lsort [keylkeys mykl1]]!=[lsort [keylkeys mykl2]]} {
+        return 0
+    }
+    foreach key [keylkeys mykl1] {
+        if {[keylget mykl1 $key]!=[keylget mykl2 $key]} {
+            return 0
+        }
+    }
+    return 1
+}
+@ tclproc minusMenge idemeta struct xdobry::Base utils
+@ tclproc minusMenge idemeta comment {eigene intersect3 erste list
+gib alle Elemente zurück, die in der list1 aber nicht in list2 sind}
+proc minusMenge {list1 list2} {
+    set la1(0) {} ; unset la1(0)
+    foreach v $list1 {
+        set la1($v) {}
+    }
+    foreach elem $list2 {
+        if {[info exists la1($elem)]} {
+            unset la1($elem)
+        }
+    }
+    return [array names la1]
+}
+@ tclproc schnittMenge idemeta struct xdobry::Base utils
+@ tclproc schnittMenge idemeta comment {Eigene Implementierung (nach tclx) von Mengen Operationen
+
+eigene intersect tclx Prozedur}
+proc schnittMenge {list1 list2} {
+    set intersectList [list]
+    set list1 [lsort $list1]
+    set list2 [lsort $list2]
+    set index1 0
+    set index2 0
+    set length1 [llength $list1]
+    set length2 [llength $list2]
+    while {1} {
+        if {$index1>=$length1 || $index2>=$length2} break
+        set compareResult [string compare [lindex $list1 $index1] [lindex $list2 $index2]]
+        if {$compareResult < 0} {
+            incr index1
+            continue
+        }
+        if {$compareResult > 0} {
+            incr index2
+            continue
+        }
+        lappend intersectList [lindex $list1 $index1]
+        incr index1
+        incr index2
+    }
+    return $intersectList
+}
+@ tclproc tdom_attr2keyl idemeta struct xdobry::Base utils
+@ tclproc tdom_attr2keyl idemeta comment {Liefert tDOM Tag Attribute als Tcl Keyed List in attr können die Attribute
+gesetzt werden, die ausgelesen werden sollen
+wenn keins dann alle}
+proc tdom_attr2keyl {domNode {attr {}}} {
+    set ret {}
+    foreach key [$domNode attributes] {
+        if {$attr!="" && ![lcontain $attr $key]} continue
+        if {[$domNode hasAttribute $key]} {
+            keylset ret $key [$domNode getAttribute $key]
+        }
+    }
+    return $ret
+}
+@ tclproc tdom_clearKontext idemeta struct xdobry::Base utils
+@ tclproc tdom_clearKontext idemeta comment {erzeugt ein Kontext, tag Name oder
+wenn bereits vorhandel liefert ihn leer}
+proc tdom_clearKontext {dom_node tagname} {
+    set tag_node [lindex [$dom_node selectNodes child::$tagname] 0]
+    if {$tag_node!=""} {
+        foreach node [$tag_node childNodes] {
+            $tag_node removeChild $node
+        }
+    } else {
+        set tag_node [[$dom_node ownerDocument] createElement $tagname]
+        $dom_node appendChild $tag_node
+    }
+    return $tag_node
+}
+@ tclproc tdom_deleteKontext idemeta struct xdobry::Base utils
+@ tclproc tdom_deleteKontext idemeta comment {Löscht ein child tag falls vorhanden}
+proc tdom_deleteKontext {dom_node tagname} {
+    foreach node [$dom_node selectNodes child::$tagname] {
+        $dom_node removeNode $node
+    }
+}
+@ tclproc tdom_extractAttributes idemeta struct xdobry::Base utils
+proc tdom_extractAttributes attrs {
+    set ret [list]
+    foreach attr $attrs {
+         lappend ret [lindex $attr 1]
+    }
+    return $ret
+}
+@ tclproc tdom_findpername idemeta struct xdobry::Base utils
+@ tclproc tdom_findpername idemeta comment {sucht ein Tag <tagname name="$name"> beginnend mit Wurzelverzeichnis}
+proc tdom_findpername {domNode tagname name} {
+    return [$domNode selectNodes //child::$tagname\[@name=\"$name\"\]]
+}
+@ tclproc tdom_getpername idemeta struct xdobry::Base utils
+proc tdom_getpername {domNode name} {
+    set node [lindex [$domNode selectNodes child::$name] 0]
+    if {$node==""} return
+    return [$node text]
+}
+@ tclproc tdom_getprimattr idemeta struct xdobry::Base utils
+proc tdom_getprimattr table_node {
+     set attrs [$table_node selectNodes {child::node()[not(self::table)]/descendant-or-self::attr[@primary_key="1"]/attribute::name}]
+     tdom_extractAttributes $attrs
+}
+@ tclproc tdom_getvaluelist idemeta struct xdobry::Base utils
+@ tclproc tdom_getvaluelist idemeta comment {Transferiert eine XML Struktur zu tcl Liste
+<valuelist>
+<item>list elem 1</item>
+<item>list elem 2</item>
+<item>list elem 3</item>
+</valuelist>}
+proc tdom_getvaluelist domNode {
+    set vlist_node [lindex [$domNode selectNodes child::valuelist] 0]
+    if {$vlist_node==""} return
+    set valuelist {}
+    foreach item_node [$vlist_node selectNodes child::item] {
+        lappend valuelist [$item_node text]
+    }
+    return $valuelist
+}
+@ tclproc tdom_keyl2attr idemeta struct xdobry::Base utils
+@ tclproc tdom_keyl2attr idemeta comment {Setzt eine TclX Keyed List als tDom Tag Attribute
+in defattr können die Default Werte definiert werden,
+die jodoch nicht gesetzt werden.
+attr definiert nur die Attribute, die gesetzt werden sollen}
+proc tdom_keyl2attr {domNode keyl {defattr {}} {attr {}}} {
+    #puts "k2a $keyl $defattr $attr"
+    if {$defattr!=""} {
+        set defk [keylkeys defattr]
+    } else {
+        set defk {}
+    }
+    #puts "KL $keyl $defattr DEF $defk"
+    foreach key [keylkeys keyl] {
+        if {$attr!="" && ![lcontain $attr $key]} continue
+        if {[lcontain $defk $key] && [keylget defattr $key]==[keylget keyl $key]} {
+            if {[$domNode hasAttribute $key]} {
+                # Die Defaultwerte werden entfern
+                # Das soll die App. übernehemen
+                #puts "entferne $key"
+                $domNode removeAttribute $key
+            }
+            continue
+        }
+        $domNode setAttribute $key [keylget keyl $key]
+    }
+}
+@ tclproc tdom_setdefaults idemeta struct xdobry::Base utils
+proc tdom_setdefaults {kl_ref defkl} {
+    upvar $kl_ref kl
+    set klk [keylkeys kl]
+    foreach key [keylkeys defkl] {
+        if {![lcontain $klk $key]} {
+            keylset kl $key [keylget defkl $key]
+        }
+    }
+}
+@ tclproc tdom_setpername idemeta struct xdobry::Base utils
+proc tdom_setpername {domNode name value} {
+    set rdom_doc [$domNode ownerDocument]
+    set node [lindex [$domNode selectNodes child::$name] 0]
+    if {$node==""} {
+        if {$value==""} return
+        set node [$rdom_doc createElement $name]
+        $domNode appendChild $node
+    } else {
+        if {$value==""} {
+            [$node parentNode] removeChild $node
+            return
+        }
+        foreach cnode [$node childNodes] {
+            $node removeChild $cnode
+        }
+    }
+    $node appendChild [$rdom_doc createTextNode $value]
+}
+@ tclproc tdom_setvaluelist idemeta struct xdobry::Base utils
+proc tdom_setvaluelist {domNode vlist} {
+    set rdom_doc [$domNode ownerDocument]
+    #Alte valuelist löschen
+    foreach vlist_node [$domNode selectNodes child::valuelist] {
+        $domNode removeChild $vlist_node
+    }
+    set vlnode [$rdom_doc createElement valuelist]
+    $domNode appendChild $vlnode
+    foreach item $vlist {
+        set nodeitem [$rdom_doc createElement item]
+        $vlnode appendChild $nodeitem
+        $nodeitem appendChild [$rdom_doc createTextNode $item]
+    }
+}
+@ Object ConnectCreator {
+description {braucht geladenes Array lan für internationalle unterstützung und
+widgetlib.tcl und dialog.tcl
+hat ein dialog für sql Verbindung zu Kreiren und ein SqlInterface
+Object zurückzugeben oder nicht wenn mißlungen}
+}
+Object ConnectCreator
+@ ::ConnectCreator idemeta component xdobry::Base
+ConnectCreator proc getconnect {{cpar {}} {withSchemaExt 0} {nodialog 0} {writefile 0}} {
+    set cpark [keylkeys cpar]
+    #  Finde alle DB Interfaces
+    set interfaces [Sqlinterface getInterfacesCleaned]
+    if {[llength $interfaces]==0} {
+        IDE::Dialog error [mc No DB Interfaces found. Please install tcl sql interfaces (mysqltcl, postgres, tclodbc, sqllit]
+        return
+    }
+    # convert keyedlist to array get fomat
+    set dbParameter {}
+    foreach k $cpark {
+        if {$k=="interface"} continue
+        lappend dbParameter $k [keylget cpar $k]
+    }
+    set interface {}
+    if {[lcontain $cpark interface]} {
+        set interface [keylget cpar interface]
+    } elseif {$nodialog} {
+        while 1 {
+            bgerror [mc "You must specify the interface parameter f.e. {interface mysql}"]
+            break
+        }
+        return {}
+    }
+    return [IDEDBConnectDialog setConnectionOnExt $interface $withSchemaExt $dbParameter $writefile]
+}
+@ Object XDBase {
+description {Base Functions for all xdobry applications}
+}
+Object XDBase
+@ ::XDBase idemeta categoriesMethodsProcs {{defaultpref loadpref initSystem setlanguage} {savepref handle_help wwwlink_autor handle_about}}
+@ ::XDBase idemeta categoriesProcs {initialize user-actions}
+@ ::XDBase idemeta component xdobry::Base
+XDBase proc commandloop {} {
+      ::commandloop
+}
+XDBase proc convertMeta {} {
+    set ret {}
+    foreach c [IDE::IntroProxy getClasses] {
+        set script "$c proc initializeAfterLoad \{\} \{\n"
+        if {[$c info procs initializeAfterLoad]!=""} {
+            append script [$c info body initializeAfterLoad]
+        }
+        set was 0
+        foreach k [$c array names _idemeta] {
+            if {![ide::lcontain {categoriesMethodsProcs  categoriesProcs categoriesMethods categories component add} $k]} {
+                 set was 1
+                 append script "\[self\] set $k [list [$c set _idemeta($k)]]\n"
+            }
+        }
+        append script \}\n
+        if {$was} {namespace eval :: $script}
+    }
+    return $ret
+}
+XDBase proc defaultpref {{var option}} {
+    global $var
+    array set $var {
+        language dummy
+        htmlhelpviewer {netscape %s}
+        netscape_remote 1
+    }
+}
+XDBase proc getVersion {} {
+    return 0.42
+}
+@ XDBase proc handle_about {} {
+description {Base Function for all xdobry applications
+}
+}
+XDBase proc handle_about {{kname XDobry}} {
+    global progdir
+    set w .aboutdialog
+    catch {destroy $w}
+    toplevel $w -class Dialog
+    wm title $w [mc "about program"]
+    wm iconname $w Dialog
+    wm protocol $w WM_DELETE_WINDOW { }
+
+
+    frame $w.bot
+    frame $w.buttons -relief raised -bd 1
+    frame $w.top -relief raised -bd 1
+
+    message $w.msg -text "Database-Application-System: Xdobry\n new approach system for datebase form generation\n program: $kname\n Version: [my getVersion] Release: 0\n Date 02.2005\n Author: Artur Trzewik\n all rights reserved\n email: mail@xdobry.de\n homepage: http://www.xdobry.de\nCopyright (C) 1999 Artur Trzewik\n\nXDobry is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details." -width 1000
+    label $w.image -image [tix getimage artur]
+    button $w.ok -text [mc "Ok"] -command "set mywait ok"
+
+    grid  $w.ok -in $w.bot -column 0 -row 0 -sticky ew -padx 10
+
+    pack $w.image -side left -padx .5c -pady .5c -in $w.top
+    pack $w.msg -side left -in $w.top
+    pack $w.top -side top -fill both -expand 1
+    pack $w.buttons
+    pack $w.bot -side bottom -fill both
+
+    bind $w <Destroy> {set mywait cancel}
+
+    wm withdraw $w
+    update idletasks
+    set x [expr [winfo screenwidth $w]/2 - [winfo reqwidth $w]/2  - [winfo vrootx [winfo parent $w]]]
+    set y [expr [winfo screenheight $w]/2 - [winfo reqheight $w]/2  - [winfo vrooty [winfo parent $w]]]
+    wm geom $w +$x+$y
+    wm deiconify $w
+
+    # 7. Set a grab and claim the focus too.
+
+    set oldFocus [focus]
+    set oldGrab [grab current $w]
+    if {$oldGrab != ""} {
+        set grabStatus [grab status $oldGrab]
+    }
+    grab $w
+    focus $w
+
+
+    # 8. Wait for the user to respond, then restore the focus and
+    # return the index of the selected button.  Restore the focus
+    # before deleting the window, since otherwise the window manager
+    # may take the focus away so we can't redirect it.  Finally,
+    # restore any grab that was in effect.
+
+    tkwait variable mywait
+    catch {image delete image2a}
+    catch {focus $oldFocus}
+    catch {
+        # It's possible that the window has already been destroyed,
+        # hence this "catch".  Delete the Destroy handler so that
+        # tkPriv(button) doesn't get reset by it.
+
+        bind $w <Destroy> {}
+        destroy $w
+    }
+    if {$oldGrab != ""} {
+        if {$grabStatus == "global"} {
+            grab -global $oldGrab
+        } else {
+            grab $oldGrab
+        }
+    }
+}
+XDBase proc handle_help {} {
+    my openHTMLBrowser {http://www.xdobry.de}     
+}
+XDBase proc initSystem {} {
+   my instvar initialized
+   if {![info exists initialized]  || !$initialized} {
+       global helpdir progdir
+       my loadpref
+       tix addbitmapdir [file join $progdir bitmaps]
+       set helpdir [file join $progdir docu]
+       set initialized 1
+       my setlanguage
+   }
+}
+XDBase proc installHelpMenu {menuwin {appname XDoBry}} {
+    global progdir tcl_platform
+    $menuwin add command -label [mc "Help"] -command [list [self] handle_help]
+    $menuwin add command -label [mc "about program"] -command [list [self] handle_about $appname]
+    $menuwin add command -label [mc "Program Homepage"] -command [list [self] wwwlink_autor]
+    if {$tcl_platform(platform) eq "windows"} {
+        $menuwin add command -label "Tcl Console" -command [list console show]
+    }
+}
+XDBase proc installXdobryToVC {} {
+    foreach comp [IDE::Component getAllComponents] {
+        if {[$comp isPersistent]} continue
+        set name [$comp getName]
+        if {![string match xdobry::* $name] && $name ne "KeyedList"} continue
+        IDE::ComponentPersistence importComponent $name
+        $comp versionEdition
+    }
+}
+XDBase proc loadpref {} {
+    global option tcl_platform
+    my defaultpref
+    if {$tcl_platform(platform)=="windows"} {
+            if {![catch {package require registry}]} {
+            set reg_path {HKEY_CURRENT_USER\Software\xdobry}
+            if {![catch {set values [registry values $reg_path]}]} {
+                 foreach val $values {
+                    set option($val) [registry get $reg_path $val]
+                }
+        }
+      }
+    } else {
+            if {[file exists [file join ~  .xdobry]]} {
+            set preffile [open [file join ~ .xdobry] r]
+            while {[gets $preffile Zeile] >= 0} {
+                set option([lindex $Zeile 0]) [lindex $Zeile 1]
+            }
+        }
+    }
+}
+XDBase proc noLengthDBTypes {} {
+    list int text longblob float double date datetime money timestamp smallint boolean
+}
+XDBase proc openHTMLBrowser url {
+    # Taken from WIKI Page 557
+    global tcl_platform
+
+    # It *is* generally a mistake to switch on $tcl_platform(os), particularly
+    # in comparison to $tcl_platform(platform).  For now, let's just regard it
+    # as a stylistic variation subject to debate.
+    switch $tcl_platform(os) {
+        Darwin {
+            set command [list open $url]
+        }
+        HP-UX -
+        Linux  -
+        SunOS {
+            foreach executable {mozilla netscape iexplorer opera lynx
+            w3m links galeon konquerer mosaic firefox amaya
+            browsex elinks} {
+                set executable [auto_execok $executable]
+                if [string length $executable] {
+                    # Do you want to mess with -remote?  How about other browsers?
+                    set command [list $executable $url &]
+                    break
+                }
+            }
+        }
+        {Windows 95} -
+        {Windows NT} {
+            set command "[auto_execok start] {} [list $url]"
+        }
+    }
+    if [info exists command] {
+        if [catch {eval exec $command} err] {
+            tk_messageBox -icon error -message "error '$err' with '$command'"
+        }
+    } else {
+        tk_messageBox -icon error -message  "Please ($tcl_platform(os), $tcl_platform(platform)) is not yet ready for browsing."
+    }
+}
+XDBase proc precisionDBTypes {} {
+    list decimal
+}
+XDBase proc savepref {} {
+    global option lan errorInfo tcl_platform
+    if {$tcl_platform(platform)=="windows"} {
+            if {![catch {package require registry}]} {
+              set reg_path {HKEY_CURRENT_USER\Software\xdobry}
+              set indicator [array startsearch option]
+                    while {[array anymore option $indicator]} {
+                                set elem [array nextelement option $indicator]
+                                  registry set $reg_path $elem $option($elem)
+                    }
+      }
+    } else {
+     set ret [catch { set preffile [open [file join ~ .xdobry] w] }]
+    if {$ret != 0} {
+        IDE::Dialog error "[mc "can't open preferences file .xdobry in home directory for saving"] $errorInfo"
+        return
+    }
+    set indicator [array startsearch option]
+    while {[array anymore option $indicator]} {
+        set elem [array nextelement option $indicator]
+        puts $preffile "$elem [list $option($elem)]"
+    }
+    close $preffile
+    }
+}
+XDBase proc setlanguage {} {
+    global progdir
+    msgcat::mcload $progdir
+}
+XDBase proc stopSystem {} {
+      my instvar xotclLocal
+      if {[info exists xotclLocal] && $xotclLocal} {
+           exit
+      }
+}
+XDBase proc supportedDBTypes {} {
+    list decimal double int timestamp smallint text bigint datetime enum float varchar longblob set char money boolean
+}
+XDBase proc versionAllXdobryInVC {} {
+    foreach comp [IDE::Component getAllComponents] {
+        if {![$comp isPersistent]} continue
+        set name [$comp getName]
+        if {![string match xdobry::* $name] && $name ne "KeyedList"} continue
+        $comp versionEdition
+    }
+}
+XDBase proc wwwlink_autor {} {
+    my openHTMLBrowser {http://www.xdobry.de}     
+}
+

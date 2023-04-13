@@ -1,0 +1,274 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>Schema vs. Formularaussehen</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Dokumentation des Programms Xdobry"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Benutzer Handbuch"
+HREF="c163.html"><LINK
+REL="PREVIOUS"
+TITLE="FormServer"
+HREF="x639.html"><LINK
+REL="NEXT"
+TITLE="Fehlende Funktionalitäten bei Xdobry"
+HREF="x813.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Dokumentation des Programms Xdobry</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x639.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Benutzer Handbuch</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x813.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN771"
+></A
+>Schema vs. Formularaussehen</H1
+><P
+>Das System wurde nach dem Motto entwickelt: Das Aussehen der Formulare soll ihrer Semantik entsprechen.
+Hier die Beispiele, wie die Konzepte der Modellierung ihren Einfluss auf das Aussehen (Struktur) der Formulare haben.
+Die Screenshoots stammen alle aus dem Tutorial-Beispiel.</P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN774"
+></A
+>Darstellung der Fremdschlüssel</H2
+><P
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="foreignkeys.png"></P
+></DIV
+>
+Die Fremdschlüssel Attribute werden als Merhkolumnen-Auswahllisten dargestellt.
+Hier sieht man auf der ersten Stelle den Wert des Primärschlüssel und einen zusätzlichen Attribut (Name), das die Rolle des Objekts-Etikette hat.</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN780"
+></A
+>Assoziation (Formular-Links)</H2
+><P
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="FormularLinks.png"></P
+></DIV
+>
+<DIV
+CLASS="FIGURE"
+><A
+NAME="ER-ASSOZIATION"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="er_assoziation.png"></P
+></DIV
+><P
+><B
+>Abbildung 8. Assoziation in ER-Modell</B
+></P
+></DIV
+>
+Die Formular-Links funktionieren etwa wie Anweisung: Öffne den Formular mit allen Objekten, die mit diesen Objekt verknüpft sind (ein Fremdschlüssel darauf haben).
+Sie werden entgegengesetzt als Fremdschlüsselverweise</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN791"
+></A
+>Spezialisierung (Vererbung)</H2
+><P
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="FormularVererbung.png"></P
+></DIV
+>
+<DIV
+CLASS="FIGURE"
+><A
+NAME="ER-GENERALISIERUNG"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="er_generalisierung.png"></P
+></DIV
+><P
+><B
+>Abbildung 9. Generalisierung in ER-Modell</B
+></P
+></DIV
+>
+Die Spezialisierung Formulare (Kinder-Formulare) werden in einem Notebook Widget des Eltern-Formula eingebettet.</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN802"
+></A
+>Aggregation</H2
+><P
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="EigebetettesFormular.png"></P
+></DIV
+>
+<DIV
+CLASS="FIGURE"
+><A
+NAME="ER-AGGREGATION"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="er_aggregation.png"></P
+></DIV
+><P
+><B
+>Abbildung 10. Aggregation in ER-Modell</B
+></P
+></DIV
+>
+Aggregation funktioniert als eingebettete Formulare, dabei werden Fremdschlüssel als Verknüpfung Pfade benutzt; unbemerkt von dem Benutzter. </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x639.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Zum Anfang</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x813.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>FormServer</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c163.html"
+ACCESSKEY="U"
+>Nach oben</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Fehlende Funktionalitäten bei Xdobry</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

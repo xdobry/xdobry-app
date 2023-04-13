@@ -1,0 +1,1419 @@
+# automatically generated from XOTclIDE
+# script require component xdobry::Container
+package provide xdobry::WidgetLib 0.33
+package require xdobry::Container
+Class OWidget -parameter win
+@ ::OWidget idemeta component xdobry::WidgetLib
+OWidget instproc init args {
+    my requireNamespace
+    next
+}
+@ OWidget instproc unmap {} {
+description {OWidget abstract instproc map window}
+}
+OWidget instproc unmap {} {
+    my instvar win
+    destroy $win
+}
+Class WidgetContainer -superclass {::OWidget ::DoubleList}
+@ ::WidgetContainer idemeta component xdobry::WidgetLib
+@ WidgetContainer instproc get_changes {} {
+description {Gibt alle Werte bei dennen dafault und value unterschiedlich sind
+(also wurden sie durch Benutzer verändert)}
+}
+WidgetContainer instproc get_changes {} {
+    set inputs [FrameVisitor [self]::inputsvisitor]
+    my foreach_elem $inputs get_change
+    set ret [$inputs set valuelist]
+    $inputs destroy
+    return $ret
+}
+WidgetContainer instproc get_defaults {} {
+    set inputs [FrameVisitor [self]::inputsvisitor]
+    my foreach_elem $inputs get_default
+    set ret [$inputs set valuelist]
+    $inputs destroy
+    return $ret
+}
+WidgetContainer instproc get_values {} {
+    set inputs [FrameVisitor [self]::inputsvisitor]
+    my foreach_elem $inputs get_value
+    set ret [$inputs set valuelist]
+    $inputs destroy
+    return $ret
+}
+WidgetContainer instproc isvalid {} {
+    return [my conform [self] validProc]
+}
+@ WidgetContainer instproc set_defaults {} {
+description {Setzt Standartwerte}
+}
+WidgetContainer instproc set_defaults keyedlist {
+    set inputs [FrameVisitor [self]::inputsvisitor -valuelist $keyedlist]
+    $inputs set keys [keylkeys keyedlist]
+    my foreach_elem $inputs set_default
+    $inputs destroy
+}
+WidgetContainer instproc set_states keyedlist {
+    set inputs [FrameVisitor [self]::inputsvisitor -valuelist $keyedlist]
+    $inputs set keys [keylkeys keyedlist]
+    my foreach_elem $inputs set_states
+    $inputs destroy
+}
+@ WidgetContainer instproc set_values {} {
+description {Setzt Werte (wenn sie anders als Default sind) werden sie
+von get_changes erfasst}
+}
+WidgetContainer instproc set_values keyedlist {
+    set inputs [FrameVisitor [self]::inputsvisitor -valuelist $keyedlist]
+    $inputs set keys [keylkeys keyedlist]
+    my foreach_elem $inputs set_value
+    $inputs destroy
+}
+@ WidgetContainer instproc undo_changes {} {
+description {Setzt Werte auf Defaults}
+}
+WidgetContainer instproc undo_changes {} {
+    set uv [FrameVisitor [self]::updatevisitor]
+    my foreach_elem $uv undo_change
+    $uv destroy
+}
+@ WidgetContainer instproc update_defaults {} {
+description {Setzt defaults auf aktuelle Werten}
+}
+WidgetContainer instproc update_defaults {} {
+    set uv [FrameVisitor [self]::updatevisitor]
+    my foreach_elem $uv update_default
+    $uv destroy
+}
+@ WidgetContainer instproc update_values {} {
+description {Muss vor jedem get_values oder get_changes durchgeführt werden}
+}
+WidgetContainer instproc update_values {} {
+    set uv [FrameVisitor [self]::updatevisitor]
+    my foreach_elem $uv update_value
+    $uv destroy
+}
+WidgetContainer instproc validProc object {
+    if {[[$object info class ] info instprocs isvalid]==""} {
+        return [$object isvalid]
+    }
+    return 1
+}
+Class FrameContainer -superclass ::WidgetContainer -parameter {label border}
+@ ::FrameContainer idemeta add attributes
+@ ::FrameContainer idemeta attributes {label border}
+@ ::FrameContainer idemeta component xdobry::WidgetLib
+@ FrameContainer instproc addwidget {} {
+description {owidget muß eine genestate Klasse von FrameContainer sein}
+}
+FrameContainer instproc addwidget {owidget paramlist} {
+    $owidget set _packopt $paramlist
+    my push_back $owidget
+}
+FrameContainer instproc give_pos_arg {primary_order ist_order elem} {
+    #puts "PO $primary_order IS $ist_order ELEM $elem"
+    set pos [lsearch $primary_order $elem]
+    set len [llength $primary_order]
+    # Idee Suche einen nächsten alten Nachbarn der in der ist_order ist und
+    # richte sich nach ihm
+    # Zuerst die Vorgänger
+    for {set prev_elem [expr {$pos - 1}]} {$prev_elem>=0} {incr prev_elem -1} {
+        set nelem [lindex $primary_order $prev_elem]
+        if {[lcontain $ist_order $nelem]} {
+            return "-after $nelem"
+        }
+    }
+    for {set next_elem [expr {$pos + 1}]} {$next_elem<$len} {incr next_elem} {
+        set nelem [lindex $primary_order $next_elem]
+        if {[lcontain $ist_order $nelem]} {
+            return "-before $nelem"
+        }
+    }
+    return
+}
+FrameContainer instproc hide list {
+    my instvar win winorder
+    #puts "HIDE $list"
+    # Feststellen welche Elemente Angezeigt werden
+    if {![info exists winorder]} {
+        set winorder [pack slaves $win]
+    }
+    set swin [pack slaves $win]
+    set forgetlist {}
+    foreach obj $list {
+        set objw [[self]::$obj set win]
+        if {[lcontain $swin $objw]} {
+            lappend forgetlist $objw
+        }
+    }
+    if {$forgetlist!=""} { eval pack forget $forgetlist }
+}
+FrameContainer instproc map window {
+    my instvar win border label
+    set win $window
+    set param {}
+    if {[info exists border] && $border=="1"} {
+        lappend param -relief solid -borderwidth 1
+    }
+    if {[info exists label] && $label!=""} {
+        labelframe $window -text $label
+    } else {
+        eval frame $window $param
+    }
+    # Map Alle Windows
+    my begin_iterator [self]::it
+    while {[[self]::it get]!="NIL"} {
+        set elem [[self]::it next_elem]
+        regexp {.*::(.+)} $elem _ name
+        $elem map ${window}.${name}
+    }
+    [self]::it destroy
+    # Setzt die Widget in die Frame
+    my begin_iterator [self]::it
+    while {[[self]::it get]!="NIL"} {
+        set elem [[self]::it next_elem]
+        set name [namespace tail $elem]
+        eval pack ${window}.${name} [${elem} set _packopt]
+    }
+    [self]::it destroy
+}
+FrameContainer instproc show list {
+    my instvar win winorder
+    #puts "SHOW $list"
+    # Festellen welche Elemente es gibt aber die nicht angezeigt werden
+    set swin [pack slaves $win]
+    foreach obj $list {
+        set objw [[self]::$obj set win]
+        if {![lcontain $swin $objw]} {
+            # Ursprungliche Anordnung herstellen
+            set position_arg [my give_pos_arg $winorder [pack slaves $win] $objw]
+            eval pack $objw [[self]::${obj} set _packopt] $position_arg
+        }
+    }
+}
+FrameContainer instproc show_only list {
+    my instvar win winorder
+    #puts "SHOW ONLY $list"
+    # Festellen welche Elemente es gibt aber die nicht angezeigt werden
+    if {![info exists winorder]} {
+        set winorder [pack slaves $win]
+    }
+    set swin [pack slaves $win]
+    set forgetlist {}
+    foreach obj $list {
+        set objw [[self]::$obj set win]
+        if {![lcontain $swin $objw]} {
+            # Ursprungliche Anordnung herstellen
+            set position_arg [my give_pos_arg $winorder [pack slaves $win] $objw]
+            eval pack $objw [[self]::${obj} set _packopt] $position_arg
+        }
+    }
+    foreach obj [my info children] {
+        if {![lcontain $list [namespace tail $obj]]} {
+            if {[$obj istype OWidget]} {
+                set objw [$obj set win]
+                lappend forgetlist $objw
+            }
+        }
+    }
+    if {$forgetlist!=""} { eval pack forget $forgetlist }
+}
+FrameContainer proc initializeAfterLoad {} {
+my set attributes {label border}
+}
+@ Class FrameVisitor {
+description {Hier wäre vielleicht besser ein allg. Composite Objekt}
+}
+Class FrameVisitor -parameter {
+    {valuelist {}}
+}
+@ ::FrameVisitor idemeta component xdobry::WidgetLib
+FrameVisitor instproc get_change obj {
+    my instvar valuelist 
+    if {[$obj istype InputWidget]} then {
+        if {[$obj info vars data]!=""} {
+            set name [$obj set data]
+        } else {
+            regexp {.*::(.+)} $obj _ name
+        }
+        if {[$obj set value]!=[$obj set default]} {
+            keylset valuelist $name [$obj set value]
+            #lappend valuelist [list $name [$obj set value]]
+        }
+        #puts "value $valuelist"
+    } elseif {[$obj istype WidgetContainer]} {
+        $obj foreach_elem [self] get_change
+    }
+}
+FrameVisitor instproc get_default obj {
+    my instvar valuelist 
+    if {[$obj istype InputWidget]} then {
+        if {[$obj info vars data]!=""} {
+            set name [$obj set data]
+        } else {
+            regexp {.*::(.+)} $obj _ name
+        }
+        keylset valuelist $name [$obj set default]
+        #lappend valuelist [list $name [$obj set value]]
+        #puts "value $valuelist"
+    } elseif {[$obj istype WidgetContainer]} {
+        $obj foreach_elem [self] get_default
+    }
+}
+FrameVisitor instproc get_value obj {
+    my instvar valuelist 
+    if {[$obj istype InputWidget]} then {
+        if {[$obj info vars data]!=""} {
+            set name [$obj set data]
+        } else {
+            regexp {.*::(.+)} $obj _ name
+        }
+        keylset valuelist $name [$obj getvalue]
+        #lappend valuelist [list $name [$obj set value]]
+        #puts "value $valuelist"
+    } elseif {[$obj istype WidgetContainer]} {
+        $obj foreach_elem [self] get_value
+    }
+}
+FrameVisitor instproc set_default obj {
+    my instvar valuelist keys
+    if {[$obj istype InputWidget]} then {
+        if {[$obj info vars data]!=""} {
+            set name [$obj set data]
+        } else {
+            regexp {.*::(.+)} $obj _ name
+        }
+        if {[lcontain $keys $name]} {
+            $obj set default [keylget valuelist $name]
+            if {[$obj info vars win]!=""} {
+                $obj setdefault
+            }
+        }
+        #lappend valuelist [list $name [$obj set value]]
+        #puts "value $valuelist"
+    } elseif {[$obj istype WidgetContainer]} {
+        $obj foreach_elem [self] set_default
+    }
+}
+FrameVisitor instproc set_states obj {
+    my instvar valuelist keys
+    if {[$obj istype InputWidget]} then {
+        if {[$obj info vars data]!=""} {
+            set name [$obj set data]
+        } else {
+            regexp {.*::(.+)} $obj _ name
+        }
+        if {[lcontain $keys $name]} {
+            $obj setstatus [keylget valuelist $name]
+        }
+    } elseif {[$obj istype WidgetContainer]} {
+        $obj foreach_elem [self] set_default
+    }
+}
+FrameVisitor instproc set_value obj {
+    my instvar valuelist keys
+    if {[$obj istype InputWidget]} then {
+        if {[$obj info vars data]!=""} {
+            set name [$obj set data]
+        } else {
+            regexp {.*::(.+)} $obj _ name
+        }
+        if {[lcontain $keys $name]} {
+            $obj setvalue [keylget valuelist $name]
+        }
+        #lappend valuelist [list $name [$obj set value]]
+        #puts "value $valuelist"
+    } elseif {[$obj istype WidgetContainer]} {
+        $obj foreach_elem [self] set_value
+    }
+}
+FrameVisitor instproc undo_change obj {
+    if {[$obj istype InputWidget]} then {        
+        $obj setdefault
+    } elseif {[$obj istype WidgetContainer]} {
+        $obj foreach_elem [self] undo_change
+    }
+}
+FrameVisitor instproc update_default obj {
+    if {[$obj istype InputWidget]} then {        
+        $obj set default [$obj set value]
+    } elseif {[$obj istype WidgetContainer]} {
+        $obj foreach_elem [self] update_default
+    }
+}
+FrameVisitor instproc update_value obj {
+    if {[$obj istype InputWidget]} then {        
+        $obj updatevalue
+    } elseif {[$obj istype WidgetContainer]} {
+        $obj foreach_elem [self] update_value
+    }
+}
+Class GridContainer -superclass ::WidgetContainer -parameter {label border}
+@ ::GridContainer idemeta add attributes
+@ ::GridContainer idemeta attributes {label border}
+@ ::GridContainer idemeta component xdobry::WidgetLib
+@ GridContainer instproc addwidget {} {
+description {owidget muß eine genestate Klasse von GridContainer sein
+Grid Container fügt dem OWidget eine zusätzliche Varibale _gridopt}
+}
+GridContainer instproc addwidget {owidget paramlist} {
+    $owidget set _gridopt $paramlist
+    my push_back $owidget
+}
+GridContainer instproc map window {
+    my instvar win border label
+    set win $window
+    set param {}
+    if {[info exists border] && $border=="1"} {
+        lappend param -relief solid -borderwidth 1
+    }
+    if {[info exists label] && $label!=""} {
+        # tixLabelFrame hat immer einen Rahmen also param nicht beachten
+        labelframe $window -text $label
+    } else {
+        eval frame $window $param
+    }
+    # Map Alle Windows
+    my begin_iterator [self]::it
+    while {[[self]::it get]!="NIL"} {
+        set elem [[self]::it next_elem]
+        set name [namespace tail $elem]
+        $elem map ${window}.${name}
+    }
+    [self]::it destroy
+    # Setzt die Widget in die Frame
+    my begin_iterator [self]::it
+    while {[[self]::it get]!="NIL"} {
+        set elem [[self]::it next_elem]
+        set name [namespace tail $elem]
+        if {[$elem info class]=="::OLabelText" && [$elem set label]!=""} {
+            IDE::Dialog message  "LabelText can not be displayed in grid Frame. This ist tix Bug. Workaround set empty label"
+        }
+        eval grid ${window}.${name} [${elem} set _gridopt]
+    }
+    [self]::it destroy
+}
+GridContainer proc initializeAfterLoad {} {
+my set attributes {label border}
+}
+Class InputWidget -superclass ::OWidget -parameter {
+    value
+    data
+    {default {}}
+    {state normal}
+}
+@ ::InputWidget idemeta component xdobry::WidgetLib
+@ ::InputWidget idemeta description {
+Eine abstrakte Klasse für alle InputWidget
+Parameter: value default state
+Methoden: getvalue, setdefault, setstatus status
+}
+InputWidget instproc baseWidget {} {
+    my set win
+}
+@ InputWidget instproc getvalue {} {
+description {die Methoden getvalue, setvalue, setdefault müssen nich übeschrieben werden
+wenn value per OPtion -varible gelinkt ist.
+Das immer den InputWidget Zustand widerspiegelt}
+}
+InputWidget instproc getvalue {} {
+    my set value
+}
+@ InputWidget instproc isvalid {} {
+description {Erweiter den Interface von InputWidget um validate Prozeduren}
+}
+InputWidget instproc isvalid {} {
+    my instvar value default
+    my updatevalue
+    if {[Object isobject [self]::validator]} {
+        if {$value==$default} {return 1}
+        return [[self]::validator isvalid $value]
+    }
+    return 1
+}
+InputWidget instproc setdefault {} {
+    my instvar default value
+    set value $default
+}
+InputWidget instproc setstatus astatus {
+    my set status $astatus
+    [my baseWidget] configure -state $astatus
+}
+InputWidget instproc setvalue newv {
+    my instvar value
+    set value $newv
+}
+InputWidget instproc updatevalue {} {
+}
+InputWidget proc initializeAfterLoad {} {
+my set description {
+Eine abstrakte Klasse für alle InputWidget
+Parameter: value default state
+Methoden: getvalue, setdefault, setstatus status
+}
+}
+Class NoteBookContainer -superclass ::WidgetContainer
+@ ::NoteBookContainer idemeta component xdobry::WidgetLib
+@ NoteBookContainer instproc addcard {} {
+description {card ist eine Liste {name label}
+OWidget muß eine Subclass des NoteBookContainer sein
+!! Vorsicht die name der Kartei wird auf Kleinschreibung umbewandelt}
+}
+NoteBookContainer instproc addcard {owidget card} {
+    $owidget set cardattr $card
+    my push_back $owidget
+}
+NoteBookContainer instproc map window {
+    my instvar win
+    set win $window
+    tixNoteBook $win
+    # Map Alle Windows
+    my begin_iterator [self]::it
+    while {[[self]::it get]!="NIL"} {
+        set elem [[self]::it next_elem]
+        set name [namespace tail $elem]
+        # Auf Kleinschreibung Umstellen
+        set name [string tolower $name]
+        $elem map ${window}.${name}
+    }
+    [self]::it destroy
+    # Setzt die Widget in die Frame
+    my begin_iterator [self]::it
+    while {[[self]::it get]!="NIL"} {
+        set elem [[self]::it next_elem]
+        set cardname [lindex [$elem set cardattr] 0]
+        set cardname [string tolower $cardname]
+        set cardlabel [lindex [$elem set cardattr] 1]
+        set name [namespace tail $elem]
+        # Auf Kleinschreibung Umstellen
+        set name [string tolower $name]
+        $win add $cardname -label $cardlabel
+        set f [$win subwidget $cardname]
+        pack ${window}.${name} -in $f
+    }
+    [self]::it destroy
+    set win $window
+}
+NoteBookContainer instproc raise card {
+    my instvar win
+    $win raise $card
+}
+Class OCheckButton -superclass ::InputWidget -parameter {
+    label
+    {default 0}
+    {onvalue 1}
+    {offvalue 0}
+}
+@ ::OCheckButton idemeta add attributes
+@ ::OCheckButton idemeta attributes {state label onvalue offvalue}
+@ ::OCheckButton idemeta component xdobry::WidgetLib
+@ ::OCheckButton idemeta description {
+Kappselung des checkbuttons von Tk
+Parameter: label
+}
+OCheckButton instproc map window {
+    my instvar label value default win state onvalue offvalue 
+    set value $default
+    checkbutton $window -text $label -state $state -variable [self]::value  -onvalue $onvalue -offvalue $offvalue
+    set win $window 
+    next
+}
+OCheckButton proc initializeAfterLoad {} {
+my set description {
+Kappselung des checkbuttons von Tk
+Parameter: label
+}
+my set attributes {state label onvalue offvalue}
+}
+Class OListChooser -superclass ::InputWidget -parameter {
+    valuelist
+}
+@ ::OListChooser idemeta component xdobry::WidgetLib
+Class OComboBox -superclass ::OListChooser -parameter {label {editable 0} {dropdown 1}}
+@ ::OComboBox idemeta add attributes
+@ ::OComboBox idemeta attributes {state label valuelist dropdown}
+@ ::OComboBox idemeta component xdobry::WidgetLib
+OComboBox instproc map window {
+    my instvar label value default win state valuelist editable dropdown
+    set value $default
+    if {![lcontain $valuelist $value]} {
+        set value [lindex $valuelist 0]
+    }
+    if {!$dropdown} {
+        set mode immediate
+    } else {
+        set mode browse
+    } 
+    tixComboBox $window -label $label -state $state -variable [self]::value  -editable $editable -dropdown $dropdown -selectmode $mode
+    foreach elem $valuelist {
+        $window insert end $elem
+    }
+    set win $window
+    next
+}
+OComboBox instproc setvaluelist list {
+    my instvar win valuelist
+    set valuelist $list
+    set lwin [$win subwidget listbox]
+    $lwin delete 0 end
+    foreach elem $valuelist {
+        $win insert end $elem
+    }
+}
+OComboBox proc initializeAfterLoad {} {
+my set attributes {state label valuelist dropdown}
+}
+@ Class OComboBoxN {
+description {Eine Erweiterung benutzt um eine ChangeValue Notify Handler zu schaffen}
+}
+Class OComboBoxN -superclass ::OComboBox -parameter {{notifyproc {}}}
+@ ::OComboBoxN idemeta component xdobry::WidgetLib
+OComboBoxN instproc map args {
+    next
+    my instvar win notifyproc
+    $win configure -command $notifyproc 
+    #puts "Configured [self] $notifyproc"
+}
+Class OEditList -superclass ::InputWidget -parameter {
+    {label {}}
+}
+@ ::OEditList idemeta add attributes
+@ ::OEditList idemeta attributes {state label width height}
+@ ::OEditList idemeta component xdobry::WidgetLib
+@ ::OEditList idemeta description {
+tixScrolledText im tixLabelFrame
+Parameter: label state
+}
+OEditList instproc deleteItem {} {
+    my instvar win
+    set lwin [$win subwidget listbox]
+    set sel [$lwin curselection]
+    if {$sel!=""} {$lwin delete $sel}
+}
+OEditList instproc getvalue {} {
+    my instvar value win
+    my updatevalue
+    return $value
+}
+OEditList instproc map window {
+    my instvar label value default win state textwidth
+    tixComboBox $window -label $label -state $state  -editable true -history true -dropdown false
+    set win $window
+    button $window.del -text Del -command "[self] deleteItem"
+    # Vorsicht Tix Interna werden hier berührt (dirty fix)
+    pack $window.del -side right -in $window.frame.f1  -before [$window subwidget entry]
+    my setdefault
+    next
+}
+OEditList instproc setdefault {} {
+    my instvar default
+    my setvalue $default
+}
+OEditList instproc setvalue newv {
+    my instvar win value
+    set value $newv
+    [$win subwidget listbox] delete 0 end
+    foreach elem $value {
+        $win insert end $elem
+    }
+}
+OEditList instproc updatevalue {} {
+    my instvar value win
+    set lwin [$win subwidget listbox]
+    set value [$lwin get 0 end]
+}
+OEditList proc initializeAfterLoad {} {
+my set description {
+tixScrolledText im tixLabelFrame
+Parameter: label state
+}
+my set attributes {state label width height}
+}
+Class OLabelControl -superclass ::InputWidget -parameter {
+    {label {}}
+    min
+    max
+}
+@ ::OLabelControl idemeta add attributes
+@ ::OLabelControl idemeta attributes {state label min max}
+@ ::OLabelControl idemeta component xdobry::WidgetLib
+@ ::OLabelControl idemeta description {
+Kappselung der tixControl
+Benutzt um Integer Input zu realisieren
+Parameter: label min max
+}
+OLabelControl instproc baseWidget {} {
+    return [my set win].spinbox
+}
+@ OLabelControl instproc getvalue {} {
+description {Hack um besonderen Wert "NULL"}
+}
+OLabelControl instproc getvalue {} {
+    my instvar value
+    if {$value==""} {
+        return NULL
+    } else {
+        return $value
+    }
+}
+OLabelControl instproc map window {
+    my instvar label value default win state min max
+    if {$default=="NULL"} {set default ""}
+    set value $default
+    set xparam {}
+    if {![info exists max]} {
+        set max [expr {2<<29}]
+    }
+    if {![info exists min]} {
+        set min 0
+    }
+    # Leider funktioniert  die Option allowempty nicht
+    # Bug in Control.tix
+    # deswegen eigene -validatecmd
+    # !!! nicht label vergessen
+    frame $window
+    label $window.label -text $label
+    # set command [list {puts hee; return 1}]
+    # eval spinbox $window.spinbox -state $state -validate all -textvariable [self]::value -validatecommand $command $xparam
+    eval spinbox $window.spinbox -state $state -validate all -textvariable [self]::value $xparam -from $min -to $max
+    pack $window.label $window.spinbox -side left
+    set win $window 
+    next
+}
+@ OLabelControl instproc setdefault {} {
+description {Die nächsten zwei Methoden brauchen nur eine Überschreibung weil
+bei state disable kein Wert geschreiben werden konnte}
+}
+OLabelControl instproc setdefault {} {
+    my instvar default
+    if {$default=="NULL"} { set default "" }
+    my setvalue $default
+}
+OLabelControl instproc setstatus astatus {
+    my instvar win status
+    set status $astatus
+    $win.spinbox configure -state $astatus
+}
+OLabelControl instproc setvalue newv {
+    my set value $newv
+}
+@ OLabelControl instproc validatecmd {} {
+description {Die Orginalle tixControl::SetValue ist fehlerhaft
+es berücksichtigt kein allowempty
+Deswegen eigene Prozedur}
+}
+OLabelControl instproc validatecmd newvalue {
+    my instvar min max
+    if {$newvalue!=""  && $newvalue!="NULL" && [catch {expr 0+$newvalue}]} {
+        return 0
+    }
+    if {$newvalue != "" && $newvalue!="NULL"} {
+        regsub {^[0]*} $newvalue "" newvalue
+        if {[info exists max] && $max != "" && $newvalue > $max} {
+            return 0
+        }
+        if {[info exists min] && $min != "" && $newvalue < $min} {
+            return 0
+        }
+    }
+    return 1
+}
+OLabelControl proc initializeAfterLoad {} {
+my set description {
+Kappselung der tixControl
+Benutzt um Integer Input zu realisieren
+Parameter: label min max
+}
+my set attributes {state label min max}
+}
+Class OLabelEntry -superclass ::InputWidget -parameter {
+    {label {}}
+    show
+    textwidth
+}
+@ ::OLabelEntry idemeta add attributes
+@ ::OLabelEntry idemeta attributes {state label show textwidth}
+@ ::OLabelEntry idemeta component xdobry::WidgetLib
+@ ::OLabelEntry idemeta description {
+Kappselung der tixLabelEntry
+Parameter: label show
+}
+OLabelEntry instproc getvalue {} {
+    my instvar value
+    my updatevalue
+    return $value
+}
+OLabelEntry instproc map window {
+    my instvar label win state show textwidth
+    #set value $default
+    set xparam {}
+    set subparam {}
+    if {[info exists show]} {
+        lappend subparam entry.show *
+    }
+    if {[info exists textwidth]} {
+        lappend subparam entry.width $textwidth
+    }
+    if {$subparam!=""} {
+        lappend xparam -options $subparam
+    }
+    eval tixLabelEntry $window -label [list $label] -state [list $state] $xparam
+    set win $window 
+    my setdefault
+    next
+}
+OLabelEntry instproc setdefault {} {
+    my instvar default
+    my setvalue $default
+}
+OLabelEntry instproc setvalue newv {
+    my instvar win value state
+    set value $newv
+    set ewin [$win subwidget entry]
+    # man kann in den edit widget bei disabled nicht schreiben (seltsam)
+    if {$state=="disabled"} {
+        $ewin configure -state normal
+    }
+    $ewin delete 0 end
+    $ewin insert 0 $value
+    if {$state=="disabled"} {
+        $ewin configure -state disabled
+    }
+}
+OLabelEntry instproc updatevalue {} {
+    my instvar value win
+    set value [[$win subwidget entry] get]
+}
+OLabelEntry proc initializeAfterLoad {} {
+my set description {
+Kappselung der tixLabelEntry
+Parameter: label show
+}
+my set attributes {state label show textwidth}
+}
+Class OLabelText -superclass ::InputWidget -parameter {
+    {label {}}
+    {width 40}
+    {height 8}
+}
+@ ::OLabelText idemeta add attributes
+@ ::OLabelText idemeta attributes {state label width height}
+@ ::OLabelText idemeta component xdobry::WidgetLib
+@ ::OLabelText idemeta description {
+tixScrolledText im tixLabelFrame
+Parameter: label state label width height
+}
+OLabelText instproc baseWidget {} {
+    return [my set swin].text
+}
+OLabelText instproc getvalue {} {
+    my instvar value win
+    my updatevalue
+    return $value
+}
+OLabelText instproc map window {
+    my instvar label win swin state width height
+    #set value $default
+    set xparam {}
+    set subparam {}
+    if {[info exists width]} {
+        lappend subparam text.width $width
+    }
+    if {[info exists height]} {
+        lappend subparam text.height $height
+    }
+    if {[info exists state]} {
+        lappend subparam text.state $state
+    }
+    if {$subparam!=""} {
+        lappend xparam -options $subparam
+    }
+    if {$label=="" && [my info class]=="::OLabelText"} {
+        set swin $window
+        eval tixScrolledText $swin $xparam -scrollbar auto
+    } else {
+        labelframe $window -text [list $label]
+        set swin $window.stext
+        eval tixScrolledText $swin $xparam -scrollbar auto
+        pack $swin -expand yes -fill both
+        set win $window 
+        my setdefault
+    }
+    next
+}
+OLabelText instproc setdefault {} {
+    my instvar default
+    my setvalue $default
+}
+OLabelText instproc setvalue newv {
+    my instvar swin value
+    # letzte \n wird ignoriert s. getvalue für Erklärung
+    set value $newv
+    set ewin [$swin subwidget text]
+    $ewin delete 1.0 end
+    $ewin insert 1.0 $value
+}
+OLabelText instproc updatevalue {} {
+    my instvar value swin
+    set ewin [$swin subwidget text]
+    # Leeres Text Widget gibt immer \n zurück (seltsam aber wahr) darum trim
+    set text [$ewin get 1.0 end]
+    set value [string range $text 0 [expr {[string length $text] - 2}]]
+}
+OLabelText proc initializeAfterLoad {} {
+my set description {
+tixScrolledText im tixLabelFrame
+Parameter: label state label width height
+}
+my set attributes {state label width height}
+}
+@ Class OMultiColumnList {
+description {Dieses Widget wird verwendet um Auswahllisten
+mit mehreren Splaten zu realisieren
+für Zwecke der Anzeige von humankonformen Fremdschlüssel}
+}
+Class OMultiColumnList -superclass ::OWidget -parameter {
+    label 
+    columns 
+    {columnslabel {}}
+    {height 12}
+    {columnswidth 12}
+    {state normal}
+    {dropdown 1}
+}
+@ ::OMultiColumnList idemeta add attributes
+@ ::OMultiColumnList idemeta attributes {state label columns columnslabel height columnswidth}
+@ ::OMultiColumnList idemeta component xdobry::WidgetLib
+@ ::OMultiColumnList idemeta description {
+Mehrspaltige Auswahlliste
+hat kein Attribut valuelist
+setvalue und getvalue behandeln den Index statt konkreten Werten.
+Hat kein setdefault value
+Parameter:  state columns columnslabel columnswidth height
+}
+OMultiColumnList instproc getindex {} {
+    my instvar lb_root win
+    return [$lb_root.listbox0 curselection]
+}
+OMultiColumnList instproc map window {
+    my instvar win state label columns columnslabel columnswidth height dropdown lb_root
+    set win $window
+    labelframe $window -text $label
+    # sonst kann man nicht scroll benutzen
+    #bind $win <FocusOut> "[self] popdown"
+    # zu kompliziertes Algorith ausgliedern !!
+    if {$dropdown} {
+        menu $win.dropshell -bd 2 -relief raised -tearoff 0
+        wm overrideredirect $win.dropshell 1
+        wm withdraw $win.dropshell
+        set lb_root $win.dropshell
+    } else {
+        set lb_root $win
+    }
+    for {set x 0} {$x<$columns} {incr x} {
+        set width [lindex $columnswidth $x]
+        if {$width eq ""}  {set width [lindex $columnswidth 0]}
+        set elem [listbox $lb_root.listbox$x -height $height -width $width  -yscrollcommand "$lb_root.scroll set"  -exportselection no]
+        bind $elem <1> "[self] setindex \[%W index @%x,%y\]"
+        bind $elem <Key-Select> "[self] setindex \[%W index @%x,%y\]"
+        if {$dropdown} {
+            set elem [::label $win.labentry$x -borderwidth 1 -width $width -justify left -relief solid]
+            bind $elem <1> "[self] popup"
+            pack $lb_root.listbox$x -expand yes  -fill both -side left
+        }
+        if {$columnslabel!=""} {
+            ::label $window.label$x -text  [lindex $columnslabel $x]
+            # gibt die Bindings an den Vater 
+            # benutzt um Dopplet Klick auszulösen
+            bindtags $window.label$x $window
+            grid $window.label$x -column $x -row 0 -sticky nsew  -in $window
+            grid $elem -column $x -row 1 -sticky ns  -in $window
+        } else {
+            pack $elem -expand yes  -fill both -side left -in $window
+        }
+    }
+    scrollbar $lb_root.scroll -command "[self] yview"
+    if {$dropdown} {
+        pack $win.dropshell.scroll -expand yes  -fill y -side left
+    } else {
+        if {$columnslabel!=""} {
+            grid $window.scroll -column $x -row 1 -sticky ns  -in $window
+        } else {
+            pack $window.scroll -expand yes  -fill y -side left -in $window
+        }
+    }
+    #next
+}
+OMultiColumnList instproc popdown args {
+    my instvar win
+    wm withdraw $win.dropshell 
+}
+OMultiColumnList instproc popup args {
+    my instvar win lb_root origwith
+    #puts "popup"
+    if {![winfo ismapped $win]} {
+        return
+    }
+    set  y [winfo rooty $win]
+    incr y [winfo height $win]
+
+    set height [winfo reqheight $lb_root.listbox0]
+
+    set x1 [winfo rootx $win]
+    if {[info exists origwith]} {
+        set reqwidth $origwith
+    } else {
+        set reqwidth [winfo reqwidth $win.dropshell]
+        set origwith $reqwidth
+    }
+    
+    set width $reqwidth
+    set x2 $width
+
+    # If the listbox is too far right, pull it back to the left
+    #
+    set scrwidth [winfo vrootwidth .]
+    if {$x2 > $scrwidth} {
+        set x1 [expr {$scrwidth - $width}]
+    }
+
+    # If the listbox is too far left, pull it back to the right
+    #
+    if {$x1 < 0} {
+        set x1 0
+    }
+
+    # If the listbox is below bottom of screen, put it upwards
+    #
+    # If the listbox is below bottom of screen, put it upwards
+    #
+    set scrheight [winfo vrootheight .]
+    set bottom [expr {$y+$height}]
+    if {$bottom > $scrheight} {
+        set y [expr {$y-$height-[winfo height $win]-5}]
+    }
+
+    # OK , popup the shell
+    #
+    global tcl_platform
+
+    wm geometry $win.dropshell $reqwidth\x$height+$x1+$y
+    if {$tcl_platform(platform) eq "windows"} {
+        update
+    }
+    wm deiconify $win.dropshell
+    if {$tcl_platform(platform) eq "windows"} {
+        update
+    }
+    raise $win.dropshell
+    focus $win
+    #puts "end of popup"
+}
+OMultiColumnList instproc setindex index {
+    my instvar lb_root columns dropdown win
+    #puts "set index to $index"
+    for {set x 0} {$x<$columns} {incr x} {
+        $lb_root.listbox$x selection clear 0 end
+        if {$index!=""} { 
+            $lb_root.listbox$x selection set $index
+            if {$dropdown} {
+                $win.labentry$x configure -text [$lb_root.listbox$x get $index]
+            }
+        } elseif {$dropdown} {
+            $win.labentry$x configure -text ""
+        }
+    }
+    if {$dropdown} {
+        my popdown
+    }
+}
+OMultiColumnList instproc setvaluelist list {
+    my instvar lb_root columns
+    for {set x 0} {$x<$columns} {incr x} {
+        $lb_root.listbox$x delete 0 end
+    }
+    foreach elem $list {
+        for {set x 0} {$x<$columns} {incr x} {
+            $lb_root.listbox$x insert end [lindex $elem $x]
+        }
+    }
+}
+OMultiColumnList instproc yview args {
+    my instvar lb_root columns
+    for {set x 0} {$x<$columns} {incr x} {
+        eval $lb_root.listbox$x yview $args
+    }
+
+}
+OMultiColumnList proc initializeAfterLoad {} {
+my set description {
+Mehrspaltige Auswahlliste
+hat kein Attribut valuelist
+setvalue und getvalue behandeln den Index statt konkreten Werten.
+Hat kein setdefault value
+Parameter:  state columns columnslabel columnswidth height
+}
+my set attributes {state label columns columnslabel height columnswidth}
+}
+@ Class OMultiFrame {
+description {Ein Widget für Eingabe von Array Strukturen
+dabei wird ein Frame als Eigabe Maske benutzt
+weiter werden Navigations Elemente für Blättern durch das Array gebildet
+Variable value wird wie folg gebildet
+keyed list (tclX)
+{{name {val1 val2 val3}} {name2 {val1 val2 val3}}}
+array von 3 Elementen}
+}
+Class OMultiFrame -superclass ::InputWidget -parameter {
+    {usernew 1}
+    {userdelete 1}
+    {count 1}
+    inputframe
+}
+@ ::OMultiFrame idemeta component xdobry::WidgetLib
+OMultiFrame instproc delete {} {
+    my instvar actuel value count
+    if {$count>1} {
+        incr count -1
+        incr actuel -1
+        if {$actuel<0} {
+            set actuel 0
+        }
+        foreach key [keylkeys value] {
+            keylset value $key [lreplace [keylget value $key] $actuel $actuel]
+        }
+        my showindex $actuel
+    } elseif {$count==1} {
+        my setvalue {}
+    }
+}
+@ OMultiFrame instproc getidvalue {} {
+description {Vereinfacht die Manipulation von value keyed list}
+}
+OMultiFrame instproc getidvalue id {
+    my instvar value 
+    set indexval {}
+    foreach key [keylkeys value] {
+        keylset indexval $key [lindex [keylget value $key] $id]
+    }
+    return $indexval
+}
+OMultiFrame instproc getvalue {} {
+    my instvar value win
+    my updatevalue
+    return $value
+}
+OMultiFrame instproc map window {
+    my instvar win inputframe usernew userdelete actuel default count
+    set win $window
+    set actuel 0
+    frame $win -bd 2 -relief sunken
+    set commands {
+        {prev back prev}
+        {next forward next_tupel}
+        {new filenew new}
+        {delete delete delete}
+    }
+    frame $win.navigation -bd 2 -relief sunken
+    label $win.navigation.pos
+    pack $win.navigation.pos -side left -anchor w
+    foreach command $commands {
+        set name [lindex $command 0]
+        if {!$usernew && $name=="new"} continue
+        if {!$userdelete && $name=="delete"} continue
+        set image [lindex $command 1]
+        set execute [lindex $command 2]
+        button $win.navigation.$name -image [tix getimage $image]  -command "[self] $execute"  -takefocus 0 -bg #c0c0c0 -highlightbackground #c0c0c0
+        pack $win.navigation.$name -side left -anchor w
+    }
+    $inputframe map $win.inputframe
+    pack $win.inputframe
+    pack $win.navigation -side bottom -anchor s -expand yes -fill x    
+    if {$default!=""} {
+        foreach key [keylkeys default] {
+            if {$count<[llength [keylget default $key]]} {
+                set count [llength [keylget default $key]]
+            }
+        }
+    }
+    my setdefault
+    next
+}
+OMultiFrame instproc new {} {
+    my instvar count
+    incr count
+    my showindex [expr {$count -1}]
+}
+OMultiFrame instproc next_tupel {} {
+    my instvar actuel count
+    set id $actuel
+    incr id
+    if {$id<$count} {
+        my updateindex
+        my showindex $id
+    }
+}
+OMultiFrame instproc prev {} {
+    my instvar actuel
+    set id $actuel
+    incr id -1
+    if {$id>=0} {
+        my updateindex
+        my showindex $id
+    }
+}
+OMultiFrame instproc setdefault {} {
+    my instvar default
+    my setvalue $default
+}
+OMultiFrame instproc setvalue newv {
+    my instvar win value actuel count inputframe
+    set value $newv
+    if {$newv==""} {
+        set count 0 
+        set actuel 0
+        set value [$inputframe get_values]
+        if {$value!=""} {
+            foreach key [keylkeys value] {
+                keylset value $key ""
+            }
+        }
+    } else {
+        set key [lindex [keylkeys newv] 0]
+        if {$count!=[llength [keylget newv $key]]} {
+            set count [llength [keylget newv $key]]
+        }
+    }
+    if {$actuel>=$count-1 && $count!=0}  {
+        set actuel [expr {$count-1}]
+    }
+    my showindex $actuel
+}
+OMultiFrame instproc showindex id {
+    my instvar value actuel inputframe win count
+    set actuel $id
+    set indexval {}
+    foreach key [keylkeys value] {
+        keylset indexval $key [lindex [keylget value $key] $id]
+    }
+    $inputframe set_defaults $indexval
+    $win.navigation.pos configure -text "[expr {$count==0 ? 0 : $actuel+1}] von $count"
+}
+OMultiFrame instproc updateindex {} {
+    my instvar value actuel inputframe count
+    if {$count==0} return
+    $inputframe update_values
+    set changes [$inputframe get_changes]
+    foreach key [keylkeys changes] {
+        set vallist [keylget value $key]
+        if {[llength $vallist]<=$actuel} {
+            for {set x [llength $vallist]} {$x<=$actuel} {incr x} {
+                lappend vallist {}
+            }
+        }
+        keylset value $key [lreplace $vallist $actuel $actuel [keylget changes $key]]
+    }
+}
+OMultiFrame instproc updatevalue {} {
+    my updateindex
+}
+Class OMultiList -superclass ::OListChooser -parameter label
+@ ::OMultiList idemeta add attributes
+@ ::OMultiList idemeta attributes {state valuelist}
+@ ::OMultiList idemeta component xdobry::WidgetLib
+@ ::OMultiList idemeta description {
+Abgeleitet from tixScrolledList ermöglicht Auswahl von Untermengen
+Parameter:  state valuelist
+}
+OMultiList instproc getvalue {} {
+    my instvar value win
+    my updatevalue
+    return $value
+}
+OMultiList instproc map window {
+    my instvar win state valuelist
+    tixScrolledListBox $window -state $state -scrollbar y  -options { listbox.selectMode multiple }
+    set win $window
+    my setvaluelist $valuelist
+    my setdefault
+    next
+}
+OMultiList instproc setdefault {} {
+    my instvar default
+    my setvalue $default
+}
+OMultiList instproc setvalue newv {
+    my instvar win value valuelist
+    set value $newv
+    set lwin [$win subwidget listbox]
+    $lwin selection clear 0 end
+    foreach elem $value {
+        $lwin selection set [lsearch -exact $valuelist $elem]
+    }
+}
+OMultiList instproc setvaluelist list {
+    my instvar win valuelist
+    set valuelist $list
+    set lwin [$win subwidget listbox]
+    $lwin delete 0 end
+    foreach elem $valuelist {
+        $lwin insert end $elem
+    }
+}
+OMultiList instproc updatevalue {} {
+    my instvar value valuelist win
+    set lwin [$win subwidget listbox]
+    set value {}
+    foreach index [$lwin curselection] {
+        lappend value [lindex $valuelist $index]
+    }
+    #puts "ML value $value"
+}
+OMultiList proc initializeAfterLoad {} {
+my set description {
+Abgeleitet from tixScrolledList ermöglicht Auswahl von Untermengen
+Parameter:  state valuelist
+}
+my set attributes {state valuelist}
+}
+Class ORadioButtons -superclass ::OListChooser -parameter {
+    {label {}}
+    {allowzero 1}
+}
+@ ::ORadioButtons idemeta add attributes
+@ ::ORadioButtons idemeta attributes {state label valuelist}
+@ ::ORadioButtons idemeta component xdobry::WidgetLib
+@ ::ORadioButtons idemeta description {
+Abgeleitet from tixSelect
+Parameter:  state valuelist
+}
+ORadioButtons instproc getvalue {} {
+    my instvar value win
+    my updatevalue
+    return $value
+}
+ORadioButtons instproc map window {
+    my instvar label win state valuelist allowzero 
+    tixSelect $window -state $state -label $label -radio true  -allowzero $allowzero -orientation vertical
+    set index 0 
+    foreach elem $valuelist {
+        $window add but_$index -text $elem
+        incr index
+    }
+    set win $window
+    my setdefault
+    next
+}
+ORadioButtons instproc setdefault {} {
+    my instvar win default
+    my setvalue $default
+}
+ORadioButtons instproc setvalue newv {
+    my instvar win value valuelist
+    set value $newv
+    set index  [lsearch -exact $valuelist $value]
+    if {$index==-1} {
+        $win configure -value {} 
+    } else {
+        if {[$win cget -value]!="but_$index"} {
+            $win invoke but_$index
+        }
+    }
+}
+ORadioButtons instproc updatevalue {} {
+    my instvar value valuelist win
+    regexp {but_([0-9]+)} [$win cget -value] _ index
+    if {[info exists index]} {
+        set value [lindex $valuelist $index]
+    }
+}
+ORadioButtons proc initializeAfterLoad {} {
+my set description {
+Abgeleitet from tixSelect
+Parameter:  state valuelist
+}
+my set attributes {state label valuelist}
+}
+@ Object WidgetFactory {
+description {WidgetFactory
+Eine zentralle Stelle für Widget Erzuegung aus listen XML und anderen}
+}
+Object WidgetFactory
+@ ::WidgetFactory idemeta component xdobry::WidgetLib
+@ WidgetFactory proc make_inputs_keylist {} {
+description {Idee: list beinhaltet eine Liste mit keydlist
+type und name werden benutzt um Widget zu bilden der Rest
+wird zu optionnen verändert und weiter gegeben
+name und type sind obligatorisch
+z.B.
+{{name data} {type OlabelEntry} {textwidth 10} {label Datenherkunft}}
+packoption werden für den Packer benutzt wenn vorhanden}
+}
+WidgetFactory proc make_inputs_keylist {name list} {
+    FrameContainer $name
+    foreach widget $list {
+        set type [keylget widget type]
+        set wname [keylget widget name]
+        set opt {}
+        set lkeys [keylkeys widget]
+        foreach key [minusMenge $lkeys {type name packoption}] {
+            lappend opt -$key [keylget widget $key]
+        }
+        # in einer der nächsten Zeile wird ein Widgetobject gebildet
+        eval $type ${name}::$wname $opt
+        if {[lcontain $lkeys packoption]} {
+            $name addwidget ${name}::${wname} [keylget widget packoption]
+        } else {
+            $name addwidget ${name}::${wname} {-anchor e}
+        }
+    }
+    return $name
+}
+@ WidgetFactory proc make_simply_inputs {} {
+description {Erzeugt imput widget aus listen
+{{typ name label default} ...}}
+}
+WidgetFactory proc make_simply_inputs {name list} {
+    FrameContainer $name
+    foreach widget $list {
+        set type [lindex $widget 0]
+        set wname [lindex $widget 1]
+        set label [lindex $widget 2]
+        set wdefault [lindex $widget 3]
+        switch $type {
+            text {
+                OLabelEntry ${name}::$wname -label $label -default $wdefault  -textwidth 20
+            }
+            file {
+                OLabelEntry ${name}::$wname -label $label -default $wdefault  -textwidth 20
+            }
+            integer {
+                OLabelEntry ${name}::$wname -label $label -default $wdefault
+            }
+            password {
+                OLabelEntry ${name}::$wname -label $label -default $wdefault  -show * -textwidth 20
+            }
+            list {
+                OComboBox ${name}::$wname -label $label -default $wdefault  -valuelist [lindex $widget 4] 
+            }
+            default {
+                error "unsupported widget type $type"
+            }
+        }
+        $name addwidget ${name}::${wname} {-anchor e}
+    }
+}
+FrameContainer initializeAfterLoad
+GridContainer initializeAfterLoad
+InputWidget initializeAfterLoad
+OCheckButton initializeAfterLoad
+OComboBox initializeAfterLoad
+OEditList initializeAfterLoad
+OLabelControl initializeAfterLoad
+OLabelEntry initializeAfterLoad
+OLabelText initializeAfterLoad
+OMultiColumnList initializeAfterLoad
+OMultiList initializeAfterLoad
+ORadioButtons initializeAfterLoad
+

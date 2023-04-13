@@ -1,0 +1,84 @@
+# Version 0.42
+* Sat Feb 12 2005 Artur Trzewik
+- bugs in migrating binary data for mysqltcl fixed
+- bugs by handling postgres bytea type fixed
+- bug by function undo in database form fixed
+- bug in inserting date-value for postgres fixed
+- improved sql dumping with database specific data handling by building inserts
+- xdobry need mysqltcl in verison at least 3.01
+- using SET IDENTITY_INSERT table ON|OFF by MS SQL Server
+- changing auto_increment type indent(1,1) to identity(1,1) by MS SQL Server
+# Version 0.41
+* Sat Jul 24 2004 Artur Trzewik
+- bugs in pgtcl interaface loading fixed
+- bugs in handling of dbtype in FormEditor fixed
+# Version 0.40
+* Thu Jul 1 2004 Artur Trzewik
+- supports new db: MS Access, MS SQL Server and Oracle
+- FormServer can modify Schema
+- FormServer can migrate schema and data
+- For internationalisation tcl package msgcat is used
+- tclx is not more used
+- improved documentation
+# Version 0.31
+* Sat Dev 27 2003 Artur Trzewik
+- internal refactoring all of main GUI.
+- menus supports dynamic enablement
+- use of IDEBaseGUI Components IDE::Browser parent class
+# Version 0.30
+* Sat Dec 6 2003 Artur Trzewik
+- new db interfaces sqlite and tclodbc
+- support tclkit
+- tclx will not be used. internal tcl-pure implementation of keyedlists
+- update of all subcomponents tix tdom and xotcl
+- many internal refactoring
+# Version 0.22
+* Thu Dec 26 2002 Artur Trzewik
+- changes for xotcl 1.0
+- XOTcl parts are removed
+- new mysqltcl2.11 interface
+- some bugs in SchemaEditor (caused by xotcl incompatiblity) was removed
+# Version 0.21
+* Sun Nov 4 2001 Artur Trzewik
+- port for xotcl 0.9 (release candidtate)
+- new xotclIDE (0.22) included. With Error Reporter
+# Version 0.20
+* Sat May 19 2001 Artur Trzewik
+- extensive refactoring by FormEngine and FormFactory packages
+- Filters becomes own windows by FormServer (more flexible filters are possible)
+- xdobry is developed with xotclIDE. My own IDE for Xotcl (www.xdobry.de/xotclIDE)
+it means new internal structure
+# Version 0.17
+* Sun Apr 22 2001 Artur Trzewik
+- update for xotcl-0.84
+- missing items in german_fe.lan added
+# Version 0.16
+* Mon Feb 17 2001 Artur Trzewik
+- named filter by FormServer
+- User templates by FormServer
+- Helptext support by F1-Key (Formserver)
+- Data Entry validators
+# Version 0.15
+* Mon Dec 26 2000 Artur Trzewik
+- redhat 7.0 support
+- dbitotcl (Perl DBI) support
+- many user friendly improvment by FormServer
+# Version 0.14
+* Tue Nov 28 2000 Artur Trzewik
+- some Bugs killed
+- adapt for mysqltcl2.0
+- better error handling of sql statements                                                 
+# Version 0.12
+* Mon Nov 6 2000 Artur Trzewik
+- Grid Packer (Geometry Manager) is supported
+- Form-Links are extendet, one can browse with forms like with hypertext-documents
+- The is new api for user-macros for FormServer
+- Der Property-Dialog in FormEditor was new programmed.
+- You can reduce the forms functionality (no delete, no insert, no update).
+- Sorting. You can view sorted tupels in forms.
+# Version 0.11
+* Sun Oct 15 2000 Artur Trzewik
+- changes for xotcl 0.82 release (info children and creating object aggregation)
+- adding English Language Support and English documentation (computer translated
+)   
+

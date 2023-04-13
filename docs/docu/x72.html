@@ -1,0 +1,371 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>Version Neuheiten</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Dokumentation des Programms Xdobry"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Xdobry Spezifikation"
+HREF="c11.html"><LINK
+REL="PREVIOUS"
+TITLE="Technische Daten"
+HREF="x69.html"><LINK
+REL="NEXT"
+TITLE="Benutzer Handbuch"
+HREF="c163.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Dokumentation des Programms Xdobry</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x69.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Xdobry Spezifikation</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="c163.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN72"
+></A
+>Version Neuheiten</H1
+><H1
+CLASS="BRIDGEHEAD"
+><A
+NAME="AEN74"
+></A
+>Version 0.12</H1
+><P
+></P
+><UL
+><LI
+><P
+>Grid Packer (Tabellen Geometry Manager) wird unterstützt</P
+></LI
+><LI
+><P
+>Formular-Link wurden erweitert, so dass sie für die Navigation von kompletten Datenbanken benutzt werden können.
+Man kann auch über die n:m Beziehung Navigieren</P
+></LI
+><LI
+><P
+>Es können in FormServer leicht eigenen Zusatzfunktionen eingebaut werden.
+Etwa eine API für FormServer.
+Es können leicht eigenen Prozeduren in Tcl für spezielle Datenverarbeitung, Datendarstellung oder Intergritätsüberprüfun hinzugefügt werden.</P
+></LI
+><LI
+><P
+>Der Eigenschaften-Dialog im FormEditor wurde effizienter programmiert.</P
+></LI
+><LI
+><P
+>Die Aktionen an Formularen können eingeschränkt werden (kein Löschen, kein Modifizieren, kein Hinzufügen).</P
+></LI
+><LI
+><P
+>Sortieren der Tupel in Formularen ist möglich.</P
+></LI
+></UL
+><H1
+CLASS="BRIDGEHEAD"
+><A
+NAME="AEN88"
+></A
+>Version 0.14</H1
+><P
+></P
+><UL
+><LI
+><P
+>Diverse Bugs wurden korrigiert</P
+></LI
+><LI
+><P
+>Besseres Error-Handling (Die Sql Fehler werden abgefangen)</P
+></LI
+><LI
+><P
+>Umstellung auf mysqltcl2.0 (nicht voll kompatibel zu mysqltcl1.53 aber deutlich schneller) und xotcl8.3</P
+></LI
+><LI
+><P
+>Die Datenbank-Schnittstellen werden getrennt in Modulen nach Bedarf geladen.</P
+></LI
+></UL
+><H1
+CLASS="BRIDGEHEAD"
+><A
+NAME="AEN98"
+></A
+>Version 0.15</H1
+><P
+></P
+><UL
+><LI
+><P
+>Getestet mit RedHat 7.0, mysql 3.23 und postgresql 7.0</P
+></LI
+><LI
+><P
+>Die Veränderungen betreffen eigentlich nur den FormServer
+<P
+></P
+><UL
+><LI
+><P
+>Nur Einfügen Modus wird unterstützt</P
+></LI
+><LI
+><P
+>viele Programmoptionen</P
+></LI
+><LI
+><P
+>Überprüfung der Notnull Bedingung</P
+></LI
+><LI
+><P
+>Navigieren auch durch Tasten-Kombinationen</P
+></LI
+><LI
+><P
+>Bessere Benutzerfreundlichkeit (Deaktivieren von leeren Funktionen)</P
+></LI
+></UL
+></P
+></LI
+><LI
+><P
+>Unterstützung von dbitotcl Schnittstelle. Es können theoretisch alle Datenbanken benutzt werden, die eine Perl DBI Schnittstelle haben.</P
+></LI
+></UL
+><H1
+CLASS="BRIDGEHEAD"
+><A
+NAME="AEN117"
+></A
+>Version 0.16</H1
+><P
+></P
+><UL
+><LI
+><P
+>Programm Quelltext Refactoring.</P
+></LI
+><LI
+><P
+>Die Formular Filter können benannt und gespeichert werden..</P
+></LI
+><LI
+><P
+>Formulare unterstützen die s.g. Schablonen. Die Schablonen erlauben schnelle Ausfüllen (Voreinstellen oder Verändern) von Datenfelder.</P
+></LI
+><LI
+><P
+>Datenfelder können automatisch überprüft werden (Validation)</P
+></LI
+><LI
+><P
+>Zu jedem Datenfeld kann eine Beschreibung angegeben werden, die bei Drücken der F1-Taste erscheint.</P
+></LI
+><LI
+><P
+>Ein paar Fehler wurden behoben.</P
+></LI
+></UL
+><H1
+CLASS="BRIDGEHEAD"
+><A
+NAME="AEN131"
+></A
+>Version 0.20</H1
+><P
+></P
+><UL
+><LI
+><P
+>Die Module FormEngine und FormFactory wurden massiv bereinigt (refactoring).</P
+></LI
+><LI
+><P
+>Die Filter im FormServer werden im eigenen Fenster spezifiziert. Die Eingabe von spezielle Filters (z.B. &#62;2) ist möglich.</P
+></LI
+><LI
+><P
+>Xdobry wird mit xotclIDE entwickelt. Eine von mir entwickelte IDE für XOTcl Programmiersprache. Die interne Struktur hat sich sehr verändert. Die Module werden per package require geladen.</P
+></LI
+></UL
+><H1
+CLASS="BRIDGEHEAD"
+><A
+NAME="AEN139"
+></A
+>Version 0.30</H1
+><P
+></P
+><UL
+><LI
+><P
+>Unterstützung für sqlite Datenbank</P
+></LI
+><LI
+><P
+>Auslieferung als Starkit für Windows und Linux. Keine weitere Voraussetzungen oder besondere Installation.</P
+></LI
+><LI
+><P
+>Kontextabhängige Aktivation der Menüs</P
+></LI
+></UL
+><H1
+CLASS="BRIDGEHEAD"
+><A
+NAME="AEN147"
+></A
+>Version 0.40</H1
+><P
+></P
+><UL
+><LI
+><P
+>Unterstützung für MS SQL-Server, MS Access und Oracle</P
+></LI
+><LI
+><P
+>Mit SchemaEditor kann das DB-Schema anlegen und modifizieren</P
+></LI
+><LI
+><P
+>Xdobry kann die Daten der veschiedenen Datenbanken migrieren</P
+></LI
+><LI
+><P
+>Für Internationalisierung wird der standard Tcl Modul msgcat benutzt</P
+></LI
+><LI
+><P
+>Überarbeitung der Dokumentation</P
+></LI
+><LI
+><P
+>Zahlreiche Fehlerbehebungen</P
+></LI
+><LI
+><P
+>Tclx wird nicht mehr eingesetzt</P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x69.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Zum Anfang</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="c163.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Technische Daten</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c11.html"
+ACCESSKEY="U"
+>Nach oben</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Benutzer Handbuch</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

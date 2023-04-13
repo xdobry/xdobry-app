@@ -1,0 +1,187 @@
+# automatically generated from XOTclIDE
+package provide xdobry::Container 0.22
+Class DLIterator -parameter {
+    node
+}
+@ ::DLIterator idemeta component xdobry::Container
+DLIterator instproc get {} {
+    my instvar node
+    return $node
+}
+@ DLIterator instproc next_elem {} {
+description {Entsprich i++ bei STL C++}
+}
+DLIterator instproc next_elem {} {
+    my instvar node
+    if {$node=="NIL"} {
+        return NIL
+    } else {
+        set ret $node
+        set node [$node set _ln_next]
+        return $ret
+    }
+}
+@ DLIterator instproc prev_elem {} {
+description {Entsprinch i-- bei STL C++}
+}
+DLIterator instproc prev_elem {} {
+    my instvar node
+    if {$node=="NIL"} {
+        return NIL
+    } else {
+        set ret $node
+        set node [$node set _ln_prev]
+        return $ret
+    }    
+}
+Class DoubleList -parameter {
+    {_head NIL}
+    {_tail NIL}
+}
+@ ::DoubleList idemeta component xdobry::Container
+DoubleList instproc begin_iterator name {
+    my instvar _head
+    return [DLIterator $name -node $_head]
+}
+@ DoubleList instproc conform {} {
+description {Kann benutzt werden um sicher zu stellen, dass alle Elemente
+eine Bedingung erfüllen}
+}
+DoubleList instproc conform {object method} {
+    my begin_iterator [self]::it
+    set test_res 1
+    while {[[self]::it get]!="NIL"} {
+        set act_elem [[self]::it next_elem]
+        if {![set test_res [$object $method $act_elem]]} {
+            break
+        }
+    }
+    [self]::it destroy
+    return $test_res
+}
+@ DoubleList instproc detect {} {
+description {Smalltalk hat hier eine Spur hinterlassen
+Also sucht den erten der eine Bedingung erfüllt}
+}
+DoubleList instproc detect {object method} {
+    my begin_iterator [self]::it
+    set ergebnis {}
+    while {[[self]::it get]!="NIL"} {
+        set act_elem [[self]::it next_elem]
+        if {[set test_res [$object $method $act_elem]]} {
+            set ergebnis $act_elem
+            break
+        }
+    }
+    [self]::it destroy
+    return $ergebnis
+}
+DoubleList instproc detect_deep {object method} {
+    my begin_iterator [self]::it
+    set ergebnis {}
+    while {[[self]::it get]!="NIL"} {
+        set act_elem [[self]::it next_elem]
+        if {[set test_res [$object $method $act_elem]]} {
+            set ergebnis $act_elem
+            break
+        }
+        if {[$act_elem istype DoubleList]} {
+            if {[set ergebnis [$act_elem detect_deep $object $method]]!=""} {
+                break
+            }
+        }
+    }
+    [self]::it destroy
+    return $ergebnis
+}
+DoubleList instproc empty {} {
+    my instvar _tail _head
+    if {$_head=="NIL" && $_tail=="NIL"} {
+        return 1
+    } else {
+        return 0
+    }
+}
+DoubleList instproc end_list {} {
+    return NIL
+}
+@ DoubleList instproc foreach_elem {} {
+description {object ist ein Visitorobeject
+jedes element der Liste wird aufgerufen
+wird dem Visitor Object durch dei Methode übergeben
+$object $methode $list_elem}
+}
+DoubleList instproc foreach_elem {object method {classfilter *}} {
+    my begin_iterator [self]::it
+    while {[[self]::it get]!="NIL"} {
+        if {$classfilter=="*"} {
+            $object $method [[self]::it next_elem]
+        } else {
+            set elem [[self]::it next_elem]
+            if {[string match $classfilter [$elem info class]]} {
+                $object $method [[self]::it next_elem]
+            }
+        }
+    }
+    [self]::it destroy
+}
+@ DoubleList instproc foreach_elem_deep {} {
+description {!! nocht nicht ansetztbar}
+}
+DoubleList instproc foreach_elem_deep {object method {classfilter *}} {
+    my begin_iterator [self]::it
+    while {[[self]::it get]!="NIL"} {
+        set act_elem [[self]::it next_elem]
+        if {$classfilter=="*"} {
+            $object $method $act_elem
+        } else {
+            set elem [[self]::it next_elem]
+            if {[string match $classfilter [$elem info class]]} {
+                $object $method $act_elem
+            }
+        }
+        # Wenn actualles Alement hat DoubleList dann rekursiv aufrufen
+        if {[$act_elem istype DoubleList]} {
+            $act_elem foreach_elem_deep $object $method $classfilter
+        }
+    }
+    [self]::it destroy
+}
+DoubleList instproc getelem_list {} {
+    my instvar _head
+    my begin_iterator [self]::it
+    while {[[self]::it get]!="NIL"} {
+        lappend ret [[self]::it next_elem]
+    }
+    [self]::it destroy
+    return $ret
+}
+DoubleList instproc push_back eclass {
+    my instvar _tail _head
+    if {[my empty]} {
+        $eclass set _ln_next NIL
+        $eclass set _ln_prev NIL
+        set _head $eclass
+        set _tail $eclass    
+    } else {
+        $eclass set _ln_next NIL
+        $eclass set _ln_prev $_tail
+        $_tail set _ln_next $eclass
+        set _tail $eclass
+    }
+}
+DoubleList instproc push_head eclass {
+    my instvar _tail _head
+    if {[my empty]} {
+        $eclass set _ln_next NIL
+        $eclass set _ln_prev NIL
+        set _tail $eclass
+        set _head $eclass
+    } else {
+        $eclass set _ln_prev NIL
+        $eclass set _ln_next $_head
+        $_head set _ln_prev $eclass
+        set _head $eclass
+    }
+}
+

@@ -1,0 +1,621 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>FormServer</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Dokumentation des Programms Xdobry"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Benutzer Handbuch"
+HREF="c163.html"><LINK
+REL="PREVIOUS"
+TITLE="FormEditor"
+HREF="x541.html"><LINK
+REL="NEXT"
+TITLE="Schema vs. Formularaussehen"
+HREF="x771.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Dokumentation des Programms Xdobry</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x541.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Benutzer Handbuch</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x771.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN639"
+></A
+>FormServer</H1
+><P
+>Es ist ein Programm, mit dem der eigentlicher Endbenutzer der Datenbank zu tun hat.
+Dieses Programm kann die Formularbeschreibungen, die von Formular-Editor stammen, richtig auswerten und die Formulare darstellen.
+Dieses Programm muss die Manipulationen auf den Formularen richtig in in die SQL Anweisungen umsetzten und an die Datenbank quittieren.
+Dabei werden folgende Funktionen unterstützt:
+<P
+></P
+><UL
+><LI
+><P
+>Daten Anzeigen (View)</P
+></LI
+><LI
+><P
+>Daten Modifizieren (Update)</P
+></LI
+><LI
+><P
+>Daten Anlegen (Create)</P
+></LI
+><LI
+><P
+>Daten Filtern oder Durchsuchen</P
+></LI
+><LI
+><P
+>Daten Sortieren</P
+></LI
+><LI
+><P
+>durch Daten Navigieren (Browsing or Navigate)</P
+></LI
+></UL
+>
+Durch die Formular-Links ist auch eine Navigation durch Dateninhalte entlang der Verknüpfungspfaden möglich.
+Der Benutzer kann ähnlich wie in Hypertext-Dokumenten navigieren und jede Information auf verschiedenen Wegen erreichen.
+Vor allem ist die Frage, was ist mit dem Objekt überhaupt verknüpft ist, schnell ohne der Kenntnis des Schemas beantwortet.</P
+><P
+>Die Formulare selbst unterstützen direkt höhere Abstraktionskonzepte wie Assoziation, Aggregation und Spezialisierung.
+Die Kenntnisse über die Konzepte der relationalen Modellierung wie Fremdschlüssel und Primärschlüssel müssen nicht vorhanden sein.
+Der Benutzer kann die verständliche und allgemeinere Konzepte wie Aggregation und Assoziation wahrnehmen, ohne auf die besondere Techniken der relationalen Modell eingehen zu müssen.
+<DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="formserver.png"></P
+></DIV
+></P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FORMULARLINKS"
+></A
+>Navigieren mit Formularen</H2
+><P
+>Die Benutzung der Formulare zum Navigieren durch eine Daten-Bank war die Idee, die mich zur Entwicklung des System verleitet hat.
+Mit dem s.g Formular-Links (Verweisen) kann man in einer Datenbank wie in Hypertextdokumenten navigieren.
+Die Idee der Hyperlinks sollte inzwischen jedem Benutzter bekannt sein.
+Die Links entstehen entlang der Assoziation-Pfaden.
+<DIV
+CLASS="FIGURE"
+><A
+NAME="STUDENTPRUEFENER"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="student_pruefen_er.png"></P
+></DIV
+><P
+><B
+>Abbildung 6. Assoziation der Kardinalität 3 mit einem Attribut</B
+></P
+></DIV
+>
+Die <A
+HREF="x639.html#STUDENTPRUEFENER"
+>Abbildung 6</A
+> zeigt eine Assoziation zwischen Drei Objekten (Student, Vorlesung, Professor).
+Die entspreche Tabellen-Struktur ist wie folgt:
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>Professor     {PersNr,Rang,Raum}
+Student       {MatrNr,Name,Semester}
+Vorlesung     {VorlesungNr,Titel,SWS,PersNr}
+pruefen       {MatrNr},VorlesungNr,PersNr,Note}</PRE
+></TD
+></TR
+></TABLE
+>
+Diese Assoziation (Beziehung, Relationship) entsteht durch das Faktum, dass die drei Objekte durch eine Prüfung zueinander assoziiert werden.
+Die Grundidee war, dass man aus dem Student-Formular einfach nachschauen kann (durch ein Klick) bei welchen Prüfungen der Student teilnimmt.
+Zusätzlich kann man durch die Formular-Links die Datenbank erforschen, ohne die genaue Datenstruktur zu kennen.
+Man sieht unmittelbar, dass ein Student an Assoziation Prüfung teilnimmt.</P
+><P
+>Die Assoziationen haben aber eine komplexere Semantik als Hypertext-Links.
+Die Assoziation ist immer transitiv (zweiseitig). Die Hyper-Links haben nur einen einseitigen Verweis-Charakter.
+Die Assoziationen können zwischen mehren Objekten bestehen.
+Man sagt, die Granuliät der Assoziation kann größer als 2 sein.
+Ein Hyper-Link verbindet nur 2 Dokumente.
+Die Kardinalität der Assoziation kann mehr als 1 betragen.
+Ein Student nimmt an mehreren Prüfungen teil.
+<DIV
+CLASS="FIGURE"
+><A
+NAME="FORMNAVIGATION"
+></A
+><DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="form_navigation.png"></P
+></DIV
+><P
+><B
+>Abbildung 7. Navigieren mit Formular-Links</B
+></P
+></DIV
+>
+Die <A
+HREF="x639.html#FORMNAVIGATION"
+>Abbildung 7</A
+> zeigt wie ein Link (Prüfen) aus Formular Student ausgeführt werden kann.
+Es gibt mehrere Typen von Formular-Link, die auch den Assoziation-Typen in ER-Modell entsprechen.
+<P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>1:N</DT
+><DD
+><P
+>Die Beziehung wird durch eine veränderbare Referenz dargestellt und deckt sich mit Fremdschlüssel-Attributen der Tabelle.
+Mit einem Doppelt-Klick kann das Formular des Objekts geöffnet werden, auf das die Referenz Verweis.</P
+></DD
+><DT
+>N:1</DT
+><DD
+><P
+>Die Beziehung wird als eine einfache Schaltfläche dargestellt.
+Es ist die andere Seite der 1:N Beziehung.
+Die Fragestellung lautet: Suche die Objekte die auf das Objekt zeigen.</P
+></DD
+><DT
+>N:N oder N:M:O:...</DT
+><DD
+><P
+>Die Beziehung wird durch einen Menü-Button dargestellt.
+Der erste Menüpunkt zeigt immer auf die N:1 Beziehung auf die Referenz-Tabellen (Tabellen, die N:M modellieren, und meistens nur Fremdschlüssel haben).
+Die nächsten Menüpunkte, zeigen die eigentliche Objekte der N:M:.. Beziehungen.
+Die Fragestellung: Suche die Objekte die durch die Referenz-Tabelle mit dem Objekt in der Beziehung stehen.</P
+></DD
+></DL
+></DIV
+>
+Die Formulare bleiben nach dem Öffnen durch die Links verbunden und passen sich automatisch dem ersten Formular an.
+Es entsteht eine Link-Kette durch die geöffnete Formulare.
+Problematisch ist es, dass auch eine Schnittstelle zur Veränderung der Assoziationen angeboten werden muss.
+Um Missverständnisse zu Vermeiden, werden bei N:M Formular-Links die Funktionen Objekt-Einlegen oder Löschen abgeschaltet.
+Um Assoziationen zwischen Objekten anzulegen oder zu löschen, muss an der Referenzen (1:N) gearbeitet werden.
+In diesem Fall, um einen Student eine weitere Prüfung zuzuweisen, muss ein neuer Datensatz in Formular Prüfung angelegt werden.</P
+><P
+>Das Konzept der Formular-Links kann auf dem ersten Moment sehr kompliziert erscheinen, ist allerdings intuitiv sehr schnell erlernbar und kann sogar durch die Möglichkeit von Links-Ketten sehr schnell zu Lösung von komplexen Fragen angewendet werden.
+Z.b. es kann schnell herausgefunden werden, mit welchen anderen Studenten ein Student einer Vorlesung zuhört.
+Die Fragestellungen. Wie heißen die Assistenten von Professoren, bei denen ein Student ein Prüfung ablegt, sind durch zwei Formular-Links zu lösen.
+Eine Frage, die bereits einer relativ komplexen SQL-Abfrage benötigt hätte.</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN690"
+></A
+>Eigene Makros in Formularen</H2
+><P
+>FormularServer besitzt eine Schnittstelle, die es erlaubt, die Funktionalitäten der Formulare um eigene Prozeduren zu erweitern.
+Dazu können gehören:
+<P
+></P
+><TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+>Eigene Überprüfung der Integrität-Regel</TD
+></TR
+><TR
+><TD
+>Besondere Behandlung von Attributen, z.B Formatierung bei Datenspeicherung oder Daten-Visualisierung</TD
+></TR
+><TR
+><TD
+>Berechnung von abgeleiteten Attributen</TD
+></TR
+><TR
+><TD
+>Selbstdefinierte Aktionen</TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+>
+Der FormularServer ist vollständig im Tcl (mit Erweiterungen) programmiert, weil Tcl eine interprative Sprache ist, erlaubt es, das Verhalten von FormularServer dynamisch zu ändern.
+Das wird durch Laden von zusätzlichen Tcl-Prozeduren zur Laufzeit erreicht.
+Es wurde eine Schnittstelle programmiert, die es ermöglicht die Standard-Prozeduren von FormServer zu beeinflussen.</P
+><P
+>Die Makros (Selbstdefinierte Prozeduren) werden in XOTcl als eine abgeleitete Klasse von FormEngine geschrieben.
+Der Name der Klasse muss mit dem Namen des Formulars übereinstimmen.
+Die Makros gelten nur für dieses Formular.
+Sie werden von FormServer geladen und als ein Teil des Programm benutzt.
+Hier eine Unterlage die für die eigenen Makros benutzt werden kann.
+(für Formular myform)
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+> 
+Class myform -superclass FormEngine
+myform instproc update_check klvalues_ref {
+    return 1
+}
+myform instproc delete_check {} {
+    return 1
+}
+myform instproc insert_check klvalues_ref {
+    return 1
+}
+myform instproc after_delete {} {
+}
+myform instproc reload_form {} {
+}
+myform instproc position_check {pos} {
+    return 1
+}
+FormEngine instproc filling_form klvalues_ref {
+}</PRE
+></TD
+></TR
+></TABLE
+>
+Die Methoden-Parametern <I
+CLASS="EMPHASIS"
+>klvalues_ref</I
+> sind Referenzen auf TclX keyd list; mehr dazu in TclX Dokumentation.
+Durch  _check Prozeduren kann man eine bestimmte Aktion verhindern (return 0).</P
+><P
+>Sehen sie das Beispiel <I
+CLASS="EMPHASIS"
+>accountancy</I
+> das vollständig mit 
+Makros implementiert ist.
+<DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="accountancy_er.png"></P
+></DIV
+>
+Hier wurden Makros benutzt um folgende Eigenschaften zu garantieren
+<P
+></P
+><UL
+><LI
+><P
+>Ein Customer (Klient) kann nur gelöscht werden, wenn er keine oder nur Bezahlte Rechnungen (orders) hat.
+Danach wird der Fremd-Schlüssel (custId) in Tabellen cust_order (Bestellungen) auf NULL gesetzt.</P
+></LI
+><LI
+><P
+>Für jede Rechnung wird der Preis (total) von FormularServer berechnet</P
+></LI
+><LI
+><P
+>Berechnung des Preises für jedes Produkt (anzahl*preis)</P
+></LI
+><LI
+><P
+>Überprüfung ob das Datum der Form 2000-01-01 entspricht</P
+></LI
+></UL
+>
+Sehen sie die Datei <TT
+CLASS="FILENAME"
+>sample/accountancy.tcl</TT
+>
+für die Realisierung (z.B wie sql-Abfragen gebildet werden).</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN716"
+></A
+>Programm-Parameter</H2
+><P
+>Beim Start von FormServer kann einer Reihe von Programm-Parameter angegeben werden. Es spart die Klick-Arbeit wenn das Programm aus Skripten ausgeführt wurde.
+<DIV
+CLASS="WARNING"
+><P
+></P
+><TABLE
+CLASS="WARNING"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/warning.gif"
+HSPACE="5"
+ALT="Warnung"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Bei der Starkit variante können keine Parameter spezifiziert werden.</P
+></TD
+></TR
+></TABLE
+></DIV
+>
+<P
+><B
+CLASS="COMMAND"
+>FormServer</B
+>  --  [-help] [-debug] [-viewonly] [-ignorexmlpar | -noconnectdialog | -connect <TT
+CLASS="REPLACEABLE"
+><I
+>connectpar</I
+></TT
+> | -loadmacros <TT
+CLASS="REPLACEABLE"
+><I
+>macrofile</I
+></TT
+> | -openform <TT
+CLASS="REPLACEABLE"
+><I
+>formname</I
+></TT
+> | <TT
+CLASS="REPLACEABLE"
+><I
+>xmlfile</I
+></TT
+>]</P
+>                                                                 
+
+<P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>-debug</DT
+><DD
+><P
+>Aktiviert Menüs für debugging: SQL-Monitor, XOtcl Klassen-Browser, Tk-Window Browser, Interaktiver Modus</P
+></DD
+><DT
+>-viewonly</DT
+><DD
+><P
+>Die Datenbankinhalten können nur angeschaut werden. Kein Löschen, Einfügen und Modifizieren von Tupeln</P
+></DD
+><DT
+>-ignorexmlpar</DT
+><DD
+><P
+>Die Parameter, die in XML-Datei kodiert werden (Datenbankanbindung, Makros), werden nicht beachtet (sinvoll mit -connect parameter)</P
+></DD
+><DT
+>-noconnectdialog</DT
+><DD
+><P
+>Es wird versucht eine Datenbankverbindung ohne Befragungs der Benutzer durchzuführen die Verbindungsparameter können entweder in XML oder durch -connect Parameter spezifiziert werden.</P
+></DD
+><DT
+>-loadmacros</DT
+><DD
+><P
+>Lädt automatisch ein Tcl-Skript. Sinnvoll um eigene Makros zu programmieren.</P
+></DD
+><DT
+>-connect</DT
+><DD
+><P
+>Angeben von Datenbank Verbindungs-Parameter.
+Wenn keine -ignorexmlpar angeschaltet wurde, werden die XML-codierte Parameter überschrieben. Die Parameter werden in Form einer TclX keyed list angegeben. Die Namen der Parameter hängen von benutzten DB-Schnittstelle z.B. für mysql wäre das. 
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="90%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>-connect "{interface mysql} {user root} {dbank test} {password geheim} {socket /var/lib/mysql/mysql.sock}"</PRE
+></TD
+></TR
+></TABLE
+></P
+></DD
+><DT
+>-openform</DT
+><DD
+><P
+>Das Programm versucht ein Formular nach dem Start sofort zu öffnen. Voraussetzung die Formulare wurden erfolgreich geladen und die Datenbankverbindung steht.</P
+></DD
+></DL
+></DIV
+>
+<DIV
+CLASS="WARNING"
+><P
+></P
+><TABLE
+CLASS="WARNING"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/warning.gif"
+HSPACE="5"
+ALT="Warnung"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Alle FormServer Parameter müssen durch -- von Tcl-Parametern getrennt werden.</P
+></TD
+></TR
+></TABLE
+></DIV
+>
+Beispiel (alles in einer Zeile)
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>./FormServer.tcl -- -debug -viewonly
+ -connect "{interface mysql} {dbank uni} 
+           {user root} {socket /var/lib/mysql/mysql.sock}" 
+ -noconnectdialog -openform Student uni.xmlforms</PRE
+></TD
+></TR
+></TABLE
+></P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x541.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Zum Anfang</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x771.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>FormEditor</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c163.html"
+ACCESSKEY="U"
+>Nach oben</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Schema vs. Formularaussehen</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

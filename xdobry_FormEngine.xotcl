@@ -1,0 +1,1585 @@
+# automatically generated from XOTclIDE
+# script require component {xdobry::WidgetLib IDEBaseGUI}
+package provide xdobry::FormEngine 0.33
+package require IDEBaseGUI
+package require xdobry::WidgetLib
+Class NotifyHandler
+@ ::NotifyHandler idemeta component xdobry::FormEngine
+NotifyHandler instproc addNotify {notify proc} {
+    my instvar notifyproc
+    lappend notifyproc($notify) $proc
+}
+NotifyHandler instproc clearNotify {notify proc} {
+    my instvar notifyproc
+    if {[info exists notifyproc($notify)]} {
+        if {[set id [lsearch $notifyproc($notify) $proc]]>=0} {
+            if {[llength $notifyproc($notify)]==1} {
+                unset notifyproc
+            } else {
+                set notifyproc($notify) [lreplace $notifyproc($notify) $id $id]
+            }
+        }
+    }
+}
+NotifyHandler instproc invokeNotify {notify args} {
+    my instvar notifyproc
+    if {[info exists notifyproc($notify)]} {
+        foreach nproc $notifyproc($notify) {
+            eval $nproc $args
+        }
+    }
+}
+Class FormEngine -superclass ::NotifyHandler -parameter {form_node sqlconnect data modi label {oneobject 0} {nestedform 0}
+}
+@ ::FormEngine idemeta add attributes
+@ ::FormEngine idemeta attributes {label form refattribute}
+@ ::FormEngine idemeta categories {addons-interface user_actions gui initialize initialize-release testing form-filling}
+@ ::FormEngine idemeta categoriesMethods {{after_delete delete_check insert_check filling_form reload_form update_check position_check preUpdate} {filterData save_tupel undo createNewTupel updateManual resetPosition orderbyData reload insert delete update} {unmarkFilter markFilter stateNeedReload getWindowTitle} {initDBProxy destroy initModi initDialog init buildNavigation initFirstState} {createDBProxy setModi buildFormNavigator} {isMode isinsert hasTuples} {fillEmptyForm fillFormWithTupel}}
+@ ::FormEngine idemeta component xdobry::FormEngine
+FormEngine instproc after_delete {} {
+}
+FormEngine instproc buildFormNavigator {} {
+    my instvar sqlconnect
+    if {[$sqlconnect hasfunction seek]} {
+        FormNavigationFull create [self]::@navigator -proxy [self]::myDBProxy
+    } else {
+        if {![$sqlconnect hasfunction rows]} {
+            FormNavigationNoRows create [self]::@navigator -proxy [self]::myDBProxy
+        } else {
+            FormNavigationNoSeek create [self]::@navigator -proxy [self]::myDBProxy
+        }
+    }
+}
+@ FormEngine instproc buildNavigation {} {
+description {Bildet die Naviagationleite und vielleicht ein Menü wenn
+Kein eingebeteter Folmular
+gibt ein Frame der Naviagationsleiste zurück
+Seiten Effect bei Bilden von Menüs ($win.mb.file)
+als bereits initialisierte Menü}
+}
+FormEngine instproc buildNavigation nwin {
+    [self]::@navigator buildNavigation $nwin
+    my set navwin $nwin
+}
+@ FormEngine instproc complete_data {} {
+description {Private Funktion setzt alle ungenutzten Felder der keyed List auf Leer}
+}
+FormEngine instproc complete_data kl_data_ref {
+    upvar $kl_data_ref kl_data
+    my instvar attrlist
+    set keylist [keylkeys kl_data]
+    foreach attr $attrlist {
+        if {![lcontain $keylist $attr]} {
+            keylset kl_data $attr {}
+        }
+    }
+}
+FormEngine instproc createDBProxy {table primarykey} {
+    my instvar form_node sqlconnect attrlist dbtypes
+    DBProxy create [self]::myDBProxy  -table $table -primarykey $primarykey -attrlist $attrlist  -sqlconnect $sqlconnect -dbtypes $dbtypes
+}
+@ FormEngine instproc createNewTupel {} {
+description {Diese Funktion wird nur durch den angemeldetetn CallBack von
+Vater-FormEngine aufgerufen}
+}
+FormEngine instproc createNewTupel key {
+    #puts "create [self] $key"
+    [self]::myDBProxy set refvalue $key
+    my update
+}
+FormEngine instproc delete {} {
+    my instvar old_tupel tupel_count sqlconnect 
+    # Kein Tupel zum Löschen ist vorhanden
+    if {[my isinsert] || [my isMode nodelete]} { 
+        return
+    }
+    if {![my delete_check]} return
+    if {[[self]::myDBProxy delete]==-1} {
+        IDE::Dialog error [mc "Sql-Interface Error by deleting %s" [$sqlconnect errorMessage]]
+        return
+    }
+    my stateNeedReload
+    #puts "DELETE [self]"
+    my invokeNotify delete
+    my after_delete
+    [self]::@navigator next_tupel
+}
+FormEngine instproc delete_check {} {
+    return 1
+}
+@ FormEngine instproc destroy {} {
+description {Forn Löschen SQL Querry beenden}
+}
+FormEngine instproc destroy {} {
+    my instvar win linkedForm oneobject sqlconnect
+    global globalexit
+    if {!$globalexit} {
+        if {$sqlconnect!=""} {
+            # wenn es etwas nicht stimmt dann nicht aufhängen
+            if {[catch {[self] update} er]!=0} {
+                global errorInfo
+                puts "update Error by [self] $er $errorInfo"
+            }
+        }
+        #puts "destroying FormEngine"
+        if {[info exists linkedForm] && [FormEngine deepinstances $linkedForm]!=""} {
+        $linkedForm clearNotify create "[self] createNewTupel"
+            # Hier kann man auch ein Kaskadierendes Delete Aufbauen"
+            if {$oneobject} {
+                $linkedForm clearNotify delete "[self] delete"
+            }
+        }
+        # zuerst die children löschen (sie brauchen die Windows noch für update)
+        next
+        #     foreach child [my info children] {
+        #         if {[$child info class]=="::FrameContainer"} {
+        #             $child destroy
+        #         }
+        #     }
+        ::destroy $win
+        #    next
+    }
+}
+FormEngine instproc fillEmptyForm {} {
+    my instvar dialog_container def_values attrlist
+    foreach attr $attrlist {
+        keylset tupel $attr {}
+    }
+    $dialog_container set_defaults $tupel
+    $dialog_container set_values $def_values
+}
+FormEngine instproc fillFormWithTupel tupel {
+    my instvar dialog_container
+    my filling_form tupel
+    $dialog_container set_defaults $tupel
+}
+FormEngine instproc filling_form klvalues_ref {
+}
+FormEngine instproc filterData {} {
+    [self]::filter setService
+}
+FormEngine instproc getFormName {} {
+    [my set form_node] getAttribute name
+}
+@ FormEngine instproc getKeyValue {} {
+description {API Procedures}
+}
+FormEngine instproc getKeyValue {} {
+    set tupelid [[self]::myDBProxy set tupelid]
+    if {[llength $tupelid]!=1} {
+        error "FormEngine [self] can't get primary key Value from $tupelid"
+    }
+    return [lindex [lindex $tupelid 0] 1]
+}
+FormEngine instproc getWindowTitle {} {
+   my getFormName
+}
+FormEngine instproc hasTuples {} {
+    [self]::@navigator hasTuples
+}
+@ FormEngine instproc init {} {
+description Normal\ Proceduress\n\nact_tupel\ -\ Aktueles\ gezeigtes\ Tupel\nold_tupel\ -\ Letztes\ behandeltes\ Tupel\nrefattribute\ -\ benutzt\ beim\ gelinkten\ Forms\ (die\ Attribute\ werden\ nicth\ gezeigt)\ und\ durch\ setdefault\ bestimmt\nnotnull_data\ -\ bestimmt\ für\ insert\ndef_values\ -\ Default\ aber\ nich\ DB\ defaults\nlinkedForm\ -\ (bool)\noneobject\ -\ beim\ Childfoms\ (bool)\nnestedform\ -\ (bool)\ beim\ Aggregation\ (kein\ eigenes\ Fenster)\nreftableLink\ -\ Beim\ n:m\ links\nmodi\ -\ keyedlist\ z.B.\ (\{nodelete\ 1\}\ \{noinsert\ 0\}\}\nemptyLinkState\ -\ wenn\ der\ Vater-Link-Formulare\ leer\ ist
+}
+FormEngine instproc init args {
+    my initFirstState
+    my initDialog
+    my initModi
+    my initDBProxy
+    my buildFormNavigator
+}
+FormEngine instproc initDBProxy {} {
+    my instvar sqlconnect form_node
+
+    if {$sqlconnect==""} return
+    
+    set table [$form_node getAttribute table]
+    set primarykey [$form_node getAttribute primarykey]
+    
+    my createDBProxy $table $primarykey
+}
+FormEngine instproc initDialog args {
+    my instvar dialog_container form_node sqlconnect attrlist notnull_data def_values oneobject nestedform refattribute dbtypes
+ 
+    set mf [ServerFormFactory new -sqlconnect $sqlconnect -hidedata $refattribute]
+    set dialog_container [$mf makedialog_fromdom $form_node [self]]
+    # Transferiere Datenherkunft Informationen
+    set attrlist [$mf set data]
+    set dbtypes [$mf set dbtypes]
+    set notnull_data [$mf set notnull_data]
+    set def_values [$mf set def_values]
+    $mf destroy
+}
+FormEngine instproc initFirstState {} {
+    my instvar emptyLinkState
+    set emptyLinkState 0
+    if {![my exists nestedform]} {[self] set nestedform 0}
+    if {![my exists oneobject]} {[self] set oneobject 0}
+    if {![my exists border]} {[self] set border 0}
+    if {![my exists refattribute]} {[self] set refattribute {}}
+    if {![my exists reftableLink]} {[self] set reftableLink {}}
+}
+FormEngine instproc initModi args {
+    my instvar form_node modi
+   
+    if {![info exists modi]} {
+        set modi [tdom_attr2keyl $form_node {insertonly nodelete noupdate noinsert}]
+    } else {
+        # Die XML Kodierte Modi kann nur strenger sein
+        set omodi [tdom_attr2keyl $form_node {insertonly nodelete noupdate noinsert}]
+        foreach m [keylkeys omodi] {
+            if {[keylget omodi $m]} {
+                keylset modi $m 1
+            }
+        }
+    }
+    tdom_setdefaults modi {{insertonly 0} {nodelete 0} {noupdate 0} {noinsert 0}}    
+    # !! Zugriff auf globalen Object FormServer
+    # Option viewonly auswerten
+    if {[FormServerWin set opts(viewonly)]} {
+        keylset modi nodelete 1
+        keylset modi noinsert 1
+        keylset modi noupdate 1
+        # vielleicht ein Sicherheitloch xdobry will aber keine
+        # zusätztliche Sicherheit-Sicht machen 
+        # keylset ${fname}::modi insertonly 0
+    }
+
+}
+@ FormEngine instproc insert {} {
+description {Setzt den Formular Inhalt als neues Tupel in die DB
+values entspricht is keyed list (aus [$dialog_container get_changes])
+Return Values:
+0 - can't insert (integrity condition)
+1 - insert ok
+2 - no changes (ignore)}
+}
+FormEngine instproc insert {} {
+    my instvar def_values modi nestedform dialog_container notnull_data sqlconnect
+    if {[my isMode noinsert]} {return 0}
+    # Vorsicht wenn die defaults-Werte nicht durch validator kommen
+    # dann death-lock
+    if {![my preUpdate]} {
+        return 0
+    }
+    set values [$dialog_container get_changes]
+    #puts "UPDATE [self] $changes"
+    # Hier sollte gezeigt werden das die Änderungen Ausgelesen wurden
+    # wichtig beim save Funktion
+    if {[lempty $values]} { return 2 }
+    # Problem keine Änderungen der Neu Template
+    # Problem wenn alle Änderungen der default entsprechen und 
+    # es keine zusätliche gibt dann ignorieren
+    if {[keylequal def_values values]} {
+        return 2
+    }
+    # Überprüfen der not_null Bedingung
+    # alle notnull_data müssen in get_changes vorhanden sein
+    set vkeys [keylkeys values]
+    foreach nkey $notnull_data {
+        if {![lcontain $vkeys $nkey]} {
+            IDE::Dialog error [mc "The attribute \"%s\" must be filled. return to input" $nkey]
+            return 0
+        }
+    }
+    if {$nestedform} {
+        # Mehrfaches Vererbung oder Aggregation
+        # id wurde von dem Urvater bereit ermittelt
+        if {[my insert_check values]} {
+            set newid [[self]::myDBProxy set refvalue]
+            if {[[self]::myDBProxy new $values]=="SQLERROR"} {
+                IDE::Dialog error [mc "Sql-Interface Error by insert command: %s" [$sqlconnect errorMessage]]
+                return 0                
+            }
+        } else {
+            return 0
+        }
+    } else {
+        if {[my insert_check values]} {
+            if {[set newid [[self]::myDBProxy new $values]]=="SQLERROR"} {
+                IDE::Dialog error [mc "Sql-Interface Error by insert command"]
+                return 0                
+            }
+        } else {
+            return 0
+        }
+    }
+    #puts "created [self] $newid"
+    my invokeNotify create $newid 
+    return 1
+}
+FormEngine instproc insert_check klvalues_ref {
+    return 1
+}
+FormEngine instproc isMode mode {
+    my instvar modi
+    keylget modi $mode
+}
+@ FormEngine instproc isinsert {} {
+description {Abfrage ob gerede ein neuer Tupel eingegeben wird}
+}
+FormEngine instproc isinsert {} {
+    [self]::@navigator isInsert
+}
+FormEngine instproc markFilter {} {
+    my instvar navwin
+    $navwin.find configure -bg blue
+}
+@ FormEngine instproc orderbyData {} {
+description {Jetzt nur ein Attribut
+Ausbaufähig}
+}
+FormEngine instproc orderbyData {} {
+    my instvar attrlist act_tupel orderby
+    set prop1 {{type OComboBox} {name attr} {label attribute} {dropdown 0}}
+    set prop2 {{type OCheckButton} {name descendant} {label descendant}}
+    keylset prop1 valuelist $attrlist
+    if {![info exists orderby]} {
+        set orderby {}
+    }
+    OInputDialog [self]::sortdialog [list $prop1 $prop2] $orderby -returnChanges 0
+    if {[set ret [[self]::sortdialog execute]]!=""} {
+        set sortlist [keylget ret attr]
+        if {[keylget ret descendant]} {
+            lappend sortlist DESC
+        }
+        [self]::myDBProxy setOrder [list $sortlist]
+        my resetPosition
+        my reload
+        set orderby $ret
+    } else {
+        if {$orderby ne ""} {
+            [self]::myDBProxy setOrder {}
+            set act_tupel 0
+            my reload
+            set orderby ""
+        }
+    }
+    [self]::sortdialog destroy    
+}
+FormEngine instproc position_check pos {
+    return 1
+}
+@ FormEngine instproc preUpdate {} {
+description {führt validate auf dialog_container wenn
+erwünscht sonst nur update_values
+1 zurück wenn alles paleti}
+}
+FormEngine instproc preUpdate {} {
+    my instvar  dialog_container
+    if {![$dialog_container isvalid]} {
+        return 0
+    }
+    #$dialog_container update_values
+    return 1
+}
+FormEngine instproc refattribute args {
+  if {[llength $args] == 0} {
+    return [::set [self]::[self proc]]
+  } elseif {[llength $args] == 1} {
+    return [::set [self]::[self proc] [lindex $args 0]]
+  } else {
+    error "wrong # args: [self] [self proc] ?value?"
+  }
+}
+FormEngine instproc reftableLink args {
+  if {[llength $args] == 0} {
+    return [::set [self]::[self proc]]
+  } elseif {[llength $args] == 1} {
+    return [::set [self]::[self proc] [lindex $args 0]]
+  } else {
+    error "wrong # args: [self] [self proc] ?value?"
+  }
+}
+FormEngine instproc reload {} {
+    my instvar labelwin oneobject sqlconnect
+    if {![Object isobject [self]::myDBProxy]} {
+        return
+    }
+    if {[my isMode insertonly]} {
+        # nothing
+    } else {
+        set ret [[self]::@navigator reload]
+        if {!$ret} {
+            IDE::Dialog error [mc "Sql-Interface Error. %s" [$sqlconnect errorMessage]]
+            [self]::@navigator destroyWindow
+            set sqlconnect {}
+            [self]::myDBProxy destroy
+            return
+        }
+    }
+    # Procedure to add user specific reload
+    set old_tupel -1
+    my reload_form
+    [self]::@navigator check_range
+}
+FormEngine instproc reload_form {} {
+}
+FormEngine instproc resetPosition {} {
+    [self]::@navigator resetPosition
+}
+FormEngine instproc save_tupel {} {
+    my update
+}
+@ FormEngine instproc setModi {} {
+description {Setz modi
+z.B.
+{{insertonly 0} {nodelete 1} {noupdate 0} {noinsert 1}}}
+}
+FormEngine instproc setModi newmodi {
+    my instvar modi sqlconnect
+    if {$sqlconnect eq ""} {
+        return
+    }
+    set modi $newmodi
+    tdom_setdefaults modi {{insertonly 0} {nodelete 0} {noupdate 0} {noinsert 0}}
+    # vorsicht hacky
+    foreach button {delete update} {
+        if {[keylget modi no$button]} {
+            [self]::@navigator removeButton $button 
+        } 
+    }
+}
+FormEngine instproc stateNeedReload {} {
+    my instvar navwin sqlconnect
+    # Setzt den Hintegrund von Reload Button auf rot
+    if {[$sqlconnect hasfunction seek] && [winfo exists $navwin.reload]} {
+        $navwin.reload configure -bg red
+    }
+}
+FormEngine instproc undo {} {
+    my instvar dialog_container
+    $dialog_container undo_changes
+}
+FormEngine instproc unmarkFilter {} {
+    my instvar navwin
+    $navwin.find configure -bg #c0c0c0
+}
+@ FormEngine instproc update {} {
+description {Setzt die Verändrung von Form auf Datenbestande
+Wenn geglückt liefert 1 zurück sonst 0
+durchführt eigentlich 2 Operationnen update (modifity) and insert}
+}
+FormEngine instproc update {} {
+    my instvar dialog_container modi sqlconnect
+    if {[my isinsert]} {
+        set ret [my insert]
+        switch $ret { 
+            0 { return 0 }
+            2 { return 1 }
+        }
+    } else {
+        if {![my preUpdate]} {
+            return 0
+        }
+        set changes [$dialog_container get_changes]
+        #puts "UPDATE [self] $changes"
+        # Hier sollte gezeigt werden das die Änderungen Ausgelesen wurden
+        # wichtig beim save Funktion
+        if {[lempty $changes]} { return 1 }
+        if {[keylget modi noupdate]} {return 1}
+        # Update alter Tupel
+        if {[my update_check changes]} {
+            if {[[self]::myDBProxy update $changes]==-1} {
+                IDE::Dialog error [mc "Sql-Interface Error by update: %s" [$sqlconnect errorMessage]]
+                return 0                
+            }
+        } else {
+            return 0
+        }
+    }
+    my stateNeedReload
+    return 1
+}
+@ FormEngine instproc updateManual {} {
+description {Manual Ausgefühtes Update}
+}
+FormEngine instproc updateManual {} {
+    my instvar dialog_container
+    my update
+    if {[my isinsert]} {
+        my fillEmptyForm   
+    } else {
+        $dialog_container update_defaults
+    }
+}
+@ FormEngine instproc update_check {} {
+description {Prozedures designed to overwrite by children classes
+by implementing an formular API
+If you want to buil your own procedures to Formular
+cut & copy this to your trigger.tcl file
+kl* variables are referencen on TclX Extension keyed lists
+
+Please see the file sample/trigger.tcl for using it}
+}
+FormEngine instproc update_check klvalues_ref {
+    return 1
+}
+FormEngine proc create args {
+    error "class [self] is abstract"
+}
+@ FormEngine proc createPerName {} {
+description {Diese Prozedur dient zu anbindung von Makros
+Dabei wird nicht ein Objekt der Klasse FormEngine gebildet
+sondern wenn möglich eins von seinen Subclass
+mit dem Namen [namespace tail $sclass]==$form_name}
+}
+FormEngine proc createPerName {form_name name args} {
+    set inst [eval MainFormEngine create $name $args]
+    foreach sclass [UserFormEngine info subclass] {
+        if {[namespace tail $sclass]==$form_name} {
+            $inst mixin $sclass
+            break
+        }
+    }
+    return $inst
+}
+FormEngine proc createPerNameForClass {fclass form_name name args} {
+    set inst [eval $fclass create $name $args]
+    foreach sclass [UserFormEngine info subclass] {
+        if {[namespace tail $sclass]==$form_name} {
+            $inst mixin $sclass
+            break
+        }
+    }
+    return $inst
+}
+@ FormEngine proc deepinstances {} {
+description {Prozeduren, die die Introspektion info erweitern}
+}
+FormEngine proc deepinstances {{inst {}}} {
+    if {$inst==""} {
+        return [my searchInstances ::FormEngine]
+    } else {
+        return [my searchForInstance ::FormEngine $inst]
+    }
+}
+FormEngine proc initializeAfterLoad {} {
+my set attributes {label form refattribute}
+}
+FormEngine proc searchForInstance {class inst} {
+    set ret [$class info instances $inst] 
+    if {$ret!=""} { 
+        return $ret
+    }
+    foreach subclass [$class info subclass] {
+        set ret [my searchForInstance $subclass $inst]
+        if {$ret!=""} { 
+            return $ret
+        }
+    }
+    return ""
+}
+FormEngine proc searchInstances class {
+    set ret [$class info instances] 
+    foreach subclass [$class info subclass] {
+        set ret [concat $ret [my searchInstances $subclass]]
+    }
+    return $ret
+}
+@ FormEngine proc searchParentFormEngine {} {
+description {Sucht den Vater Form Engine (benutzt bei Aggregation und FormLinks)
+!! keine Fehlertoleranz}
+}
+FormEngine proc searchParentFormEngine object {
+    set pf_engine {}
+    for {set pf_engine $object}  {$pf_engine!="" && $pf_engine!="::" && 
+        ![$pf_engine istype FormEngine]} {
+        set pf_engine [$pf_engine info parent]
+    } {
+    }
+    return $pf_engine
+}
+Class LinkedFormEngine -superclass {::FormEngine ::InputWidget} -parameter {refattribute linkedForm}
+@ ::LinkedFormEngine idemeta component xdobry::FormEngine
+LinkedFormEngine instproc createDBProxy {table primarykey} {
+    my instvar sqlconnect attrlist refattribute dbtypes
+    DBProxy create [self]::myDBProxy  -table $table -primarykey $primarykey -attrlist $attrlist  -sqlconnect $sqlconnect -refattribute $refattribute -dbtypes $dbtypes
+}
+LinkedFormEngine instproc getWindowTitle {} {
+    my instvar form_node linkedForm
+    if {[my exists linkedForm]} {
+        return "[my getFormName] linked [$linkedForm getFormName]"
+    } else {
+        next
+    }
+}
+LinkedFormEngine instproc getvalue {} {
+    my instvar value
+    return $value
+}
+LinkedFormEngine instproc initDBProxy {} {
+    my instvar form_node sqlconnect linkedForm oneobject nestedform reftableLink
+ 
+    next
+    if {$sqlconnect==""} return
+ 
+    if {[my exists linkedForm] && [Object isobject $linkedForm]} {
+        # Überprüfung von Rekursiven Form Aggregation
+        if {$nestedform && $form_node==[$linkedForm set form_node]} {
+            IDE::Dialog error [mc "Recursive nesting of forms is not possible (causes end loop).  Correct this form (consider specialization and aggregation)"]
+            error "XML Forms corrupt"
+        }
+        if {[$sqlconnect hasfunction getinsertid]} {
+            $linkedForm addNotify create "[self] createNewTupel"
+        }
+        # Hier kann man auch ein Kaskadierendes Delete Aufbauen"
+        # funktioniert nicht beim Aggregation (Ausbaufähig)
+        if {$oneobject} {
+            $linkedForm addNotify delete "[self] delete"
+        }
+    }
+}
+LinkedFormEngine instproc setdefault {} {
+    my instvar default value act_tupel tupel_count old_tupel navwin oneobject sqlconnect emptyLinkState
+    set value $default
+    #puts "setdefault [self] VAL=$value"
+    set act_tupel 0
+    set old_tupel -1
+    # value=="" soll als neues Tupel implementiert werden
+    #if {$value==""} return
+    if {$default==""} {
+        my resetPosition
+        set emptyLinkState 1
+        my fillEmptyForm
+        [self]::@navigator setFunctionMode disabled {first prev last next delete reload find orderby update newtupel}
+    } else {
+        if {$emptyLinkState} {
+            [self]::@navigator setFunctionMode normal {first prev last next delete reload find orderby update newtupel}
+        }
+        set emptyLinkState 0
+        [self]::myDBProxy set refvalue $default
+        my reload
+    }
+}
+LinkedFormEngine instproc setvalue value {
+}
+LinkedFormEngine instproc updatevalue {} {
+    my instvar linkedForm
+    #puts "updatevalue [self]"
+    # Ist der Formular gelinkt
+    if {[info exists linkedForm] && [FormEngine deepinstances $linkedForm]!=""} {
+        # wenn Update beim Create Tupel, dann ignoriere
+        # dafür gibt es Notify createNewTupel
+        if {[$linkedForm isinsert]} {
+            return
+        }
+    }
+    my update
+}
+Class ShellFormEngine
+@ ::ShellFormEngine idemeta component xdobry::FormEngine
+ShellFormEngine instproc addMenuItem {name label command accel} {
+    my instvar menuindex win
+    if {$accel==""} {
+         $win.mb.file add command -label $label  -command $command
+    } else {
+        $win.mb.file add command -label $label  -command $command -accelerator $accel
+         bind [winfo toplevel $win] <$accel> $command
+    }
+    $win.mb.file index $label
+}
+ShellFormEngine instproc create args {
+    error "class [self] is abstract"
+}
+ShellFormEngine instproc map {{window {}}} {
+    my instvar form_node win dialog_container nestedform label  data labelwin refattribute modi linkedForm reftableLink
+    if {$window!=""} {
+        set win $window
+    } else {
+        set win .[namespace tail [self]]
+    }
+    #puts "WINDOW $win [self] $oneobject $nestedform"
+
+    #puts "not nested [self]"
+    toplevel $win
+    wm withdraw $win
+    wm title $win [my getWindowTitle]
+
+    $dialog_container map $win.dialog
+        
+    menu $win.mb -tearoff 0
+    menu $win.mb.file -tearoff 0
+    menu $win.mb.service -tearoff 0
+    menu $win.mb.service.filter -tearoff 0
+    menu $win.mb.service.template -tearoff 0
+    $win.mb add cascade -label [mc "Form"] -menu $win.mb.file  -underline 1
+    $win.mb add cascade -label [mc "Service"]  -menu $win.mb.service -underline 0
+    $win.mb.service add cascade -label [mc "Filter"]  -menu $win.mb.service.filter
+    $win.mb.service add cascade -label [mc "Template"]  -menu $win.mb.service.template
+    # Filter Service Object bilden
+    # etwas unglückliche Stelle aber es muss nach map erfolgen
+    FormEngine::Filter [self]::filter -form_node $form_node  -filtermenu $win.mb.service.filter
+    FormEngine::Template [self]::template -form_node $form_node  -templatemenu $win.mb.service.template
+
+    # list of {Name Image Command}
+    pack [my buildNavigation $win.navigation]  -side bottom -anchor s -expand yes -fill x
+    pack $win.dialog -side top -expand yes -fill both
+    $win configure -menu $win.mb 
+    wm protocol $win WM_DELETE_WINDOW "[self] destroy"
+    wm deiconify $win
+    my setModi $modi
+    FormEngine::Helper [self]::helper
+}
+Class AssoziationFormEngine -superclass {::LinkedFormEngine ::ShellFormEngine}
+@ ::AssoziationFormEngine idemeta component xdobry::FormEngine
+Class FormLink -superclass ::InputWidget -parameter {
+    form_node
+    sqlconnect 
+    data
+    label
+    {refattribute {}}
+    reftable
+    objlinks
+}
+@ ::FormLink idemeta add attributes
+@ ::FormLink idemeta attributes {label form refattribute data reftable reftable}
+@ ::FormLink idemeta categories widget-interface
+@ ::FormLink idemeta categoriesMethods {{setvalue getvalue map setdefault updatevalue}}
+@ ::FormLink idemeta component xdobry::FormEngine
+FormLink instproc executeForm {{obj {}}} {
+    my instvar form_node sqlconnect data refattribute  formengine objformengine objlinks reftable
+    # Normalles 1:n Link
+    if {$obj==""} {
+        if {![info exists formengine] ||  $formengine=="" ||  [FormEngine deepinstances ::$formengine]==""} {
+            # suche den Vater FormEngine
+            # FormLink soll der Kind oder Enkelkind .... davon sein
+            set pf_engine [FormEngine searchParentFormEngine [self]]
+            set formengine [FormEngine createPerNameForClass AssoziationFormEngine [$form_node getAttribute name]  [Object autoname formengine]  -form_node $form_node  -sqlconnect $sqlconnect -data $data  -refattribute $refattribute -linkedForm $pf_engine]
+            $formengine map
+            my setdefault
+        }
+    } else {
+        if {![info exists objformengine($obj)] ||  $objformengine($obj)=="" ||  [FormEngine deepinstances ::$objformengine($obj)]==""} {
+            set pf_engine [FormEngine searchParentFormEngine [self]]
+            set refa [lindex [lindex $objlinks [lsearch -glob $objlinks $obj*]] 1]
+            set oform_node [tdom_findpername $form_node form $obj]
+            set  objformengine($obj)  [FormEngine createPerNameForClass MNAssoziationFormEngine [$oform_node getAttribute name]  [Object autoname formengine]  -form_node $oform_node  -sqlconnect $sqlconnect -data $data  -refattribute $refattribute -linkedForm $pf_engine  -reftableLink [list $reftable $refa]  -modi {{nodelete 1} {noinsert 1}}] 
+            $objformengine($obj) map
+            my setdefault
+        }
+    }
+}
+FormLink instproc getvalue {} {
+    my instvar value
+    return $value
+}
+@ FormLink instproc map {} {
+description {Realiseirung von Form Navigation (FormLink)
+Das Eigentliche Form wird in das Objekt Aggregiert
+die Änderungen werden durch}
+}
+FormLink instproc map window {
+    my instvar win label reftable objlinks
+    set win $window
+    if {![info exists reftable]} {
+        button $win -text $label -command "[self] executeForm"
+    } else {
+        menubutton $win -text $label -menu $win.menu -relief raised
+        menu $win.menu -tearoff 0
+        $win.menu add command -label $label -command "[self] executeForm"
+        foreach link $objlinks {
+            $win.menu add command -label [lindex $link 2] -command "[self] executeForm [lindex $link 0]"
+        }
+
+    }
+    return $win
+}
+FormLink instproc setdefault {} {
+    my instvar default value formengine objformengine sqlconnect
+    #puts "setdefault [self] [self class]"
+    if {$sqlconnect==""} return
+    set value $default
+    if {[info exists formengine] &&  $formengine!="" &&  [FormEngine deepinstances ::$formengine]!=""} {
+        $formengine set default $default
+        $formengine setdefault
+    }
+    if {[array exists objformengine]} {
+        foreach obj [array names objformengine] {
+            if {$objformengine($obj)!="" &&  [FormEngine deepinstances ::$objformengine($obj)]!=""} {
+                $objformengine($obj) default $default
+                $objformengine($obj) setdefault
+            }        
+        }
+    }
+}
+@ FormLink instproc setvalue {} {
+description {Prozeduren für die Behandlung der FormLink als EditWidget}
+}
+FormLink instproc setvalue value {
+}
+FormLink instproc updatevalue {} {
+    my instvar formengine objformengine
+    #puts "updatevalue [self] [self class]"
+    if {[info exists formengine] &&  $formengine!="" &&  [FormEngine deepinstances ::$formengine]!=""} {
+        $formengine updatevalue
+    }
+    if {[array exists objformengine]} {
+        foreach obj [array names objformengine] {
+            if {$objformengine($obj)!="" &&  [FormEngine deepinstances ::$objformengine($obj)]!=""} {
+                $objformengine($obj) updatevalue
+            }        
+        }
+    }
+}
+FormLink proc initializeAfterLoad {} {
+my set attributes {label form refattribute data reftable reftable}
+}
+Class FormNavigationBase -parameter proxy
+@ ::FormNavigationBase idemeta categories {testing user-navigation gui user-actions initialize-release}
+@ ::FormNavigationBase idemeta categoriesMethods {{isActualInsert isInsert hasTuples} {next_tupel prev first resetPosition last} {setPosFromEntry removeButton setFunctionMode setTupelCount} {newtupel updateManual delete exitForm filterData orderbyData reloadForm} {init destroyWindow buildNavigation}}
+@ ::FormNavigationBase idemeta component xdobry::FormEngine
+FormNavigationBase instproc baseReload {} {
+    my instvar proxy
+    if {![$proxy reload]} {
+        return 0
+    } else {
+        my handleTupelCount
+    }
+    return 1
+}
+FormNavigationBase instproc buildNavigation nwin {
+    my instvar win labelwin oneobject navwin sqlconnect usecommands nestedform menuindex
+    set navwin $nwin
+    set oneobject [[my getForm] set oneobject]
+    set nestedform [[my getForm] set nestedform]
+    
+    if {$sqlconnect==""} {
+        ::label $nwin -text [mc "No DB connection"]
+        return $nwin
+    }
+    frame $nwin  -bd 1 -relief ridge
+    # Name, Bitmap, Command
+    set commands {
+        first start first Alt-a First
+        prev back prev Alt-b Prev
+        next forward next_tupel Alt-f Next
+        last finish last Alt-e Last
+        newtupel newtupel newtupel {} New
+        update filefloppy updateManual {} Update
+        undo undo undo Alt-z Undo
+        delete delete delete {} Delete
+        reload reload reloadForm Alt-r Reload
+        find filter filterData {} Find
+        orderby orderby orderbyData {} Sort
+        exit exit exitForm {} Exit
+    }
+    if {$oneobject} {
+        set usecommands {update undo delete reload}
+    } elseif {[[my getForm] isMode insertonly]} {
+        set usecommands {next undo}
+    } else { 
+        if {[$sqlconnect hasfunction seek]} {
+            set usecommands {first prev next last update 
+                undo delete reload find orderby}
+        } else {
+            set usecommands {next newtupel update undo delete 
+                reload find orderby}
+        }
+        tixLabelEntry $nwin.label -labelside right -label "von ?"  -option {
+                entry.width 4
+            }
+        $nwin.label subwidget entry configure -takefocus 0
+        set labelwin $nwin.label
+        pack $nwin.label -side left -anchor w
+        if {[$sqlconnect hasfunction seek]} {
+            bind [$nwin.label subwidget entry] <Return> "[self] setPosFromEntry"
+        }
+    }
+    if {!$nestedform} {
+        lappend usecommands {exit}
+    }
+    foreach {name image execute accel label} $commands {
+        if {![lcontain $usecommands $name]} { continue }
+        button $nwin.$name -image [tix getimage $image]  -command "[self] $execute"  -takefocus 0 -bg #c0c0c0 -highlightbackground #c0c0c0
+        set index [[my getForm] addMenuItem $name [mc $label] [list [self] $execute] $accel]
+        keylset menuindex $name $index
+        pack $nwin.$name -side left -anchor w
+    }
+    if {[winfo exists $nwin.next]} {
+        $nwin.next configure -takefocus 1
+    }
+    return $nwin
+}
+FormNavigationBase instproc checkRangeBase {} {
+    error "should be overwritten"
+}
+FormNavigationBase instproc check_range {} {
+    my instvar act_tupel old_tupel oneobject labelwin tupel_count
+    if {![[my getForm] position_check $act_tupel]} {
+        set act_tupel $old_tupel
+        return
+    }
+    set noInsertModi [[my getForm] isMode noinsert]
+    if {[my checkRangeBase]} {
+        set act_tupel $old_tupel
+    } else {
+        set my_old $old_tupel
+        my fill_form
+        if {$act_tupel==0} {
+            my setFunctionMode disabled {first prev}
+        } elseif {$my_old==0 || $my_old==-1} {
+            my setFunctionMode normal {first prev}
+        }
+        my setEnableAfterPosChange $my_old $noInsertModi
+    }
+    if {!$oneobject && ![[my getForm] isMode insertonly]} {
+        $labelwin subwidget entry delete 0 end
+        $labelwin subwidget entry insert 0 [expr $act_tupel +1]
+    }
+}
+FormNavigationBase instproc delete {} {
+    [my getForm] delete
+}
+FormNavigationBase instproc destroyWindow {} {
+    my instvar navwin
+    ::destroy $navwin
+}
+FormNavigationBase instproc exitForm {} {
+    [my getForm] destroy
+}
+FormNavigationBase instproc fill_form {} {
+    my instvar act_tupel old_tupel tupel_count
+    if {$old_tupel!=-1 && $act_tupel!=$old_tupel} { 
+        if {![[my getForm] update]} {
+            set act_tupel $old_tupel
+            return
+        }
+    }
+    if {[my isActualInsert]} {
+        [my getForm] fillEmptyForm
+        my set isInsert 1
+    } else {
+        my set isInsert 0
+        set tupel [[my proxy] gettupel $act_tupel]
+        if {$tupel eq ""} {
+            [my getForm] fillEmptyForm
+            my set isInsert 1
+        } else {
+            [my getForm] fillFormWithTupel $tupel
+        }
+    }
+    set old_tupel $act_tupel
+}
+FormNavigationBase instproc filterData {} {
+    [my getForm] filterData
+}
+FormNavigationBase instproc first {} {
+    my instvar act_tupel
+    set act_tupel 0
+    my check_range
+}
+FormNavigationBase instproc getForm {} {
+    my info parent
+}
+FormNavigationBase instproc handleTupelCount {} {
+    # no function in base class
+}
+FormNavigationBase instproc handle_newtupel {} {
+    if {[[my getForm] insert]==1} {
+        my fill_form
+        [my getForm] stateNeedReload
+    }
+}
+FormNavigationBase instproc hasTuples {} {
+    expr {[my set tupel_count]>0}
+}
+FormNavigationBase instproc init {} {
+    my set act_tupel 0
+    my set old_tupel -1
+    my set isInsert 0
+    my set sqlconnect [[my proxy] set sqlconnect]
+}
+FormNavigationBase instproc isActualInsert {} {
+    my instvar act_tupel tupel_count
+    expr {$act_tupel>=$tupel_count}
+}
+FormNavigationBase instproc isInsert {} {
+    my instvar isInsert
+    return $isInsert
+}
+FormNavigationBase instproc last {} {
+    my instvar act_tupel old_tupel tupel_count modi
+    if {[my isInsert]} {
+        my handle_newtupel
+    } else {
+        if {$old_tupel==$tupel_count-1} {
+            set act_tupel [expr $tupel_count - [[my getForm] isMode noinsert]]
+        } else {
+            set act_tupel [expr $tupel_count - 1]
+        }
+        my check_range
+    }
+}
+FormNavigationBase instproc newtupel {} {
+    my instvar act_tupel old_tupel tupel_count modi
+    if {[my isInsert]} {
+        my handle_newtupel
+    } else {
+        [my getForm] fillEmptyForm
+        my set isInsert 1
+    }
+}
+FormNavigationBase instproc next_tupel {} {
+    my instvar act_tupel
+    if {[my isInsert]} {
+        my handle_newtupel
+    } else {
+        incr act_tupel
+        my check_range
+    }
+}
+FormNavigationBase instproc orderbyData {} {
+    [my getForm] orderbyData
+}
+FormNavigationBase instproc prev {} {
+    my instvar act_tupel
+    incr act_tupel -1
+    my check_range
+}
+FormNavigationBase instproc reloadForm {} {
+    [my getForm] reload
+}
+FormNavigationBase instproc removeButton button {
+    my instvar navwin usecommands
+    set buttons [pack slaves $navwin]
+    if {[lcontain $buttons $navwin.$button]} {
+        pack forget $navwin.$button
+        set index [lsearch $usecommands $button]
+        my setFunctionMode disabled $button
+        if {$index>=0} {
+            set usecommands [lreplace $usecommands $index $index]
+        }
+    }
+}
+FormNavigationBase instproc resetPosition {} {
+    my set act_tupel 0
+    my set old_tupel 0
+}
+FormNavigationBase instproc setEnableAfterPosChange {my_old noInsertModi} {
+    my instvar act_tupel tupel_count
+    if {$act_tupel==$tupel_count-1 && $noInsertModi} {
+        my setFunctionMode disabled {last next}
+    } elseif {($my_old==$tupel_count-1 && $noInsertModi) || $my_old==-1} {
+        my setFunctionMode normal {last next}
+    }
+    if {[my isInsert]} {
+        my setFunctionMode disabled delete
+    } elseif {$my_old>=$tupel_count || $my_old==-1} {
+        my setFunctionMode normal delete
+    }
+}
+FormNavigationBase instproc setFunctionMode {mode funclist} {
+    my instvar usecommands commStates navwin nestedform menuindex
+    if {![info exists commStates]} {
+        foreach comm $usecommands {
+            keylset commStates $comm normal
+        }
+    }
+    foreach comm [schnittMenge $funclist $usecommands] {
+        if {[keylget commStates $comm]!=$mode} {
+            $navwin.$comm configure -state $mode
+            keylset commStates $comm $mode
+            if {!$nestedform} {
+                set win [winfo toplevel $navwin]
+                $win.mb.file entryconfigure [keylget menuindex $comm] -state $mode
+            }
+        }
+    }
+}
+FormNavigationBase instproc setPosFromEntry {} {
+    my instvar labelwin act_tupel
+    set pos [$labelwin subwidget entry get]
+    if {[catch {expr $pos+1}]} {
+        $labelwin subwidget entry delete 0 end
+        $labelwin subwidget entry insert 0 [expr $act_tupel +1]
+    } else {
+        set act_tupel [expr $pos-1]
+        my check_range
+    }
+}
+FormNavigationBase instproc setTupelCount count {
+    my instvar labelwin oneobject
+    if {$oneobject} return
+    $labelwin subwidget label configure -text "von $count"
+}
+FormNavigationBase instproc undo {} {
+    [my info parent] undo
+}
+FormNavigationBase instproc updateManual {} {
+    [my getForm] updateManual
+}
+Class FormNavigationFull -superclass ::FormNavigationBase
+@ ::FormNavigationFull idemeta component xdobry::FormEngine
+FormNavigationFull instproc checkRangeBase {} {
+    my instvar act_tupel old_tupel tupel_count
+    set noInsertModi [[my getForm] isMode noinsert]
+    expr {$act_tupel<0 || ($act_tupel>[expr {$tupel_count - $noInsertModi}] && $tupel_count!=0)}
+}
+FormNavigationFull instproc handleTupelCount {} {
+    my instvar tupel_count act_tupel
+    set tupel_count [[my proxy] set rows]
+    if {$tupel_count==0} {
+        set act_tupel 0
+        my set isInsert 1
+    } elseif {$act_tupel>=$tupel_count} {
+        set act_tupel [expr $tupel_count-1]
+    }
+    my setTupelCount $tupel_count
+}
+FormNavigationFull instproc reload {} {
+    my set isInsert 0
+    my instvar navwin
+    my set act_tupel 0
+    $navwin.reload configure -bg #c0c0c0
+    my baseReload
+}
+Class FormNavigationNoRows -superclass ::FormNavigationBase
+@ ::FormNavigationNoRows idemeta component xdobry::FormEngine
+FormNavigationNoRows instproc checkRangeBase {} {
+    my instvar act_tupel
+    expr {$act_tupel<0}
+}
+FormNavigationNoRows instproc hasTuples {} {
+    # HACK
+    expr {![my isInsert]}
+}
+FormNavigationNoRows instproc isActualInsert {} {
+    my isInsert
+}
+FormNavigationNoRows instproc prev {} {
+    error "not supported for this class"
+}
+FormNavigationNoRows instproc reload {} {
+    my set isInsert 0
+    my set act_tupel 0
+    my set old_tupel -1
+    my baseReload
+}
+FormNavigationNoRows instproc setEnableAfterPosChange {my_old noInsertModi} {
+    my instvar act_tupel tupel_count
+    if {[my isInsert]} {
+        my setFunctionMode disabled delete
+    } else {
+        my setFunctionMode normal delete
+    }
+}
+FormNavigationNoRows instproc setPosFromEntry {} {
+    my instvar labelwin act_tupel
+    set pos [$labelwin subwidget entry get]
+    if {[catch {expr $pos+1}]} {
+        $labelwin subwidget entry delete 0 end
+        $labelwin subwidget entry insert 0 [expr $act_tupel +1]
+    }
+}
+Class FormNavigationNoSeek -superclass ::FormNavigationBase
+@ ::FormNavigationNoSeek idemeta component xdobry::FormEngine
+FormNavigationNoSeek instproc checkRangeBase {} {
+    my instvar act_tupel old_tupel tupel_count
+    set noInsertModi [[my getForm] isMode noinsert]
+    expr {$act_tupel<0 || ($act_tupel>[expr {$tupel_count - $noInsertModi}] && $tupel_count!=0)}
+}
+FormNavigationNoSeek instproc isActualInsert {} {
+    my isInsert
+}
+FormNavigationNoSeek instproc prev {} {
+    error "not supported for this class"
+}
+FormNavigationNoSeek instproc reload {} {
+    my set isInsert 0
+    my set act_tupel 0
+    my set old_tupel -1
+    my baseReload
+}
+FormNavigationNoSeek instproc setPosFromEntry {} {
+    my instvar labelwin act_tupel
+    set pos [$labelwin subwidget entry get]
+    if {[catch {expr $pos+1}]} {
+        $labelwin subwidget entry delete 0 end
+        $labelwin subwidget entry insert 0 [expr $act_tupel +1]
+    }
+}
+@ Class InheritForm {
+description {Die Vererbung wird durch ein NoteBook Widget wiedergeben.
+Dabei werden die unterschiedliche Argumente des
+Kindobjekt als Unterformulare (Eigebetette Formulare) gezeigt
+
+Das Objekt besitzt entweder aggregiertes ONoteBookConteiner Objekt mit
+einzelnen Unterformularen(FormEngine)  (notebook) oder eine aggregierte
+FormEngine als (form)
+
+! Die Objekte der Klasse können sich selber nicht kontruieren}
+}
+Class InheritForm -superclass ::InputWidget
+@ ::InheritForm idemeta add attributes
+@ ::InheritForm idemeta attributes data
+@ ::InheritForm idemeta component xdobry::FormEngine
+InheritForm instproc getAllChildren {} {
+    if {[my info children notebook]!=""} {
+        return  [[self]::notebook info children]
+    } else {
+        return [self]::form
+    }
+}
+InheritForm instproc getvalue {} {
+    my instvar value
+    return $value
+}
+InheritForm instproc map window {
+    my instvar win
+    set win $window
+    if {[my info children notebook]!=""} {
+        [self]::notebook map $window
+    } else {
+        [self]::form map $window
+    }
+    return $win
+}
+InheritForm instproc setdefault {} {
+    my instvar default value data 
+    set value $default
+    # Eigentlich ein Neues Template
+    set foundchild 0
+    foreach child [my getAllChildren] {
+        #puts "seting $child"
+        $child set default $default
+        $child setdefault
+        # Schalte auf das NoteBook wenn Kind gefunden
+        if {!$foundchild && [my info children notebook]!=""} {
+            if {[$child hasTuples]} {
+                [self]::notebook raise [string tolower [namespace tail $child]]
+                set foundchild 1
+            }
+        }
+        
+    }
+}
+InheritForm instproc setvalue value {
+}
+InheritForm instproc updatevalue {} {
+    my instvar data
+    foreach child [my getAllChildren] {
+            $child updatevalue
+    }
+}
+InheritForm proc initializeAfterLoad {} {
+my set attributes data
+}
+Class MNAssoziationFormEngine -superclass ::AssoziationFormEngine -parameter reftableLink
+@ ::MNAssoziationFormEngine idemeta component xdobry::FormEngine
+MNAssoziationFormEngine instproc createDBProxy {table primarykey} {
+    my instvar form_node sqlconnect attrlist refattribute reftableLink dbtypes
+
+    DBProxyRT [self]::myDBProxy  -table $table -primarykey $primarykey -attrlist $attrlist  -sqlconnect $sqlconnect -refattribute $refattribute  -reftable [lindex $reftableLink 0]  -refattribute2 [lindex $reftableLink 1] -dbtypes $dbtypes
+}
+MNAssoziationFormEngine instproc getWindowTitle {} {
+    my instvar form_node linkedForm reftableLink
+    return "[my getFormName] linked [$linkedForm getFormName] via [lindex $reftableLink 0]"
+}
+Class MainFormEngine -superclass {::FormEngine ::ShellFormEngine}
+@ ::MainFormEngine idemeta component xdobry::FormEngine
+Class NestedFormEngine -superclass ::LinkedFormEngine -parameter {{border 0}}
+@ ::NestedFormEngine idemeta component xdobry::FormEngine
+NestedFormEngine instproc addMenuItem {name label command accel} {
+
+}
+NestedFormEngine instproc initDialog args {
+    my instvar linkedForm nestedform
+    set nestedform 1
+    set linkedForm [FormEngine searchParentFormEngine [my info parent]]
+    next
+}
+NestedFormEngine instproc map window {
+    my instvar form_node win dialog_container nestedform label  data labelwin refattribute oneobject border modi linkedForm reftableLink
+    set win $window
+
+    FormEngine::Filter [self]::filter -form_node $form_node
+    FormEngine::Template [self]::template -form_node $form_node
+    #puts "nested [self]"
+    if {[info exists label] && $label!=""} {
+        labelframe $win -text $label
+        set bwin $win
+    } else {
+        if {$border==1} {
+            frame $win -relief sunken -borderwidth 1
+        } else {
+            frame $win
+        }
+        set bwin $win
+    }
+    $dialog_container map $bwin.dialog
+      
+    pack [my buildNavigation $bwin.navigation]  -side bottom -anchor s -expand yes -fill x
+    pack $bwin.dialog -side top -expand yes -fill both
+
+    my setModi $modi
+    FormEngine::Helper [self]::helper
+}
+@ Class OSqlReferenceList {
+description {Ein Widget für Darstellung der Referenzen
+ab Version 0.12 kann es als FormLink benutzt werden}
+}
+Class OSqlReferenceList -superclass {::OMultiColumnList ::FormLink} -parameter {
+    sqlquery
+    sqlconnect
+    {notnull 0}
+    {showfirst 1}
+    value
+    {default {}}
+    data
+}
+@ ::OSqlReferenceList idemeta add attributes
+@ ::OSqlReferenceList idemeta attributes {state label columns columnslabel height columnswidth sqlquery showfirst dropdown form}
+@ ::OSqlReferenceList idemeta component xdobry::FormEngine
+@ ::OSqlReferenceList idemeta description {
+Humankonforme Repräsentation der Fremdschlüssel als 
+mehrspaltige Auswahlliste
+hat kein Attribut valuelist
+setvalue und getvalue behandeln den Index statt konkreten Werten.
+Hat kein setdefault value
+Vorsicht Parameter sqlconnect muß initialisiert werden
+auch notnull gehört nicht zur Klassenvarible attributes
+(Stadart Datenverkunft Parameter)
+Parameter:  state valuelist columns columnslabel columnswidth height notnull
+sqlconnect sqlquery
+}
+OSqlReferenceList instproc getvalue {} {
+    my instvar value win
+    my updatevalue
+    return $value
+}
+OSqlReferenceList instproc map window {
+    my instvar win form_node refattribute
+    next
+    if {[info exists form_node]} {
+        bind $win <Double-Button-1> [list [self] executeForm]
+        bind $win <Double-Button-1> [list [self] executeForm]
+        set refattribute [$form_node getAttribute primarykey]
+    }
+    my refresh
+}
+OSqlReferenceList instproc refresh {} {
+    my instvar sqlconnect sqlquery notnull columns indexlist showfirst win
+    if {$sqlconnect==""} return
+    set query [$sqlconnect query $sqlquery]
+    if {$query==""} {
+        IDE::Dialog error [mc "Sql-Interface Error by Reading Object-References"]"
+        $win configure -bg red
+        set sqlconnect {}
+        return
+    }
+    if {!$notnull} {
+        for {set x 0} {$x<$columns} {incr x} {
+            lappend nulllist NULL
+        }
+        lappend valuelist $nulllist
+        lappend indexlist NULL
+    }
+    while 1 {
+        # is der Eigentliche Fremschlüssel ausgeblendet
+        set row  [$query fetch]
+        if {[llength $row]==0} break
+        lappend indexlist [lindex $row 0]
+        if {$showfirst} {
+            lappend valuelist $row
+        } else {
+            lappend valuelist [lrange $row 1 end]
+        }
+    }
+    $query destroy
+    my setvaluelist $valuelist
+}
+OSqlReferenceList instproc setdefault {} {
+    #puts "setdefault [self] [self class]"
+    my instvar win default form_node
+    my setvalue $default
+    if {[info exists form_node]} {
+         next
+    }
+}
+OSqlReferenceList instproc setvalue newv {
+    my instvar win value indexlist  form_node
+    set value $newv
+    # Lerres Wert (z.B. neuer Tulep 
+    if {[info exists indexlist]} {
+        if {$value==""} {
+            my setindex {}
+            return
+        }
+        set index [lsearch -exact $indexlist $value]
+        if {$index==-1} {
+            IDE::Dialog message [mc "The reference does not exist as primary key (integrity constrain) no meaningful display possible!!"]
+            return
+        }
+        my setindex $index
+        my yview $index
+    }
+    if {[info exists form_node]} {
+         next
+    }
+}
+OSqlReferenceList instproc updatevalue {} {
+    my instvar value win indexlist  form_node
+    if {[info exists indexlist]} {
+        set index [my getindex]
+        if {$index!=""} {
+            set value [lindex $indexlist $index]
+        } else {
+            set value ""
+        }
+    }
+    if {[info exists form_node]} {
+        next
+    }
+    #puts "upadet sqllist $value"
+}
+OSqlReferenceList proc initializeAfterLoad {} {
+my set description {
+Humankonforme Repräsentation der Fremdschlüssel als 
+mehrspaltige Auswahlliste
+hat kein Attribut valuelist
+setvalue und getvalue behandeln den Index statt konkreten Werten.
+Hat kein setdefault value
+Vorsicht Parameter sqlconnect muß initialisiert werden
+auch notnull gehört nicht zur Klassenvarible attributes
+(Stadart Datenverkunft Parameter)
+Parameter:  state valuelist columns columnslabel columnswidth height notnull
+sqlconnect sqlquery
+}
+my set attributes {state label columns columnslabel height columnswidth sqlquery showfirst dropdown form}
+}
+Class TableoverviewEngine -superclass ::IDE::Browser -parameter {tableNode sqlconnect}
+@ ::TableoverviewEngine idemeta component xdobry::FormEngine
+TableoverviewEngine instproc deleteRow {} {
+    my instvar sqlconnect tableNode
+    set pk [my getRowId]
+    if {$pk eq ""} return
+    if {[IDE::Dialog yesNo [mc "Are you shure to delete one data row"]]} {
+        set deleteSql "delete from [$tableNode getAttribute table] where [$tableNode getAttribute primarykey]=$pk"
+        set ret [$sqlconnect execute $deleteSql]
+        if {$ret eq ""} {
+            IDE::Dialog error [mc "sql error occured: %s" [$sqlconnect errorMessage]]
+        } else {
+            my refreshView
+        }
+    }
+}
+TableoverviewEngine instproc fillColumns {} {
+    my instvar win sqlconnect tableNode tableWin primaryKeys hiddenPk sqlStatement pkIndex
+    set expr [list]
+    foreach columnNode [$tableNode selectNodes columns/column] {
+        lappend expr [$columnNode getAttribute dbexpresion]
+    }
+    my setTitleAddition [$tableNode getAttribute name]
+    set primaryKey [$tableNode getAttribute primarykey]
+    if {[set pkIndex [lsearch $expr $primaryKey]]<0} {
+        set expr [linsert $expr 0 $pkIndex]
+        set hiddenPk 1
+    } else {
+        set hiddenPk 0
+    }
+    
+    set sqlStatement "select [join $expr ,] from [$tableNode getAttribute table]"
+    my refreshView
+}
+TableoverviewEngine instproc getFormName {} {
+    [my set tableNode] getAttribute name
+}
+TableoverviewEngine instproc getRowId {} {
+    my instvar tableWin primaryKeys
+    set index [lindex [$tableWin curselection] 0]
+    set index [lindex [split $index ,] 0]
+    return $primaryKeys($index)
+}
+TableoverviewEngine instproc getTitle {} {
+    return [mc "Tableoverview"]
+}
+TableoverviewEngine instproc refreshView {} {
+    my instvar win sqlconnect tableNode tableWin primaryKeys sqlStatement pkIndex hiddenPk
+    $tableWin configure -state normal
+    if {[info exists primaryKeys]} {
+        unset primaryKeys
+    }
+    set result [$sqlconnect query $sqlStatement]
+    set x 1
+    set rowsCount [$tableWin cget -rows]
+    if {$result ne ""} {
+        while {[llength [set row [$result fetch]]]>0} {
+            if {$x>$rowsCount} {
+                incr rowsCount 20
+                $tableWin configure -rows $rowsCount
+            }
+            if {$hiddenPk} {
+                $tableWin set row $x,0 [lrange $row 1 end]
+            } else {
+                $tableWin set row $x,0 $row
+            }
+            set primaryKeys($x) [lindex $row $pkIndex]
+            incr x
+        }
+        $tableWin configure -rows $x
+        $result destroy
+    }
+    $tableWin configure -state disabled
+}
+TableoverviewEngine instproc showDetails {} {
+    set pk [my getRowId]
+    if {$pk eq ""} return
+    
+    my instvar tableNode sqlconnect 
+    set form_name [$tableNode getAttribute detailsform]
+    set form_node [tdom_findpername [[$tableNode ownerDocument] documentElement] form $form_name]
+    if {$form_node eq ""} {
+        IDE::Dialog error [my "can not find form with name %" $form_name]
+    }
+    
+    set formengine [FormEngine createPerNameForClass AssoziationFormEngine [$form_node getAttribute name]  [Object autoname formengine]  -form_node $form_node  -sqlconnect $sqlconnect -refattribute [$tableNode getAttribute primarykey] -oneobject 1]
+    $formengine map
+    $formengine set default $pk
+    $formengine setdefault
+}
+TableoverviewEngine instproc specificInit {} {
+    my instvar win tableNode tableWin
+    set rows [expr {1+[$tableNode getAttribute rows 20]}]
+    
+    frame $win.result
+    scrollbar $win.result.ytablescroll -command [list $win.result.table yview]
+    scrollbar $win.result.xtablescroll -command [list $win.result.table xview] -orient horizontal
+    set tableWin $win.result.table
+    table $tableWin -yscrollcommand [list $win.result.ytablescroll set] -xscrollcommand [list $win.result.xtablescroll set] -cache yes -height $rows -rows 20 -anchor w -titlerows 1 -selecttype row -exportselection 0
+    grid $win.result.table -column 0 -row 0 -sticky news
+    grid $win.result.ytablescroll -column 1 -row  0 -sticky nws
+    grid $win.result.xtablescroll -column 0 -row  1 -sticky nwe
+    grid columnconfig $win.result 0 -weight 1
+    grid rowconfig $win.result 0 -weight 1
+
+    pack $win.result -expand 1 -fill both
+    
+    # set title row
+    set titleRow [list]
+    foreach columnNode [$tableNode select columns/column] {
+        lappend titleRow [$columnNode getAttribute name]
+    }
+    if {[llength $titleRow]>0} {
+        $win.result.table configure -cols [llength $titleRow]
+        $win.result.table set row 0,0 $titleRow
+    }
+    
+    frame $win.buttons
+    button $win.buttons.details -text [mc "Details"] -command [list [self] showDetails]
+    button $win.buttons.refresh -text [mc "Refresh"] -command [list [self] refreshView]
+    button $win.buttons.delete -text [mc "Delete"] -command [list [self] deleteRow]
+    button $win.buttons.create -text [mc "Create"] -command [list [self] createRow]
+    button $win.buttons.exit -text [mc "Exit"] -command [list [self] destroy]
+    pack $win.buttons.details $win.buttons.refresh $win.buttons.delete $win.buttons.create $win.buttons.exit -side left
+    pack $win.buttons -fill x
+    
+    my fillColumns
+    next
+}
+Class UserFormEngine
+@ ::UserFormEngine idemeta component xdobry::FormEngine
+FormEngine initializeAfterLoad
+FormLink initializeAfterLoad
+InheritForm initializeAfterLoad
+OSqlReferenceList initializeAfterLoad
+

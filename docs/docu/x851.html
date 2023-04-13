@@ -1,0 +1,209 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>Erstellung des Repositories</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Dokumentation des Programms Xdobry"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Tutorial"
+HREF="c834.html"><LINK
+REL="PREVIOUS"
+TITLE="Tutorial"
+HREF="c834.html"><LINK
+REL="NEXT"
+TITLE="Erstellung der Formulare"
+HREF="x876.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Dokumentation des Programms Xdobry</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c834.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Tutorial</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x876.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN851"
+></A
+>Erstellung des Repositories</H1
+><P
+>Für die Erstellung des Reposities, das eine Erweiterung des relationalen Schemas um semantische Informationen darstellt, wird das Programm <B
+CLASS="COMMAND"
+>SchemaEditor</B
+> verwendet.
+Das Programm kann durch die SQL-Verbindung das relationale Schema auslesen.
+Dazu verwendet man den Menüpunkt
+<B
+CLASS="GUIMENU"
+>Datei</B
+>-&gt;<B
+CLASS="GUIMENUITEM"
+>Neues Schema aus DB</B
+>.
+In nachfolgenden Dialog muss die richtige Datenanbindung angegeben werden.
+<DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="dbconnect.png"></P
+></DIV
+>
+Dann können weitere semantische Informationen hinzugefügt werden.
+<DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="schemaeditor.png"></P
+></DIV
+>
+Das kann auf drei Arten geschehen
+<P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>Benutzung von Reverse Engineering Menü 
+<B
+CLASS="GUIMENU"
+>Reverse Engineering</B
+>.</P
+></LI
+><LI
+><P
+>Hinzufügen von Abstraktionskonzepten durch die Verwendung von Assistenten: +Assoziation (etwa Fremdschlüssel), +Aggregation, +Vererbung</P
+></LI
+><LI
+><P
+>Editieren von Eigenschaften der Einzelnen Attributen (Schema-Elementen). Wie auf dem Screenshoots können zu jedem Attribut weitere Information spezifiziert werden.</P
+></LI
+><LI
+><P
+>Hinzufügen von weiteren Schema-Elementen wie: Attribut-Gruppe, Label (Etikette). Es geschieht durch Benutzung von Pop-Up Menuüs (rechte Maustaste)</P
+></LI
+></OL
+>
+Das komplette Beispiel von XML-Repository wird in Datei
+<TT
+CLASS="FILENAME"
+>sample/uni.xmldbschema</TT
+> gespeichert.
+Zu einzelnen Tabellen wird die Semantische Information gespeichert, ob die Tabelle ein Objekt, Spezialisierung, Aggregation oder Assoziation (Relationship) abbildet.
+Zu Relationship werden können weitere Information eingegeben werden, wie Kardinalität, Rolennamen, Granularität, Existenzbedingungen (beim Löschen).</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c834.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Zum Anfang</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x876.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Tutorial</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c834.html"
+ACCESSKEY="U"
+>Nach oben</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Erstellung der Formulare</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

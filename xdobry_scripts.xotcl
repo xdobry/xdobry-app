@@ -1,0 +1,31 @@
+# automatically generated from XOTclIDE
+package provide xdobry::scripts 0.1
+Object XDTests
+@ ::XDTests idemeta component xdobry::scripts
+XDTests proc encodeGifFromBase64 {} {
+     set f [open sample/back.b64]
+     #fconfigure $f -encoding binary
+     set bitmap [::base64::decode [read $f]]
+     close $f
+     set f [open sample/back.gif w]
+     fconfigure $f -encoding binary
+     #puts "lang [string length $bitmap]"
+     #puts "blang [string bytelength $bitmap]"
+     puts -nonewline $f $bitmap
+     close $f
+}
+XDTests proc saveGifAsBase64 {} {
+     package require base64
+     set f [open bitmaps/back.gif r]
+     fconfigure $f -encoding binary
+     set bitmap [read $f]
+     puts "2 lang [string length $bitmap]"
+     puts "2 blang [string bytelength $bitmap]"
+
+     close $f
+     set f [open sample/back.b64 w]
+     fconfigure $f -encoding binary
+     puts -nonewline $f [::base64::encode $bitmap]
+     close $f
+}
+

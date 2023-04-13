@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE dbforms SYSTEM "xmlforms.dtd">
+<dbforms name="accountancy">
+    <?dbschema /home/artur/programs/xotclIDE/sample/accountancy.xmldbschema?>
+    <form name="cust_order" table="cust_order" primarykey="orderId">
+        <frame manager="pack">
+            <pack>
+                <numeric label="orderId" data="orderId" dbtype="int" state="disabled"/>
+                <numeric label="paid" data="paid" dbtype="smallint"/>
+                <text label="order_date" textwidth="10" data="order_date" dbtype="datetime"/>
+                <list label="transport" data="transport" dbtype="enum" dbdefault="unknown">
+                    <valuelist>
+                        <item>unknown</item>
+                        <item>post</item>
+                        <item>ship</item>
+                        <item>air</item>
+                        <item>pizzaboy</item>
+                    </valuelist>
+                </list>
+                <formlink label="item" data="orderId" refattribute="orderId" form="item" reftable="item">
+                    <objectlink form="product" refattribute="productId" label="product"/>
+                </formlink>
+                <reference data="custId" dbtype="int" form="customer" label="customer" columns="2" columnslabel="custId name">
+                    <sqlquery>SELECT custId,name FROM customer</sqlquery>
+                </reference>
+            </pack>
+        </frame>
+    </form>
+    <form name="customer" table="customer" primarykey="custId">
+        <frame manager="pack">
+            <pack>
+                <numeric label="custId" data="custId" dbtype="int" state="disabled"/>
+                <text label="name" textwidth="20" data="name" dbtype="varchar"/>
+                <text label="street" textwidth="20" data="street" dbtype="varchar"/>
+                <text label="postcode" textwidth="10" data="postcode" dbtype="varchar"/>
+                <text label="city" textwidth="20" data="city" dbtype="varchar"/>
+                <text label="country" textwidth="20" data="country" dbtype="varchar"/>
+                <text subtype="area" label="comment" data="comment" dbtype="text"/>
+                <formlink label="customercust_order" data="custId" refattribute="custId" form="cust_order"/>
+            </pack>
+        </frame>
+    </form>
+    <form name="item" table="item" primarykey="productId orderId">
+        <frame manager="pack">
+            <pack>
+                <numeric label="count" data="count" dbtype="int" dbdefault="1"/>
+                <reference data="orderId" dbtype="int" form="cust_order" label="cust_order" columns="1" columnslabel="orderId">
+                    <sqlquery>SELECT orderId FROM cust_order</sqlquery>
+                </reference>
+                <reference data="productId" dbtype="int" form="product" label="product" columns="2" columnslabel="productId name">
+                    <sqlquery>SELECT productId,name FROM product</sqlquery>
+                </reference>
+            </pack>
+        </frame>
+    </form>
+    <form name="product" table="product" primarykey="productId">
+        <frame manager="pack">
+            <pack>
+                <text label="name" textwidth="20" data="name" dbtype="varchar"/>
+                <numeric label="productId" data="productId" dbtype="int" state="disabled"/>
+                <numeric label="price" data="price" dbtype="int"/>
+                <formlink label="item" data="productId" refattribute="productId" form="item" reftable="item">
+                    <objectlink form="cust_order" refattribute="orderId" label="cust_order"/>
+                </formlink>
+            </pack>
+        </frame>
+    </form>
+</dbforms>
+
+

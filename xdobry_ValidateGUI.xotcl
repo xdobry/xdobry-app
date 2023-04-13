@@ -1,0 +1,101 @@
+# automatically generated from XOTclIDE
+# script require component xdobry::WidgetLib
+package provide xdobry::ValidateGUI 0.23
+package require xdobry::WidgetLib
+Class OValidatorSet -superclass ::OWidget -parameter label
+@ ::OValidatorSet idemeta component xdobry::ValidateGUI
+OValidatorSet instproc getValue {} {
+    [self]::mframe updatevalue
+    return [[self]::mframe getvalue]
+}
+@ OValidatorSet instproc initFromTDom {} {
+description {Erwartet eine Parent Node die checks enthält wenn keine dann leer}
+}
+OValidatorSet instproc initFromTDom dom_node {
+    set types {}
+    set values {}
+    foreach checks_node [$dom_node selectNodes child::checks] {
+        foreach check_node [$checks_node selectNodes child::check] {
+            lappend types [$check_node getAttribute validator]
+            lappend values [$check_node text]
+        }
+        break
+    }
+    keylset datalist type $types
+    keylset datalist value $values
+    [self]::mframe set default $datalist
+    [self]::mframe setdefault
+}
+OValidatorSet instproc initFromVariable datalist {
+    [self]::mframe set default $datalist
+    [self]::mframe setdefault
+}
+OValidatorSet instproc map twin {
+    my instvar win label
+    frame $twin
+    ::label $twin.lab -text $label
+    set widgetpar {{type OComboBox} {name type} 
+        {valuelist {Regexpr Expr Length}} }
+    keylset widgetpar label [mc "Typ"]
+    lappend widgetlist $widgetpar
+    set widgetpar {{type OLabelEntry} {name value}
+        {textwidth 20} }
+    keylset widgetpar label [mc "Value"]
+    lappend widgetlist $widgetpar
+    set childframe [WidgetFactory make_inputs_keylist  [self]::wcontainer $widgetlist]
+    OMultiFrame [self]::mframe -inputframe [self]::wcontainer -count 0
+    [self]::mframe map $twin.mframe
+    pack $twin.lab -anchor e
+    pack $twin.mframe -expand yes -fill both
+    set win $twin
+    next
+}
+OValidatorSet instproc updateToTDom dom_node {
+    if {[[self]::mframe count]==0} {
+        tdom_deleteKontext $dom_node checks
+        return
+    }
+    [self]::mframe updatevalue
+    set value_kl [[self]::mframe getvalue]
+    if {$value_kl!=[[self]::mframe default]} {
+        set checks_node [tdom_clearKontext $dom_node checks]
+        set types [keylget value_kl type]
+        set values [keylget value_kl value]
+        foreach type $types value $values {
+            set check_node [[$dom_node ownerDocument] createElement check]
+            $check_node setAttribute validator $type
+            $check_node appendChild [[$dom_node ownerDocument] createTextNode $value] 
+            $checks_node appendChild $check_node
+        }
+    }
+}
+OValidatorSet proc tDomToVariable dom_node {
+    set types {}
+    set values {}
+    foreach checks_node [$dom_node selectNodes child::checks] {
+        foreach check_node [$checks_node selectNodes child::check] {
+            lappend types [$check_node getAttribute validator]
+            lappend values [$check_node text]
+        }
+        break
+    }
+    keylset datalist type $types
+    keylset datalist value $values
+    return $datalist
+}
+OValidatorSet proc variableToTDom {value_kl doc_node} {
+    set types {}
+    set values {}
+    set types [keylget value_kl type]
+    set values [keylget value_kl value]
+    if {[llength $types]==0} { return {} }
+    set checks_node [$doc_node createElement checks]
+    foreach type $types value $values {
+        set check_node [$doc_node createElement check]
+        $check_node setAttribute validator $type
+        $check_node appendChild [$doc_node createTextNode $value] 
+        $checks_node appendChild $check_node
+    }
+    return $checks_node
+}
+

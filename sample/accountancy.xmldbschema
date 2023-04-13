@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE database SYSTEM "dbschema.dtd">
+<database name="accountancy">
+    <?dbconnect {interface mysql} {hostname localhost} {user root} {dbank accountancy}?>
+    <table name="cust_order">
+        <attr name="orderId" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="custId" type="int" null="1"/>
+        <attr name="paid" type="smallint" null="1"/>
+        <attr name="order_date" type="datetime" null="1"/>
+        <attr name="transport" type="enum" null="1" default="unknown">
+            <valuelist>
+                <item>unknown</item>
+                <item>post</item>
+                <item>ship</item>
+                <item>air</item>
+                <item>pizzaboy</item>
+            </valuelist>
+        </attr>
+        <assoziationtarget name="item" table="item"/>
+        <assoziationcollection name="customercust_order" type="reference">
+            <participant reference="custId" table="customer"/>
+        </assoziationcollection>
+    </table>
+    <table name="customer">
+        <label>
+            <valuelist>
+                <item>name</item>
+            </valuelist>
+        </label>
+        <attr name="custId" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="name" length="20" type="varchar" null="1"/>
+        <attr name="street" length="20" type="varchar" null="1"/>
+        <attr name="postcode" length="10" type="varchar" null="1"/>
+        <attr name="city" length="20" type="varchar" null="1"/>
+        <attr name="country" length="20" type="varchar" null="1"/>
+        <attr name="comment" type="text" null="1"/>
+        <assoziationtarget name="customercust_order" table="cust_order"/>
+    </table>
+    <table name="item" type="relationship">
+        <attr name="productId" type="int" primary_key="1" default="0"/>
+        <attr name="orderId" type="int" primary_key="1" default="0"/>
+        <attr name="count" type="int" null="1" default="1"/>
+        <assoziationcollection name="item" type="reftable">
+            <participant reference="orderId" table="cust_order"/>
+            <participant reference="productId" table="product"/>
+        </assoziationcollection>
+    </table>
+    <table name="product">
+        <label>
+            <valuelist>
+                <item>name</item>
+            </valuelist>
+        </label>
+        <attr name="name" length="20" type="varchar" null="1"/>
+        <attr name="productId" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="price" type="int" null="1"/>
+        <assoziationtarget name="item" table="item"/>
+    </table>
+</database>
+

@@ -1,0 +1,244 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>Tutorial</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Dokumentation des Programms Xdobry"
+HREF="book1.html"><LINK
+REL="PREVIOUS"
+TITLE="Fehlende Funktionalitäten bei Xdobry"
+HREF="x813.html"><LINK
+REL="NEXT"
+TITLE="Erstellung des Repositories"
+HREF="x851.html"></HEAD
+><BODY
+CLASS="CHAPTER"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Dokumentation des Programms Xdobry</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x813.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x851.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="TUTORIAL"
+></A
+>Tutorial</H1
+><P
+>Hier wird es eine Beispielverwendung des System beschrieben.
+Es wurde eine Lehrbuch-Datenbank gewählt, so dass alle Eigenschaften des System gezeigt werden können.
+Die Schrittfolge entspricht etwa dem Vorgehen, das bei realen DB-Applikationen Erstellung anzutreffen ist.
+Zuerst wird ein ER-Diagramm des System erstellt und in relationales Schema abgebildet.
+Danach wird diese Schema mit Hilfe von Reverse Engineering Techniken in eine XML-Repository umgewandelt.
+Um die fertige Beispielformulare sofort zu sehen gehen sie zum letzten Schritt.</P
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN837"
+></A
+>Relationales Schema</H1
+><P
+>Angenommen, es wurde ein Datenbank-Schema mit Hilfe von ER-Modell entworfen.
+Dieses Schema enthält 5 Entities.
+Dabei wird Angestellte zu Assistent und Professor spezialisiert.
+Bei Termin handelt es sich um ein Weak-Entity.
+Es ist hier die Modellierung der Aggregation (besser Komposition) von Mengenwertigen Attribut des Objekts Vorlesung.
+Es gibt auch unterschiedliche Arten der Beziehungen (Relationships).
+Prüfen ist eine Beziehung der Granularität 3 mit einem eigenen Attribut Note.
+<DIV
+CLASS="MEDIAOBJECT"
+><P
+><IMG
+SRC="uni_er_diagramm.png"></P
+></DIV
+>
+Dieses ER-Diagramm wird zum relationalen Schema umgewandelt.
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>Angestellte   {PersNr,Name}
+Professor     {PersNr,Rang,Raum}
+Assistent     {PersNr,Rang,Raum,Professor}
+Student       {MatrNr,Name,Semester}
+Vorlesung     {VorlesungNr,Titel,SWS,PersNr}
+hoeren        {MatrNr,VorlesungNr}
+voraussetzten {VorgaengerNr,NachfolgerNr}
+pruefen       {MatrNr},VorlesungNr,PersNr,Note}
+Termin        {VorlesungNr,Wochentag,Zeit}</PRE
+></TD
+></TR
+></TABLE
+>
+Datei <TT
+CLASS="FILENAME"
+>uni.xmldump</TT
+> im Verzeichnis <TT
+CLASS="FILENAME"
+>sample</TT
+> des Programms beinhaltet ein XML-Abzug der Datenbank die mit SchemaEditor auf jede unterstützte Datenbank aufgespielt werden kann.
+Um die Datenbank anzulegen muss man zuerst die <SPAN
+CLASS="DATABASE"
+>uni</SPAN
+> Datenbank kreieren.</P
+><P
+>Für die Mysql Datenbank muss man folgende vorbereitende Schritte machen.
+<DIV
+CLASS="WARNING"
+><P
+></P
+><TABLE
+CLASS="WARNING"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="./stylesheet-images/warning.gif"
+HSPACE="5"
+ALT="Warnung"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Voraussetzung! Sie haben die MySql Datenbank richtig installiert. Es läuft und Sie haben entsprechende rechte die Datenbank und Tabellen anzulegen.</P
+></TD
+></TR
+></TABLE
+></DIV
+>
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="SCREEN"
+>[user@localhost]@ mysql
+mysql&#62; CREATE DATABASE uni</PRE
+></TD
+></TR
+></TABLE
+></P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x813.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Zum Anfang</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x851.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Fehlende Funktionalitäten bei Xdobry</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Erstellung des Repositories</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

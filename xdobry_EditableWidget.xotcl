@@ -1,0 +1,1625 @@
+# automatically generated from XOTclIDE
+# script require component xdobry::WidgetLib
+package provide xdobry::EditableWidget 0.31
+package require xdobry::WidgetLib
+Class EditWidget
+@ ::EditWidget idemeta component xdobry::EditableWidget
+@ EditWidget instproc asTDom {} {
+description {asTDom wandelt das Widget zu tDom (node)
+die Standart Prozedur wird hier erledigt in speziel Fällen
+sollte die Methode überschrieben werden
+(Bei Container muß sie sogar überschrieben werden=
+Erwartet als Klassen variable xmlcode eine KeyedList mit
+Convertierungs Parameter. Auch eine best. Klassenstruktur wird erwartet
+-superclass {OWidget... EditWidget}}
+}
+EditWidget instproc asTDom docuNode {
+    my instvar win data checkData
+    set oclass [my info class]
+    set wattr [concat [my getAttributes] description]
+    set node [$docuNode createElement [keylget ${oclass}::xmlcode name]]
+    if {[lcontain [keylkeys ${oclass}::xmlcode] subtype]} {
+        $node setAttribute subtype  [keylget ${oclass}::xmlcode subtype]
+    }
+    if {[lcontain [keylkeys ${oclass}::xmlcode] tagattr]} {
+        set tagattr [keylget ${oclass}::xmlcode tagattr]
+    } else {
+        set tagattr {}
+    }
+    # description wird immer als Tag gespeichert
+    lappend tagattr description
+    if {[lcontain [keylkeys ${oclass}::xmlcode] defaults]} {
+        set defattr [keylget ${oclass}::xmlcode  defaults]
+    } else {
+        set defattr {}
+    }
+    if {[lcontain [keylkeys ${oclass}::xmlcode] ignore]} {
+        set ignore [keylget ${oclass}::xmlcode  ignore]
+    } else {
+        set ignore {}
+    }
+    # Widgeteigene Attribute
+    foreach attr $wattr {
+        if {[my exists $attr]} {
+            if {$attr=="valuelist"} then {
+                tdom_setvaluelist $node [my set $attr]
+            } elseif {[lcontain $tagattr $attr]} {
+                tdom_setpername $node $attr [my set $attr]
+            } elseif {[lcontain $ignore $attr]} {
+                continue
+            } else {
+                #puts "$oclass ATTR $attr $defattr"
+                if {![lcontain [keylkeys defattr] $attr] ||  [keylget defattr $attr]!=[my set $attr]} {
+                    $node setAttribute $attr [my set $attr]
+                }
+            }
+        }
+    }
+    # Datenherkunft Attribute {data default notnull}
+    foreach attr [keylkeys data] {
+        $node setAttribute $attr [keylget data $attr]
+    }
+    # Checks zu XML umwandeln (es wird der ValidatorSet Object benutzt
+    if {[my isCheckAble] && $checkData!=""} {
+        if {[set tnode [OValidatorSet variableToTDom $checkData  [$node ownerDocument]]]!=""} {
+            $node appendChild $tnode
+        }
+    }
+    return $node
+}
+@ EditWidget instproc clone {} {
+description {Benutzt um copy Funktion zu implementieren
+Es werden die Werte aus der Attribute Liste übernommen
+bei Container Widget wird der inhalt nicht kopiert}
+}
+EditWidget instproc clone name {
+    set wattr [my getAttributes]
+    set parlist {}
+    foreach attr $wattr {
+        if {[info exists [self]::$attr]} {
+            lappend parlist -$attr [my set $attr]
+        }
+    }
+    eval [my info class] $name $parlist
+    return $name
+}
+@ EditWidget instproc editAttr {} {
+description {Diese PRozedur baut das Eigenschaften Fenster für einzelne Objekte
+Es werden drei Arten von Eigenschten unterstützt
+1. Widget Eigenschaften wie (enabled, textwidth)
+2. Datenherkunft (Tabellenspalte, Default, NotNull)
+3. Geometrische Manager Eigenschaften
+(bei Pack anchor, side, expand, fill,position)}
+}
+EditWidget instproc editAttr parentwin {
+    my instvar geo_manager data
+    set wattr [concat [my getAttributes] description]
+    set alist {}
+    set acard {}
+    # Optionen des Widgets
+    foreach attr $wattr {
+        if {[info exists [self]::$attr]} {
+            keylset alist $attr [my set $attr]
+        } else {
+            keylset alist $attr {}
+        }
+    }
+    keylset acard widget $alist
+    # Optionen der Datenherkunft {data default notnull}
+    # Nur bei Input Klassen
+    set oclass [my info class]
+    if {[my istype InputWidget] || 
+        [my istype EFormEngine] || 
+        [my istype EFormLink] ||
+        [my istype EInheritForm]
+    } {
+        set alist {}
+        if {$oclass=="::EFormEngine" || $oclass=="::EFormLink" || 
+            $oclass=="::EInheritForm" } {
+            set wopt data
+            # hier nur data sinvoll
+        } else {
+            set wopt {data default notnull unbound dbtype}
+            if {[my isCheckAble]} {
+                lappend wopt constrain
+            }
+        }
+        foreach attr $wopt {
+            if {[lcontain [keylkeys data] $attr]} {
+                keylset alist $attr [keylget data $attr]
+            } else {
+                keylset alist $attr {}
+            }
+        }
+        keylset acard data $alist
+    }
+    # ist das ein toplevel frame window
+    if {[info exists geo_manager] && $geo_manager!=""} {
+        # Optionen des Packers ermitteln
+        if {[$geo_manager info class]=="::EPackFrame"} {
+            keylset acard  pack [$geo_manager getOptions [self]]
+    } else {
+            keylset acard  grid [$geo_manager getOptions [self]]
+        }
+    }
+    WidgetOptions setOptions [self] $parentwin $acard  [[my info parent] getFormNames]  [set [my info parent]::datalist]
+}
+EditWidget instproc foreach_do proc {
+    #puts "EditWidget foreach [self]"
+    eval $proc [self]
+}
+EditWidget instproc getAttributes {} {
+    # suche nach Widget Attributten
+    # Sie sind in der Ableitung der Klasse EditWidget als Klassenvariable
+    # attributes
+#     set oclass [my info class]
+#     if {[$oclass set typ]!="container"} {
+#         set owidget [lindex [$oclass info superclass] 0]
+#         # Manchmal (bei Vertreter SqlReferenceList ist EditWidget Ableitung
+#         # bei zweiten stelle
+#         if {![OWidget info subclass $owidget]} {
+#             set owidget [lindex [$oclass info superclass] 1]
+#         }
+#         set wattr [$owidget set attributes]
+#     } else {
+#         set wattr [$oclass set attributes]
+#     }
+    set oclass [my info class] 
+    foreach class [concat $oclass [$oclass info heritage]] {
+        #puts "testing $class"
+        if {[$class exists attributes]} {
+            return  [$class set attributes]
+        }
+    }
+    return
+
+}
+@ EditWidget instproc getNext {} {
+description {Standart Prozeduren für das Setzten (interaktive) von Eigeschaften
+Probeleme es müsste bei viellen Prozeduren überschrieben werden
+die es nicht unterstützen (weg damit)
+EditWidget instproc setlabel {value} {
+[self] instvar win label
+set label $value
+puts "setzte label $value $win"
+$win configure -label $value
+}
+Funktionen für Operationen giveNext givePrev giveParent.
+Anfrage wied zu geo_manager weitergeleitet
+(gebraucht von GuiEditor)}
+}
+EditWidget instproc getNext {} {
+    my instvar geo_manager
+    return [$geo_manager geo_getNext [self]]
+}
+EditWidget instproc getParent {} {
+    my instvar geo_manager
+    return [$geo_manager geo_getParent [self]]
+}
+EditWidget instproc getPrev {} {
+    my instvar geo_manager
+    return [$geo_manager geo_getPrev [self]]
+}
+EditWidget instproc getinfo {} {
+    my instvar geo_manager data
+    set class [my info class]
+    if {[info exists data]} {
+        set idata "<[keylget data data]>"
+    } else {
+        set idata ""
+    }
+    if {[info exists geo_manager] && $geo_manager!=""} {
+        # Ignoriere toplevel (workbench window)
+        return "[$class set name] $idata manager [$geo_manager getpackinfo [self]]"
+    }
+}
+@ EditWidget instproc isCheckAble {} {
+description {soll in Unterklassen überschrieben werden}
+}
+EditWidget instproc isCheckAble {} {
+    return 0
+}
+@ EditWidget instproc make_young {} {
+description {Diese Prozedur löscht das Fenster und zeichnet es wieder neu
+(die alten bindigs werden beibehaltet)
+damit es höher in der XWindow hierarchie ist
+Benutzt in kontext von FrameContainer}
+}
+EditWidget instproc make_young {} {
+    my instvar win
+    raise $win
+    set create_id [EditWidget incr create]
+    return
+#     set allbind {}
+#     foreach bind [bind $win] {
+#         keylset allbind $bind [bind $win $bind]
+#     }
+#     [self] unmap
+#     [self] map $win
+#     foreach bind [keylkeys allbind] {
+#         bind $win $bind [keylget allbind $bind]
+#     }
+}
+EditWidget instproc map win {
+    my instvar create_id
+    # next
+
+    # Vorsicht ein Hack
+    # Hier erwartet man das der Parent der Klasse (Behälter)
+    # die variable win hat, das das Toplevel window hat
+    set parentwin [[my info parent] set win]
+    bind $win <Double-Button-1> [list [self] editAttr $parentwin]
+    # create_id wird der laufende nummer des 
+    # Erzeugten Window ermittelt es ist wichtig für Container Klassen
+    # weil sie früher erzeugt sein müssen als ihre Elemente (XWindows abhängig)
+    set create_id [EditWidget incr create]
+    #$win configure -border 1 -
+}
+EditWidget instproc notify_changes {typ kl_changes} {
+    my instvar geo_manager data
+    switch $typ {
+        widget {
+            foreach key [keylkeys kl_changes] {
+                if {[[my info class] info instprocs set$key]!=""} {
+                    my set$key [keylget kl_changes $key]
+                } else {
+                    my instvar $key
+                    set $key [keylget kl_changes $key]
+                }
+            }
+        }
+        pack {
+            $geo_manager setOptions [self] $kl_changes
+        }
+        grid {
+            $geo_manager setOptions [self] $kl_changes
+        }
+        data {
+            foreach key [keylkeys kl_changes] {
+                if {$key=="data"} {
+                    # DBGuiObject benachrichtigen
+                    [my info parent] changeObject [self] [keylget kl_changes $key]
+                }
+                keylset data $key [keylget kl_changes $key]
+                # Die data Herkunft veränderungen auf GUI übertragen
+            }
+        }
+    }
+}
+EditWidget instproc pointInWindow {win x y} {
+    set rootx [winfo rootx $win]
+    set rooty [winfo rooty $win]
+    #puts "x=$x y=$y $rootx $rooty [winfo width $win] [winfo height $win]"
+    if {$rootx<$x && [expr $rootx+[winfo width $win]]>$x &&
+        $rooty<$y && [expr $rooty+[winfo height $win]]>$y} {
+        return 1
+    } else {
+        return 0
+    }
+}
+@ EditWidget instproc release {} {
+description {Diese Prozedur löst das Widget aus der Umgebung (Packer)
+und macht es bereit für die verschiebung oder das Löschen
+Vorbedingungen:
+1. varibale geo_manager muß mit einen GeomentryMAnager (Frame) initialisiert
+sein das die Prozedur forget unterstützt}
+}
+EditWidget instproc release {} {
+    my instvar geo_manager
+    $geo_manager forget [self]
+    set geo_manager ""
+}
+EditWidget instproc select {} {
+    my instvar win
+    $win configure -background red
+}
+EditWidget instproc unselect {} {
+    my instvar win
+    # Setze Hintergrundfarba auf Default
+    $win configure -background [lindex [$win configure -background] 3]
+}
+EditWidget proc initializeAfterLoad {} {
+EditWidget set create 0
+EditWidget set attr_inputs {
+    {label {{type OLabelEntry} {textwidth 20}}}
+    {onvalue {{type OLabelEntry} {textwidth 10}}}
+    {offvalue {{type OLabelEntry} {textwidth 10}}}
+    {state {{type OCheckButton} {onvalue disabled} {offvalue normal} }}
+    {show {{type OCheckButton} }}
+    {border {{type OCheckButton} }}
+    {textwidth {{type OLabelControl} {min 0} }}
+    {width {{type OLabelControl} {min 0} }}
+    {height {{type OLabelControl} {min 0} }}
+    {min {{type OLabelControl} }}
+    {max {{type OLabelControl} }}
+    {dropdown {{type OCheckButton} }}
+    {valuelist {{type OEditList} }}
+    {columns {{type OLabelControl} {min 0} }}
+    {columnswidth {{type OLabelEntry} {textwidth 20} }}
+    {columnslabel {{type OLabelEntry} {textwidth 20} }}
+    {showfirst {{type OCheckButton} }}
+    {sqlquery {{type OLabelText} {width 33} }}
+    {form {{type OComboBox} {valuelist {}} }}
+    {refattribute {{type OLabelEntry} {textwidth 20}}}
+    {reftable {{type OLabelEntry} {textwidth 20}}}
+    {childforms {{type OMultiFrame} }}
+    {objlinks {{type OMultiFrame} }}
+    {description {{type OLabelText} {width 33} {height 5} }}
+}
+EditWidget set attr_data {
+    {data {{type OComboBox} {editable 1} {valuelist {}} }}
+    {dbtype {{type OComboBox} {valuelist 
+	{
+	    decimal double int timestamp smallint text datetime enum float varchar longblob set char money boolean
+	}
+    }}}
+    {notnull {{type OCheckButton} }}
+    {default {{type OLabelEntry} {textwidth 20} }}
+    {unbound {{type OCheckButton} }}
+    {constrain {{type OValidatorSet} }}
+}
+
+}
+@ EditWidget proc makeWidget {} {
+description {Eine Klassen Prozedur die als Widget Fabrik funktioniert
+gedacht um hier die Default-Setztung einzubauen}
+}
+EditWidget proc makeWidget {class name} {
+    #puts "$class";
+    switch $class {
+        ::EOLabelEntry { 
+            return [::EOLabelEntry $name -label LabelEntry -textwidth 20 -data {{data dummy}}] 
+        }
+        ::EOLabelControl { 
+            return [::EOLabelControl $name -label LabelControl -data {{data dummy}}] 
+        }
+        ::EOCheckButton {
+            return [::EOCheckButton $name -label CheckButton -data {{data dummy}}]
+        }
+        ::EOComboBox {
+            return [::EOComboBox $name -label ComboBox -valuelist {} -data {{data dummy}}]
+        }
+        ::EPackFrame {
+            return [::EPackFrame $name]
+        }
+        ::EGridFrame {
+            return [::EGridFrame $name]
+        }
+        ::EOLabelText {
+            return [::EOLabelText $name -label Text -data {{data dummy}}]
+        }
+        ::EORadioButtons {
+            return [::EORadioButtons $name -label RadioButtons -valuelist {R_0 R_1} -data {{data dummy}}]
+        }
+        ::EOSqlReferenceList {
+            return [::EOSqlReferenceList $name -label ForeignKey -data {{data dummy}} -columns 1]
+        }
+        ::EFormEngine {
+            return [::EFormEngine $name -label NestedForm -data {{data dummy}}]
+        }
+        ::EFormLink {
+            return [::EFormLink $name -label FormLink -data {{data dummy}}]
+        }
+        ::EInheritForm {
+            return [::EInheritForm $name -data {{data dummy}} -childforms {{label dummy} {form dummy} {inheritkey dummy}}]
+        }
+    }
+}
+Class EFormEngine -superclass {::EditWidget ::OWidget} -parameter {
+    data
+    label
+    refattribute
+    form
+}
+@ ::EFormEngine idemeta add attributes
+@ ::EFormEngine idemeta attributes {label form refattribute}
+@ ::EFormEngine idemeta component xdobry::EditableWidget
+EFormEngine instproc map window {
+    my instvar win label
+    set win $window
+    message $win -text "Vertreter Eingebeteter Formular\n Label: $label" -border 2 -width 160 -relief sunken
+    next
+    #EditWidget::[self] map $window
+}
+EFormEngine instproc setlabel nl {
+    my instvar win label
+    set label $nl
+    $win configure -text "Vertreter Eingebeteter Formular\n Label: $label"
+}
+EFormEngine proc initializeAfterLoad {} {
+
+EFormEngine set image nestedform
+EFormEngine set typ data
+EFormEngine set widgetset tix
+EFormEngine set name NestedForm
+EFormEngine set morf {EFormLink}
+EFormEngine set xmlcode {{name nestedform}}
+
+my set attributes {label form refattribute}
+}
+Class EFormLink -superclass {::EditWidget ::OWidget} -parameter {
+    data
+    label
+    refattribute
+    form
+    {objlinks {}}
+    {reftable {}}
+}
+@ ::EFormLink idemeta add attributes
+@ ::EFormLink idemeta attributes {label form refattribute objlinks reftable}
+@ ::EFormLink idemeta component xdobry::EditableWidget
+EFormLink instproc asTDom docuNode {
+    my instvar win objlinks
+    set node [next]
+    if {$objlinks!=""} {
+        set id 0
+        while {[lindex [keylget objlinks form] $id]!=""} {
+            set cnode [$docuNode createElement objectlink]
+            $node appendChild $cnode
+            foreach key [keylkeys objlinks] {
+                $cnode setAttribute $key [lindex [keylget objlinks $key] $id]
+            }
+            incr id
+        }
+    }
+    return $node
+}
+EFormLink instproc map window {
+    my instvar win label
+    set win $window
+    message $win -text "Vertreter Formular-Link\n Label: $label" -border 2 -width 160 -relief sunken
+    next
+    #EditWidget::[self] map $window
+}
+EFormLink instproc setlabel nl {
+    my instvar win label
+    set label $nl
+    $win configure -text "Vertreter Formular-Link\n Label: $label"
+}
+EFormLink proc initializeAfterLoad {} {
+
+EFormLink set image formlink
+EFormLink set typ data
+EFormLink set widgetset tix
+EFormLink set name FormLink
+EFormLink set morf {EFormEngine}
+EFormLink set xmlcode {{name formlink} {ignore objlinks} {defaults {{reftable {}}}}}
+
+my set attributes {label form refattribute objlinks reftable}
+}
+@ Class EGridFrame {
+description {Ein Grid (Table) Frame}
+}
+Class EGridFrame -superclass ::EditWidget -parameter {
+    {widgetlist {}} {label {}} {border 0}
+}
+@ ::EGridFrame idemeta add attributes
+@ ::EGridFrame idemeta attributes {label border}
+@ ::EGridFrame idemeta component xdobry::EditableWidget
+@ EGridFrame instproc actualize {} {
+description {Hier muß die Liste widgetlist und gridoptions_arr auf den aktuellen
+stand gebracht werden}
+}
+EGridFrame instproc actualize {} {
+    my instvar widgetlist gridoptions_arr win
+    if {$widgetlist==""} { return }
+    foreach obj $widgetlist {
+        set winobj([$obj set win]) $obj
+    }
+    foreach elemwin [grid slaves $win] {
+        array set optarr [grid info $elemwin]
+        set obj $winobj($elemwin)
+        lappend newwidgetlist $obj
+        set gridoptions_arr($obj) "-column $optarr(-column) -columnspan $optarr(-columnspan) -row $optarr(-row) -rowspan $optarr(-rowspan) -sticky $optarr(-sticky)"
+    }
+    set widgetlist $newwidgetlist
+}
+EGridFrame instproc addColumn col {
+    my instvar widgetlist win
+    foreach obj $widgetlist {
+        set owin [$obj set win]
+        array set parr [grid info $owin]
+        if {$parr(-column)>=$col} {
+            grid configure $owin -column [expr $parr(-column)+1]
+        }
+    }
+}
+EGridFrame instproc addRow row {
+    my instvar widgetlist win
+    foreach obj $widgetlist {
+        set owin [$obj set win]
+        array set parr [grid info $owin]
+        if {$parr(-row)>=$row} {
+            grid configure $owin -row [expr $parr(-row)+1]
+        }
+    }
+}
+EGridFrame instproc addwidget {owidgetobj gridoptions} {
+    my instvar widgetlist gridoptions_arr
+    lappend widgetlist $owidgetobj
+    set gridoptions_arr($owidgetobj) $gridoptions
+}
+@ EGridFrame instproc asTDom {} {
+description {Umwandlung zu tDom representation}
+}
+EGridFrame instproc asTDom docuNode {
+    my instvar widgetlist win gridoptions_arr label border
+    my actualize
+    set node [$docuNode createElement frame]
+    $node setAttribute manager grid
+    if {$label!=""} {
+        $node setAttribute label $label
+    }
+    if {$border!="0"} {
+        $node setAttribute border $border
+    }
+    foreach obj $widgetlist {
+        set pnode [$docuNode createElement grid]
+        $node appendChild $pnode
+        array set popt [grid info [$obj set win]]
+        $pnode setAttribute column $popt(-column)
+        $pnode setAttribute columnspan $popt(-columnspan)
+        $pnode setAttribute row $popt(-row)
+        $pnode setAttribute rowspan $popt(-rowspan)
+        if {$popt(-sticky)!=""} {
+            $pnode setAttribute sticky $popt(-sticky)
+        }
+        # Hier rekursiv aufrufen
+        $pnode appendChild [$obj asTDom $docuNode]
+    }
+    return $node
+}
+@ EGridFrame instproc foreach_do {} {
+description {Überschreiben des foreach_do}
+}
+EGridFrame instproc foreach_do proc {
+    my instvar widgetlist
+    eval $proc [self]
+    foreach obj $widgetlist {
+        #puts "EPAck Frame $obj"
+        $obj foreach_do $proc
+    }
+}
+EGridFrame instproc forget object {
+    my instvar widgetlist win
+    set owin [$object set win]
+    grid forget $owin
+    set index [lsearch $widgetlist $object]
+    set widgetlist [lreplace $widgetlist $index $index]
+    if {$widgetlist=="" && ![string match *depository* $win]} {
+        ::label $win.empty -text "empty Cell" -border 3 -relief sunken
+        grid $win.empty -sticky nswe -padx 3 -pady 3
+        bindtags $win.empty [list $win [winfo toplevel $win]]
+    }
+}
+EGridFrame instproc geo_getNext object {
+    my instvar win widgetlist
+    set slaves [grid slaves $win]
+    if {[set len [llength $slaves]]<1} {
+        return {}
+    }
+    set owin [$object set win]
+    set index [lsearch $slaves $owin]
+    if {$index<0} {
+        error "internal EGridFrame"
+    }
+    incr index
+    if {$index>=$len} {
+        set index 0
+    }
+    set swin [lindex $slaves $index]
+    # Suche den Objekt zum Window
+    foreach obj $widgetlist {
+        if {[$obj set win]==$swin} {
+            return $obj
+        }
+    }
+    return {}
+}
+EGridFrame instproc geo_getParent object {
+    my instvar geo_manager
+    if {[info exists geo_manager] && $geo_manager!=""} {
+        return [self]
+    } else {
+        return {}
+    }
+}
+EGridFrame instproc geo_getPrev object {
+    my instvar win widgetlist
+    set slaves [grid slaves $win]
+    if {[set len [llength $slaves]]<1} {
+        return {}
+    }
+    set owin [$object set win]
+    set index [lsearch $slaves $owin]
+    if {$index<0} {
+        error "internal EGridFrame"
+    }
+    incr index -1
+    if {$index<0} {
+        set index [expr $len -1]
+    }
+    set swin [lindex $slaves $index]
+    # Suche den Objekt zum Window
+    foreach obj $widgetlist {
+        if {[$obj set win]==$swin} {
+            return $obj
+        }
+    }
+    return {}
+}
+EGridFrame instproc getOptions object {
+    my instvar win
+    set owin [$object set win]
+    array set gridopt_arr [grid info $owin]
+    foreach opt {sticky column columnspan row rowspan} {
+        # label setzten
+        keylset pack_opts $opt $gridopt_arr(-$opt)
+    }
+    return $pack_opts
+}
+EGridFrame instproc getpackinfo object {
+    my instvar gridoptions_arr widgetlist
+    set owin [$object set win]
+    array set optarr [grid info $owin]
+    set popt "column $optarr(-column) columnspan $optarr(-columnspan) row $optarr(-row) rowspan $optarr(-rowspan) sticky $optarr(-sticky)"
+    return "grid $popt"
+}
+@ EGridFrame instproc make_young {} {
+description {EGridFrame muss sich auch um die children kümmern}
+}
+EGridFrame instproc make_young {} {
+    my instvar widgetlist
+    next
+    foreach child $widgetlist {
+        $child make_young
+    }
+}
+EGridFrame instproc map window {
+    my instvar widgetlist gridoptions_arr win create_id
+    #set childs_parentwin [[my info parent] set win]
+    set win $window
+    if {![winfo exists $win]} {
+        frame $win -relief solid -borderwidth 2
+        set childs_parentwin [winfo parent $window]
+        next
+    } else {
+        set create_id -1
+        set childs_parentwin $window
+        #$win configure  -relief solid -borderwidth 4
+    }
+    if {$widgetlist==""} {
+        ::label $win.empty -text "empty Cell" -border 3 -relief sunken
+        grid $win.empty -sticky nsew -padx 3 -pady 3
+        bindtags $win.empty [list $win [winfo toplevel $win]]
+    } else {
+        foreach celem $widgetlist {
+            regexp {.*::(.+)} $celem _ name
+            $celem map ${childs_parentwin}.${name}
+            $celem set geo_manager [self]
+            eval grid ${childs_parentwin}.${name} $gridoptions_arr($celem) -in $win
+        }
+    }
+    return $win
+}
+@ EGridFrame instproc packObject {} {
+description {Bewegt ein Object in den Container}
+}
+EGridFrame instproc packObject {obj {gridoption {}}} {
+    my instvar win widgetlist create_id
+    #puts "grid pack $obj $gridoption"
+    set owin [$obj set win]
+    $obj set geo_manager [self]
+    if {$create_id>[$obj set create_id]} {
+        # Container ist jünger als das Objekt. Verjüngen (tja hier geht es)
+        $obj make_young
+    }
+    if {$widgetlist==""} {
+        destroy $win.empty
+    }
+    eval grid $owin -in $win $gridoption
+    lappend widgetlist $obj
+}
+@ EGridFrame instproc searchDropCommand {} {
+description {Diese Prozedur wird durch Drag&Drop verursacht (ButtonRelase)
+Es soll das Ziel des Drag&Drop ermittelt werden möglichst rekursiv
+Durch alle children}
+}
+EGridFrame instproc searchDropCommand {x y} {
+    # Überprüfe ob sich der Punkt in irgendeinem von Kinder befindet
+    my instvar widgetlist win
+    set location  [grid location $win [expr $x - [winfo rootx $win]]  [expr $y - [winfo rooty $win]]]
+    #puts "location $location [expr $x - [winfo rootx $win]] [expr $y - [winfo rooty $win]]"
+    if {$location=="-1"} {
+        return "[self] packObject %s"
+    } else {
+        set cx [lindex $location 0]
+        set cy [lindex $location 1]
+        #puts "cell $cx $cy"
+        if {$cx<0} {
+            my addColumn 0
+            set cx 0
+        }
+        if {$cy<0} {
+            my addRow 0
+            set cy 0
+        }
+        # Überprüfen ob die Zelle bereits besetzt is
+        foreach obj $widgetlist {
+            # Suche ob auf ein Objekt gezeigt wurde
+            set owin [$obj set win]
+            array set parr [grid info $owin]
+            if {($cx>=$parr(-column) && $cx<($parr(-column)+$parr(-columnspan))) && ($cy>=$parr(-row) && $cy<($parr(-row)+$parr(-rowspan)))} {
+                if {[my pointInWindow $owin $x $y] &&
+                    [[$obj info class] set typ]=="container"} {
+                        return [$obj searchDropCommand $x $y]
+                } else {
+                    #puts "occupated by $obj [array get parr]"
+                    set ox [expr $x - [winfo rootx $owin]]
+                    set oy [expr $y - [winfo rooty $owin]]
+                    # Ein bischen Mathe
+                    if {(([winfo height $owin]-$oy)-double([winfo height $owin]) / double([winfo width $owin])*$ox)>0} {
+                        set pos a
+                    } else {
+                        set pos b
+                    }
+                    if {(-$oy+double([winfo height $owin]) / double([winfo width $owin])*$ox)>0} {
+                        append pos a
+                    } else {
+                        append pos b
+                    }
+                    switch $pos {
+                        aa {
+                            my addRow $parr(-row)
+                            set command "-row $parr(-row) -column $parr(-column)"
+                        }
+                        ab {
+                            my addColumn $parr(-column)
+                            set command "-row $parr(-row) -column $parr(-column)"
+                        }
+                        ba {
+                            my addColumn [expr $parr(-column) + $parr(-columnspan)]
+                            set command "-row $parr(-row) -column [expr $parr(-column) + $parr(-columnspan)]"
+                        }
+                    bb {
+                        my addRow [expr $parr(-row) + $parr(-rowspan)]
+                        set command "-row [expr $parr(-row) + $parr(-rowspan)] -column $parr(-column)"
+                    }
+                    }
+                    #puts "pos $pos $command"
+                    return "[self] packObject %s {$command}"                
+                }
+            }
+        }         
+        return "[self] packObject %s {-column $cx -row $cy}"
+    }
+}
+EGridFrame instproc setOptions {object options} {
+    my instvar win
+    set owin [$object set win]
+    foreach key [keylkeys options] {
+        lappend pack_opt -$key [keylget options $key]
+    }
+    #puts "grid configure $owin $pack_opt"
+    if {[lcontain [grid slaves $win] $owin]} {
+        eval grid configure $owin $pack_opt
+    } else {
+        eval grid $owin $pack_opt
+    }
+}
+EGridFrame instproc unmap {} {
+    my instvar win 
+    my actualize
+    destroy $win
+}
+EGridFrame proc initializeAfterLoad {} {
+
+EGridFrame set image grid
+EGridFrame set typ container
+EGridFrame set widgetset tk
+EGridFrame set name GridContainer
+EGridFrame set attr {
+    {{type OStickyChooser} {name sticky} }
+    {{type OLabelControl} {name column} {min 0} }
+    {{type OLabelControl} {name columnspan} {min 0} }
+    {{type OLabelControl} {name row} {min 0} }
+    {{type OLabelControl} {name rowspan} {min 0} }
+}
+
+my set attributes {label border}
+}
+Class EInheritForm -superclass {::EditWidget ::OWidget} -parameter {
+    data
+    childforms
+}
+@ ::EInheritForm idemeta add attributes
+@ ::EInheritForm idemeta attributes childforms
+@ ::EInheritForm idemeta component xdobry::EditableWidget
+EInheritForm instproc asTDom docuNode {
+    my instvar win childforms
+    set node [next]
+    # Dokodiere childform Attribut als XML Baum
+    # Problem mit ermittlung der Kinder Anzahl es wird so weit gemacht bis 
+    # form Eigenschaft leer ist
+    set id 0
+    while {[lindex [keylget childforms form] $id]!=""} {
+        set cnode [$docuNode createElement child]
+        $node appendChild $cnode
+        foreach key [keylkeys childforms] {
+            $cnode setAttribute $key [lindex [keylget childforms $key] $id]
+        }
+        incr id
+    }
+    return $node
+}
+EInheritForm instproc map window {
+    my instvar win
+    set win $window
+    message $win -text "Vertreter Vererbung Form" -border 2 -width 160 -relief sunken
+    next
+    #EditWidget::[self] map $window
+}
+EInheritForm proc initializeAfterLoad {} {
+
+EInheritForm set image inheritform
+EInheritForm set typ data
+EInheritForm set widgetset tix
+EInheritForm set name InheritForm
+EInheritForm set xmlcode {{name inheritform} {ignore childforms}}
+
+my set attributes childforms
+}
+Class EOCheckButton -superclass {::OCheckButton ::EditWidget}
+@ ::EOCheckButton idemeta component xdobry::EditableWidget
+EOCheckButton instproc map win {
+    next
+    set tlwin [winfo toplevel $win]
+    bindtags $win [list $tlwin $win]
+    $win configure -border 2
+    $win configure -state disabled -cursor {}
+}
+EOCheckButton instproc setlabel value {
+    my instvar win label
+    set label $value
+    $win configure -text $value
+}
+EOCheckButton proc initializeAfterLoad {} {
+EOCheckButton set image checkbutton
+EOCheckButton set typ data
+EOCheckButton set widgetset tk
+EOCheckButton set name CheckButton
+EOCheckButton set xmlcode {{name boolean} {defaults {{state normal}}}}
+
+}
+Class EOComboBox -superclass {::OComboBox ::EditWidget}
+@ ::EOComboBox idemeta component xdobry::EditableWidget
+EOComboBox instproc map win {
+    next
+    set tlwin [winfo toplevel $win]
+    bindtags [$win subwidget arrow] [list $tlwin $win]
+    bindtags [$win subwidget entry] [list $tlwin $win]
+    bindtags [$win subwidget label] [list $tlwin $win]
+    bindtags [$win subwidget listbox] [list $tlwin $win]
+    bindtags [$win subwidget slistbox] [list $tlwin $win]
+    bind $win <Destroy> {
+        #puts [winfo class %W]
+        if {[winfo class %W]=="TixComboBox"} {
+            # !!! Very Very Hack
+            tixComboBox:Destructor %W
+        }
+    }
+    $win configure -border 2
+    $win subwidget entry configure -state disabled -cursor {}
+}
+EOComboBox instproc setlabel value {
+    my instvar win label
+    set label $value
+    $win subwidget label configure -text $value
+}
+EOComboBox proc initializeAfterLoad {} {
+EOComboBox set image menubutton
+EOComboBox set typ data
+EOComboBox set widgetset tix
+EOComboBox set name ComboBox
+EOComboBox set morf {EORadioButtons}
+EOComboBox set xmlcode {{name list} {defaults {{state normal}}}}
+
+}
+Class EOLabelControl -superclass {::OLabelControl ::EditWidget}
+@ ::EOLabelControl idemeta component xdobry::EditableWidget
+EOLabelControl instproc map win {
+    next
+    set tlwin [winfo toplevel $win]
+    # Dieses Macht Probleme bei Destroy weil dann mehrfach Aufrufe
+    bindtags $win [list $tlwin $win]
+    bindtags $win.label [list $tlwin $win]
+    bindtags $win.spinbox [list $tlwin $win]
+    # Wieder ein Hack (Gott beschütze die Kompatibilität)
+    $win configure -border 2
+}
+EOLabelControl instproc setlabel value {
+    my instvar win label
+    set label $value
+    $win subwidget label configure -text $value
+}
+EOLabelControl proc initializeAfterLoad {} {
+EOLabelControl set image entry
+EOLabelControl set typ data^
+EOLabelControl set widgetset tix
+EOLabelControl set name LabelControl
+EOLabelControl set xmlcode {{name numeric} {defaults {{state normal}}}}
+
+}
+Class EOLabelEntry -superclass {::OLabelEntry ::EditWidget}
+@ ::EOLabelEntry idemeta component xdobry::EditableWidget
+EOLabelEntry instproc isCheckAble {} {
+    return 1
+}
+EOLabelEntry instproc map win {
+    next
+    set tlwin [winfo toplevel $win]
+    bindtags [$win subwidget entry] [list $tlwin $win]
+    bindtags [$win subwidget label] [list $tlwin $win]
+    $win configure -border 2
+    $win subwidget entry configure -state disabled -cursor {}
+}
+EOLabelEntry instproc setlabel value {
+    my instvar win label
+    set label $value
+    $win subwidget label configure -text $value
+}
+EOLabelEntry instproc settextwidth value {
+    my instvar textwidth win
+    set textwidth $value
+    $win subwidget entry configure -width $value
+}
+EOLabelEntry proc initializeAfterLoad {} {
+EOLabelEntry set image entry
+EOLabelEntry set typ data
+EOLabelEntry set widgetset tix
+EOLabelEntry set name LabelEntry
+EOLabelEntry set xmlcode {{name text} {defaults {{state normal} {show 0}}} }
+EOLabelEntry set morf {{EOLabelText {textwidth width}}}
+
+}
+Class EOLabelText -superclass {::OLabelText ::EditWidget}
+@ ::EOLabelText idemeta component xdobry::EditableWidget
+EOLabelText instproc isCheckAble {} {
+    return 1
+}
+EOLabelText instproc map win {
+    next
+    set tlwin [winfo toplevel $win]
+    bindtags [$win.stext subwidget text] [list $tlwin $win]
+    $win.stext subwidget text configure -state disabled -cursor {}
+}
+EOLabelText instproc setheight value {
+    my instvar height win
+    set height $value
+    $win.stext subwidget text configure -height $value
+}
+EOLabelText instproc setlabel value {
+    my instvar win label
+    set label $value
+    $win subwidget label configure -text $value
+}
+EOLabelText instproc setwidth value {
+    my instvar width win
+    set width $value
+    $win.stext subwidget text configure -width $value
+}
+EOLabelText proc initializeAfterLoad {} {
+EOLabelText set image text
+EOLabelText set typ data
+EOLabelText set widgetset tix
+EOLabelText set name LabelText
+EOLabelText set morf {{EOLabelEntry {width textwidth}}}
+EOLabelText set xmlcode {{name text} {subtype area} {defaults {{state normal} }}}
+
+}
+Class EORadioButtons -superclass {::ORadioButtons ::EditWidget}
+@ ::EORadioButtons idemeta component xdobry::EditableWidget
+EORadioButtons instproc map win {
+    next
+    set tlwin [winfo toplevel $win]
+    bindtags [$win subwidget label] [list $tlwin $win]
+    $win configure -border 2
+    $win configure -state disabled
+    # Wieder ein Hack (Gott beschütze die Kompatibilität)
+    bind $win <Destroy> {
+        if {[winfo class %W]=="TixControl"} {
+            # !!! Very Very Hack
+            tixSelect:Destructor %W
+        }
+    }
+}
+EORadioButtons instproc setlabel value {
+    my instvar win label
+    set label $value
+    $win subwidget label configure -text $value
+}
+EORadioButtons proc initializeAfterLoad {} {
+EORadioButtons set image radiobutton
+EORadioButtons set typ data
+EORadioButtons set widgetset tix
+EORadioButtons set name RadioButtons
+EORadioButtons set morf {EOComboBox}
+EORadioButtons set xmlcode {{name list} {subtype radiobuttons} {defaults {{state normal} {dropdown 1}}}}
+
+}
+Class EOSqlReferenceList -superclass {::InputWidget ::EditWidget} -parameter {
+    sqlquery
+    sqlconnect
+    {notnull 0}
+    {showfirst 1}
+    value
+    {default {}}
+    data
+    label 
+    columns 
+    {columnslabel {}}
+    {height 12}
+    {columnswidth 12}
+    {state normal}
+    {dropdown 1}
+    form
+}
+@ ::EOSqlReferenceList idemeta add attributes
+@ ::EOSqlReferenceList idemeta attributes {state label columns columnslabel height columnswidth sqlquery showfirst dropdown form}
+@ ::EOSqlReferenceList idemeta component xdobry::EditableWidget
+EOSqlReferenceList instproc map window {
+    my instvar win label
+    set win $window
+    ::label $win -text "Vertreter SqlReference ($label)" -border 2 -width 30 -height 2 -relief sunken
+    next
+    #EditWidget::[self] map $window
+}
+EOSqlReferenceList instproc setlabel window {
+    my instvar win label
+    $win configure -text "Vertreter SqlReference ($label)"
+}
+EOSqlReferenceList proc initializeAfterLoad {} {
+
+EOSqlReferenceList set image sqlreference
+EOSqlReferenceList set typ data
+EOSqlReferenceList set widgetset tix
+EOSqlReferenceList set name SqlReferenceList
+EOSqlReferenceList set xmlcode {{name reference} {tagattr sqlquery} {defaults {{state normal}}}}
+
+my set attributes {state label columns columnslabel height columnswidth sqlquery showfirst dropdown form}
+}
+Class EPackFrame -superclass ::EditWidget -parameter {
+    {widgetlist {}} {label {}} {border 0}
+}
+@ ::EPackFrame idemeta add attributes
+@ ::EPackFrame idemeta attributes {label border}
+@ ::EPackFrame idemeta component xdobry::EditableWidget
+@ EPackFrame instproc actualize {} {
+description {Hier muß die Liste widgetlist und packoptions_arr auf den aktuellen
+stand gebracht werden}
+}
+EPackFrame instproc actualize {} {
+    my instvar widgetlist packoptions_arr win
+    if {$widgetlist==""} { return }
+    foreach obj $widgetlist {
+        set winobj([$obj set win]) $obj
+    }
+    foreach elemwin [pack slaves $win] {
+        array set optarr [pack info $elemwin]
+        set obj $winobj($elemwin)
+        lappend newwidgetlist $obj
+        set packoptions_arr($obj) "-side $optarr(-side) -anchor $optarr(-anchor) -expand $optarr(-expand) -fill $optarr(-fill)"
+    }
+    set widgetlist $newwidgetlist
+}
+EPackFrame instproc addwidget {owidgetobj packoptions} {
+    my instvar widgetlist packoptions_arr
+    lappend widgetlist $owidgetobj
+    set packoptions_arr($owidgetobj) $packoptions
+}
+@ EPackFrame instproc asTDom {} {
+description {Umwandlung zu tDom representation}
+}
+EPackFrame instproc asTDom docuNode {
+    my instvar widgetlist win packoptions_arr label border
+    my actualize
+    set node [$docuNode createElement frame]
+    $node setAttribute manager pack
+    if {$label!=""} {
+        $node setAttribute label $label
+    }
+    if {$border!="0"} {
+        $node setAttribute border $border
+    }
+    foreach obj $widgetlist {
+        set pnode [$docuNode createElement pack]
+        $node appendChild $pnode
+        array set popt [pack info [$obj set win]]
+        if {$popt(-side)!="top"} {
+            $pnode setAttribute side $popt(-side)
+        }
+        if {$popt(-anchor)!="center"} {
+            $pnode setAttribute anchor $popt(-anchor)
+        }
+        if {$popt(-expand)!="0"} {
+            $pnode setAttribute expand $popt(-expand)
+        }
+        if {$popt(-fill)!="none"} {
+            $pnode setAttribute fill $popt(-fill)
+        }
+        # Hier rekursiv aufrufen
+        $pnode appendChild [$obj asTDom $docuNode]
+    }
+    return $node
+}
+@ EPackFrame instproc foreach_do {} {
+description {Überschreiben des foreach_do}
+}
+EPackFrame instproc foreach_do proc {
+    my instvar widgetlist
+    eval $proc [self]
+    foreach obj $widgetlist {
+        #puts "EPAck Frame $obj"
+        $obj foreach_do $proc
+    }
+}
+EPackFrame instproc forget object {
+    my instvar widgetlist win
+    set owin [$object set win]
+    pack forget $owin
+    set index [lsearch $widgetlist $object]
+    set widgetlist [lreplace $widgetlist $index $index]
+    if {$widgetlist=="" && ![string match *depository* $win]} {
+        ::label $win.empty -text "empty Frame" -border 3 -relief sunken
+        pack $win.empty -fill both -expand yes  -padx 3 -pady 3
+        bindtags $win.empty [list $win [winfo toplevel $win]]
+    }
+}
+EPackFrame instproc geo_getNext object {
+    my instvar win widgetlist
+    set slaves [pack slaves $win]
+    if {[set len [llength $slaves]]<1} {
+        return {}
+    }
+    set owin [$object set win]
+    set index [lsearch $slaves $owin]
+    if {$index<0} {
+        error "internal EPackFrame"
+    }
+    incr index
+    if {$index>=$len} {
+        set index 0
+    }
+    set swin [lindex $slaves $index]
+    # Suche den Objekt zum Window
+    foreach obj $widgetlist {
+        if {[$obj set win]==$swin} {
+            return $obj
+        }
+    }
+    return {}
+}
+EPackFrame instproc geo_getParent object {
+    my instvar geo_manager
+    if {[info exists geo_manager] && $geo_manager!=""} {
+        return [self]
+    } else {
+        return {}
+    }
+}
+EPackFrame instproc geo_getPrev object {
+    my instvar win widgetlist
+    set slaves [pack slaves $win]
+    if {[set len [llength $slaves]]<1} {
+        return {}
+    }
+    set owin [$object set win]
+    set index [lsearch $slaves $owin]
+    if {$index<0} {
+        error "internal EPackFrame"
+    }
+    incr index -1
+    if {$index<0} {
+        set index [expr $len -1]
+    }
+    set swin [lindex $slaves $index]
+    # Suche den Objekt zum Window
+    foreach obj $widgetlist {
+        if {[$obj set win]==$swin} {
+            return $obj
+        }
+    }
+    return {}
+}
+EPackFrame instproc getOptions object {
+    my instvar win
+    set owin [$object set win]
+    array set packopt_arr [pack info $owin]
+    foreach opt {side anchor expand fill position} {
+        # label setzten
+        if {$opt=="position"}  {
+            keylset pack_opts $opt [lsearch [pack slaves $win] $owin]
+        } else {
+            keylset pack_opts $opt $packopt_arr(-$opt)
+        }
+    }
+    return $pack_opts
+}
+EPackFrame instproc getpackinfo object {
+    my instvar packoptions_arr widgetlist
+    set owin [$object set win]
+    array set pa [pack info $owin]
+    set popt "side=$pa(-side) anchor=$pa(-anchor) fill=$pa(-fill) expand=$pa(-expand)"
+    return "pack $popt pos=[lsearch $widgetlist $object]"
+}
+@ EPackFrame instproc make_young {} {
+description {EPackFrame muss sich auch um die children kümmern}
+}
+EPackFrame instproc make_young {} {
+    my instvar widgetlist
+    next
+    foreach child $widgetlist {
+        $child make_young
+    }
+}
+EPackFrame instproc map window {
+    my instvar widgetlist packoptions_arr win create_id
+    #set childs_parentwin [[my info parent] set win]
+    set win $window
+    if {![winfo exists $win]} {
+        frame $win -relief solid -borderwidth 2
+        set childs_parentwin [winfo parent $window]
+        next
+    } else {
+        set create_id -1
+        set childs_parentwin $window
+        #$win configure  -relief solid -borderwidth 4
+    }
+    if {$widgetlist==""} {
+        ::label $win.empty -text "empty Frame" -border 3 -relief sunken
+        pack $win.empty -fill both -expand yes -padx 3 -pady 3
+        bindtags $win.empty [list $win [winfo toplevel $win]]
+    } else {
+        foreach celem $widgetlist {
+            regexp {.*::(.+)} $celem _ name
+            $celem map ${childs_parentwin}.${name}
+            $celem set geo_manager [self]
+            eval pack ${childs_parentwin}.${name} $packoptions_arr($celem) -in $win
+        }
+    }
+    return $win
+}
+@ EPackFrame instproc packObject {} {
+description {Bewegt ein Object in den Container}
+}
+EPackFrame instproc packObject {obj {packoption {}}} {
+    my instvar win widgetlist create_id
+    set owin [$obj set win]
+    $obj set geo_manager [self]
+    if {$create_id>[$obj set create_id]} {
+        # Container ist jünger als das Objekt. Verjüngen (tja hier geht es)
+        $obj make_young
+    }
+    if {$widgetlist==""} {
+        destroy $win.empty
+    }
+    eval pack $owin -in $win $packoption
+    lappend widgetlist $obj
+}
+@ EPackFrame instproc searchDropCommand {} {
+description {Diese Prozedur wird durch Drag&Drop verursacht (ButtonRelase)
+Es soll das Ziel des Drag&Drop ermittelt werden möglichst rekursiv
+Durch alle children
+
+Das Ziel wird als eine für Funktion packObject Parametr
+angegeben (-side und -after bzw. -before)
+Das Objekt wird nacher mit %s gewechselt (durch format)}
+}
+EPackFrame instproc searchDropCommand {x y} {
+    # Überprüfe ob sich der Punkt in irgendeinem von Kinder befindet
+    my instvar widgetlist win
+    foreach obj $widgetlist {
+        set owin [$obj set win]
+        if {[my pointInWindow $owin $x $y]} {
+            if {[[$obj info class] set typ]=="container"} {
+                return [$obj searchDropCommand $x $y]
+            } else {
+                array set parr [pack info $owin]
+                set pside $parr(-side)
+                if {$pside=="top" || $pside=="buttom"} {
+                    if {[expr [winfo height $owin]/2+[winfo rooty $owin]]>$y} {
+                        set par "-before $owin"
+                    } else {
+                        set par "-after $owin"
+                    }
+                } else {
+                    if {[expr [winfo width $owin]/2+[winfo rootx $owin]]<$x} {
+                        set par "-after $owin"
+                    } else {
+                        set par "-before $owin"
+                    }
+                }
+                return "[self] packObject %s {-side $pside $par}"
+            }
+        }
+    }
+    # Standart Packing (am Ende der Liste mit StandartOptionnen)
+    return "[self] packObject %s"
+}
+EPackFrame instproc setOptions {object options} {
+    my instvar win
+    set owin [$object set win]
+    foreach key [keylkeys options] {
+        if {$key=="position"}  {
+            set slaves [pack slaves $win]
+            if {[lcontain [pack slaves $win] $owin]} {
+                set add 1
+                set apos [lsearch $slaves $owin]
+            } else {
+                set add 0
+                set apos 0
+            }
+            set position [keylget options $key]
+            if {$position>=[expr [llength $slaves]-$add]} {
+                lappend pack_opt -after [lindex $slaves end]
+            } else {
+                if {$apos>=$position} {
+                    lappend pack_opt -before [lindex $slaves $position]
+                } else {
+                    lappend pack_opt -before [lindex $slaves [expr $position + $add]]
+                }
+            }
+        } else {
+            lappend pack_opt -$key [keylget options $key]
+        }
+    }
+    #puts "pack configure $owin $pack_opt"
+    if {[lcontain [pack slaves $win] $owin]} {
+        eval pack configure $owin $pack_opt
+    } else {
+        eval pack $owin $pack_opt
+    }
+}
+EPackFrame instproc unmap {} {
+    my instvar win 
+    my actualize
+    destroy $win
+}
+EPackFrame proc initializeAfterLoad {} {
+
+EPackFrame set image frame
+EPackFrame set typ container
+EPackFrame set widgetset tk
+EPackFrame set name PackContainer
+EPackFrame set attr {
+    {{type OComboBox} {name side} {valuelist {top bottom right left}}}
+    {{type OComboBox} {name anchor} {valuelist {n ne e se s sw w nw center}}}
+    {{type OCheckButton} {name expand} {packoption {-anchor c}}}
+    {{type ORadioButtons} {name fill} {valuelist {x y both none}} {packoption {-anchor c}} }
+    {{type OLabelControl} {name position} {min 0} {packoption {-anchor c}}}
+}
+
+my set attributes {label border}
+}
+@ Class OStickyChooser {
+description {Ein Widget für die sticky Attibut (grid manager)}
+}
+Class OStickyChooser -superclass ::InputWidget -parameter {
+    label
+}
+@ ::OStickyChooser idemeta component xdobry::EditableWidget
+OStickyChooser instproc getvalue {} {
+    my instvar value 
+    my updatevalue
+    return $value
+}
+OStickyChooser instproc map window {
+    my instvar label value default win label
+    set win $window
+    labelframe $win -text $label
+    set fwin $win
+    checkbutton $fwin.n -text n -onvalue n -offvalue {} -variable [self]::varn
+    checkbutton $fwin.s -text s -onvalue s -offvalue {} -variable [self]::vars
+    checkbutton $fwin.w -text w -onvalue w -offvalue {} -variable [self]::varw
+    checkbutton $fwin.e -text e -onvalue e -offvalue {} -variable [self]::vare
+    grid $fwin.n -column 1 -row 0
+    grid $fwin.s -column 1 -row 2
+    grid $fwin.w -column 0 -row 1
+    grid $fwin.e -column 2 -row 1
+    my setdefault
+}
+OStickyChooser instproc setdefault {} {
+    my instvar default
+    my setvalue $default
+}
+OStickyChooser instproc setvalue newv {
+    my instvar value win varn vars varw vare
+    set value $newv
+    set fwin $win
+    foreach char {n s w e} {
+        if {[string first $char $value]>=0} {
+            set var$char $char
+        } else {
+            set var$char {}
+        }
+    }
+}
+OStickyChooser instproc updatevalue {} {
+    my instvar value win varn vars varw vare
+    set fwin $win
+    set value {}
+    foreach char {n s w e} {
+        if {[set var$char]!=""} {
+            append value $char
+        }
+    }
+}
+@ Object WidgetOptions {
+description {Ein Objekt für Widget Eigenschaften
+die Windows und Stukturen werden aus Effizienzgrunden nur einmal
+erzeugt}
+}
+Object WidgetOptions
+@ ::WidgetOptions idemeta component xdobry::EditableWidget
+WidgetOptions proc buildWindow {} {
+    my instvar win inputframe validatorWidget
+    set win .widgetprop
+    catch {destroy $win}
+    toplevel $win -class Dialog
+    wm title $win [mc "Properties"]
+    wm iconname $win Dialog
+    wm protocol $win WM_DELETE_WINDOW {WidgetOptions button_cancel}
+    wm withdraw $win
+    tixButtonBox $win.buttons -orientation horizontal
+    $win.buttons add ok -text [mc "Ok"] -command "WidgetOptions button_ok"
+    $win.buttons add apply -text [mc "Apply"] -command "WidgetOptions button_apply"
+    $win.buttons add cancel -text [mc "Cancel"] -command "WidgetOptions button_cancel"
+
+    set inputframe [NoteBookContainer [self]::inputframe]
+
+
+    set childframe [WidgetFactory make_inputs_keylist ${inputframe}::childforms {
+        {{type OLabelEntry} {name label} {label label} {textwidth 20}}
+        {{type OComboBox} {name form} {label form} {valuelist {}}}
+        {{type OLabelEntry} {name inheritkey} {label inheritkey} {textwidth 20}}
+    }]
+    set objlinks [WidgetFactory make_inputs_keylist ${inputframe}::objlinks {
+        {{type OLabelEntry} {name label} {label label} {textwidth 20}}
+        {{type OComboBox} {name form} {label form} {valuelist {}}}
+        {{type OLabelEntry} {name refattribute} {label refattribute} {textwidth 20}}
+    }]
+
+    keylset klist inputframe $inputframe
+    foreach opt [EditWidget set attr_inputs] {
+        set wopt [lindex $opt 1]
+        set name [lindex $opt 0]
+        keylset wopt name $name
+        if {$name=="childforms"} {
+            keylset wopt inputframe ${inputframe}::childforms
+        } elseif {$name=="objlinks"} {
+            keylset wopt inputframe ${inputframe}::objlinks
+        } elseif {$name!="valuelist"} {
+            keylset wopt label [mc $name]
+        }
+        lappend input $wopt
+    }
+    WidgetFactory make_inputs_keylist ${inputframe}::widget $input
+    $inputframe addcard ${inputframe}::widget {widget widget}
+
+    set input {}
+    foreach opt [EditWidget set attr_data] {
+        set wopt [lindex $opt 1]
+        set name [lindex $opt 0]
+        keylset wopt name $name
+        keylset wopt label [mc $name]
+        lappend input $wopt
+    }
+    WidgetFactory make_inputs_keylist ${inputframe}::data $input
+    $inputframe addcard ${inputframe}::data {data data}
+
+    set input {}
+    foreach wopt [EPackFrame set attr] {
+        keylset wopt label [mc [keylget wopt name]]
+        lappend input $wopt
+    }
+    WidgetFactory make_inputs_keylist ${inputframe}::pack $input
+    $inputframe addcard ${inputframe}::pack {pack pack}
+
+    set input {}
+    foreach wopt [EGridFrame set attr] {
+        keylset wopt label [mc [keylget wopt name]]
+        lappend input $wopt
+    }
+    WidgetFactory make_inputs_keylist ${inputframe}::grid $input
+    $inputframe addcard ${inputframe}::grid {grid grid}
+
+    $inputframe map $win.inputframe
+    pack $win.inputframe -side top -fill both -expand 1
+    pack $win.buttons -side bottom -fill x -expand 1
+    # suche nach validatorWidget
+    set validatorWidget [$inputframe detect_deep [self] searchValidatorWin]
+}
+WidgetOptions proc button_apply {} {
+    my instvar win inputframe eo_widget cardlist validatorWidget
+    if {[info commands $eo_widget]==""} return
+    foreach card $cardlist {
+        ${inputframe}::$card update_values
+        set changes [${inputframe}::$card get_changes]
+        if {$changes!=""} {
+            $eo_widget notify_changes $card $changes
+            ${inputframe}::$card update_defaults
+        }
+    }
+    if {[$eo_widget isCheckAble]} {
+        $eo_widget set checkData [$validatorWidget getValue]
+    }
+}
+WidgetOptions proc button_cancel {} {
+    my instvar win
+    wm withdraw $win 
+    #wm deiconify .
+}
+WidgetOptions proc button_ok {} {
+    my button_apply
+    my button_cancel
+}
+WidgetOptions proc searchValidatorWin object {
+    return [$object istype OValidatorSet]
+}
+WidgetOptions proc setOptions {ewidget parentwin options {forms {}} {data {}}} {
+    my instvar old_options inputframe win eo_widget cardlist validatorWidget
+    if {![info exists win] || ![winfo exists $win]} {
+        my buildWindow
+    } else {
+        my button_apply
+    }
+    set eo_widget $ewidget
+    #puts "Widget Option $options $forms $data"
+    set cardlist [keylkeys options]
+    foreach card $cardlist {
+        set cardo [keylget options $card]
+        ${inputframe}::${card} show_only [keylkeys cardo]
+        ${inputframe}::${card} set_defaults $cardo
+    }
+    set nwin [$inputframe set win]
+    foreach card {widget data pack grid} {
+        #puts "$card [$nwin pagecget $card -state]"
+        if {[lcontain $cardlist $card]} {
+            if {[$nwin pagecget $card -state]=="disabled"} {
+                $nwin pageconfigure $card -state normal
+            }
+        } else {
+            if {[$nwin pagecget $card -state]=="normal"} {
+                $nwin pageconfigure $card -state disabled
+            }
+        }
+    }
+    if {![lcontain $cardlist [$nwin raised]]} {
+        $nwin raise [lindex $cardlist 0]
+    }
+    # Setzen von data und forms für ComboBox Widget
+    ${inputframe}::widget::form setvaluelist $forms
+    ${inputframe}::childforms::form setvaluelist $forms
+    ${inputframe}::objlinks::form setvaluelist $forms
+    ${inputframe}::data::data setvaluelist $data
+    
+    if {[$ewidget isCheckAble]} {
+        $validatorWidget initFromVariable [$ewidget set checkData]
+    }
+    wm group $win $parentwin
+    wm deiconify $win
+}
+EditWidget initializeAfterLoad
+EFormEngine initializeAfterLoad
+EFormLink initializeAfterLoad
+EGridFrame initializeAfterLoad
+EInheritForm initializeAfterLoad
+EOCheckButton initializeAfterLoad
+EOComboBox initializeAfterLoad
+EOLabelControl initializeAfterLoad
+EOLabelEntry initializeAfterLoad
+EOLabelText initializeAfterLoad
+EORadioButtons initializeAfterLoad
+EOSqlReferenceList initializeAfterLoad
+EPackFrame initializeAfterLoad
+

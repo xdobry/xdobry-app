@@ -1,0 +1,620 @@
+# automatically generated from XOTclIDE
+package provide xdobry::GUIEditor 0.32
+Class GuiEditor -parameter {
+    form_node
+}
+@ ::GuiEditor idemeta component xdobry::GUIEditor
+@ GuiEditor instproc bindObject {} {
+description {Benutzt um die Binding für ein Object zu schaffen
+ bei neuen Object}
+}
+GuiEditor instproc bindObject object {
+    my instvar win
+    set cwin [$object set win]
+    bind $cwin <Enter> "[self] enterObject $object"
+    #Bind für Eigenschafte Double-Button-1 wird bereits in dem Objekt
+    #erledigt, da wird auch entsprechen die bindtags umgelaeitet
+    bind $cwin <ButtonPress-1> "[self] selectObject $object"
+    bind $cwin <ButtonPress-3> "[self] popmenuObject $object %X %Y"
+    bind $cwin <Shift-ButtonPress-1> "[self] selectAddObject $object"
+    # Drag&Drop wird realisiert wenn bei gepressten Button1 
+    # das Widget verlassen wird
+    # andere Methode specTcl (button_bind.tk) bei Motion
+    bind $cwin <B1-Leave>  "[self] start_drag $object"
+}
+@ GuiEditor instproc build_window {} {
+description {Baut das Haupteditierfenster
+ Attribut win muß initialisiert sein}
+}
+GuiEditor instproc build_window {} {
+    my instvar win depositorywin workbench dataset_win widgetset  red_style green_style
+    toplevel $win
+    wm withdraw $win
+    menu $win.mb -tearoff 0
+    menu $win.mb.edit -tearoff 0
+    menu $win.mb.tools -tearoff 0
+
+    $win.mb add cascade -label [mc "Edit"] -menu $win.mb.edit  -underline 0
+    $win.mb add cascade -label [mc "Tools"] -menu $win.mb.tools  -underline 0
+    $win.mb.edit add command -label [mc "Form properties"] -command  "[self] editFormProperties"
+    $win.mb.edit add command -label [mc "End Edit"] -command  "[self] end_edit"
+    tixScrolledWindow $win.swdepository
+    set depositorywin [$win.swdepository subwidget window]
+    tixScrolledWindow $win.swworkbench
+    set workbench [$win.swworkbench subwidget window]
+    label $win.statusbar -text statusbar -relief raised -border 5
+    frame $win.toolbar -relief raised -border 5
+    tixNoteBook $win.notebook
+    $win.notebook add widgetset -label [mc "Widgets"]
+    $win.notebook add dataset_win -label [mc "Data"]
+    set f [$win.notebook subwidget widgetset]
+    set widgetset [tixScrolledTList $f.list -options {
+        tlist.orient horizontal
+        tlist.selectMode single
+        tlist.command {}
+        tlist.width 20
+        tlist.height 20
+    }
+                  ]
+    set f [$win.notebook subwidget dataset_win]
+    set dataset_win [tixScrolledTList $f.list -options {
+        tlist.orient horizontal
+        tlist.selectMode single
+        tlist.command {}
+        tlist.width 20
+        tlist.height 20
+    }
+                 ]
+    pack $dataset_win -expand yes -fill both
+    pack $widgetset -expand yes -fill both
+    # DUMMY button
+    # button $win.toolbar.b1 -text button
+    # Image Command
+    set toolcommand {
+        editcut moveDepository Edit
+        eraser deleteObject Delete
+        up selectparent Up
+        next selectnext Next
+        prev selectprev Prev
+    }
+    # [mc "Edit"]
+    # [mc "Delete"]
+    # [mc "Up"]
+    # [mc "Next"]
+    # [mc "Prev"]
+    foreach {image name label} $toolcommand {
+        button $win.toolbar.$name -image [tix getimage $image]  -command [list [self] doSelectedObject $name]  -takefocus 0 -bg #c0c0c0 -highlightbackground #c0c0c0
+        pack $win.toolbar.$name -side left -anchor w
+        $win.mb.tools add command -label [mc $label]  -command [list [self] doSelectedObject $name]
+    }
+    grid $win.toolbar -row 0 -column 0 -columnspan 2 -sticky we
+    grid $win.notebook -row 1 -column 0 -sticky ns
+    grid $win.swworkbench -row 1 -column 1 -sticky wnse
+    grid $win.swdepository -row 2 -column 0 -columnspan 2 -sticky wesn
+    grid $win.statusbar -row 3 -column 0 -columnspan 2 -sticky we
+    grid rowconfigure $win 1 -weight 1
+    grid columnconfigure $win 1 -weight 1 -minsize 500
+    grid rowconfigure $win 2 -minsize 100
+    $win configure -menu $win.mb 
+    # Standart Window Close Abfangen
+    wm protocol $win WM_DELETE_WINDOW "[self] end_edit"
+    set red_style  [tixDisplayStyle text -fg red]
+    set green_style [tixDisplayStyle text -fg green4]
+ }
+@ GuiEditor instproc copyDepository {} {
+description {Hier hat die Operation sinn wenn ein Target per Maus für alle
+ Depository Objekte Spezifiezirt wird}
+}
+GuiEditor instproc copyDepository obj {
+    #$obj release
+}
+GuiEditor instproc deleteObject obj {
+    my instvar selectedObj datawidget_arr
+    if {[[$obj info class] set typ]=="container" && [llength [$obj set widgetlist]]>0} {
+        IDE::Dialog message [mc "Nur leere Behälter Widget können gelöscht werden"]
+        return
+    } 
+    set index [lsearch $selectedObj $obj]
+    if {$index>=0} {
+        set selectedObj [lreplace $selectedObj $index $index] 
+        #puts "deleted $obj $selectedObj"
+    }
+    if {[$obj exists data] && [lcontain [keylkeys ${obj}::data] data]} {
+        if {[info exists datawidget_arr([keylget ${obj}::data data])]} {
+            my dataset_minus $obj [keylget ${obj}::data data]
+        }
+    }
+    $obj release
+    $obj unmap
+    $obj destroy
+}
+@ GuiEditor instproc doSelectedObject {} {
+description {Toolbars und Menüs entrypoints}
+}
+GuiEditor instproc doSelectedObject command {
+    my instvar selectedObj 
+    foreach obj $selectedObj {
+        my $command $obj
+    }
+}
+GuiEditor instproc end_edit {} {
+    my instvar win
+    #puts "GUI EDIT end_edit"
+    destroy $win
+    my destroy
+}
+GuiEditor instproc init args {
+    my instvar win selectedObj drag_object newwidget
+    regexp {.*::(.+)} [self] _ win
+    set win .$win
+    set selectedObj {}
+    set drag_object {}
+    set newwidget {}
+    my build_window
+    my initwidgetset
+}
+@ GuiEditor instproc initwidgetset {} {
+description {Initiert die Auswahlmenge von untertützten Widget
+ im tixTree das im widgetset gesetzt ist}
+}
+GuiEditor instproc initwidgetset {} {
+    my instvar widgetset widgetlist
+    set hlist [$widgetset subwidget tlist]
+    # Problem die Reihenfolge ist zufällig
+    foreach ewidget [EditWidget info subclass] {
+        $hlist insert end -itemtype imagetext  -text [$ewidget set name]  -image [tix getimage [$ewidget set image]]
+            #-data $ewidget
+        lappend widgetlist $ewidget
+    }
+    #$hlist configure -command "[self] new_widget"
+    bind $hlist <B1-Leave> "[self] new_widget"
+}
+GuiEditor instproc morfObject {obj morfclass {transAttr {}}} {
+    # Es lebe hoch XOTCL
+    # Dynamische Klassenänderung
+    #puts "moorf $obj $morfclass $transAttr"
+    $obj class $morfclass
+    # Initialisiere Defaultwerte die jetzt leer sind
+    foreach oclass [concat $morfclass [$morfclass info superclass]] {
+        foreach par [$oclass info parameter] {
+            if {[$obj info vars [lindex $par 0]]=="" && [llength $par]>1} {
+                $obj set [lindex $par 0] [lindex $par 1]
+            }
+        }
+    }
+    foreach attr $transAttr {
+        $obj set [lindex $attr 1] [$obj set [lindex $attr 0]]
+    }
+    set packopt [[${obj} set geo_manager] getOptions $obj]
+    $obj unmap
+    $obj map [$obj set win]
+    [$obj set geo_manager] setOptions $obj $packopt
+    my bindObject $obj
+}
+GuiEditor instproc moveDepository obj {
+    my instvar depositorywin
+    # Wenn das Objekt bis jetzt 'unmapped' ist
+    # z.B wenn es gereade kreirt ist
+    if {[$obj exists win] && [$obj set win]!=""} {
+        $obj release
+        set winname [winfo name [$obj set win]]
+        $obj unmap
+    } else {
+        set winname [Object autoname widget]
+    }
+    $obj map $depositorywin.$winname
+    [self]::depository packObject $obj {-side left}
+    $obj foreach_do "[self] bindObject"
+}
+GuiEditor instproc new_widget {} {
+    my instvar widgetlist win newwidget widgetset
+    set hlist [$widgetset subwidget tlist]
+    set index [$hlist info selection]
+    if {$index==""} {return}
+    $win configure -cursor target
+    set newwidget [lindex $widgetlist $index]
+    my setStatusInfo "Definiere das Ziel für Widget $newwidget"
+}
+GuiEditor instproc pointInWindow {win x y} {
+    set rootx [winfo rootx $win]
+    set rooty [winfo rooty $win]
+    #puts "x=$x y=$y $rootx $rooty [winfo width $win] [winfo height $win]"
+    if {$rootx<$x && [expr $rootx+[winfo width $win]]>$x &&
+        $rooty<$y && [expr $rooty+[winfo height $win]]>$y} {
+        return 1
+    } else {
+        return 0
+    }
+}
+GuiEditor instproc popmenuObject {obj x y} {
+    my instvar win
+    set m $win.popmenu
+    destroy $m
+    
+    menu $m -tearoff 0
+    if {"[$obj set geo_manager]"!="[self]::depository"} {
+        $m add command -label [mc "Cut"]  -command "[self] moveDepository $obj"
+    }
+    #$m add command -label [mc "Copy"]  -command "[self] copyDepository $obj"
+    $m add command -label [mc "Delete"]  -command "[self] deleteObject $obj"
+    set oclass [$obj info class]
+    if {[$oclass info vars morf]!=""} {
+        menu $m.morf -tearoff 0
+        foreach morfinfo [$oclass set morf] {
+            set morfclass [lindex $morfinfo 0]
+            $m.morf add command -label [$morfclass set name]  -command "[self] morfObject $obj $morfclass [list [lrange $morfinfo 1 end]]"
+        }
+        $m add cascade -menu $m.morf -label [mc "Convert into"]
+    }
+    $m add separator
+    $m add command -label [mc "Characteristics"]  -command "$obj editAttr $win"
+    tk_popup $m $x $y
+}
+@ GuiEditor instproc postInit {} {
+description {Eine PostInitialisierung, gedacht um nach der Init der abgeleiteten
+ Klasse abgerufen zu werden}
+}
+GuiEditor instproc postInit {} {
+    my instvar win
+    bind $win <ButtonRelease-1> "[self] try_enddrag %W %X %Y"
+    wm deiconify $win
+}
+GuiEditor instproc selectAddObject obj {
+    my instvar selectedObj
+    $obj select
+    lappend selectedObj $obj
+}
+GuiEditor instproc selectObject obj {
+    my instvar selectedObj win
+    foreach sobj $selectedObj {
+        $sobj unselect
+    }
+    $obj select
+    set selectedObj $obj
+    # Wenn ein Options Window geöffnet ist. Dann benutzt es für dieses Object
+    if {[winfo exist .widgetprop] && [winfo ismapped .widgetprop]} {
+        $obj editAttr $win
+    }
+}
+GuiEditor instproc selectnext obj {
+    my instvar selectedObj
+    if {[set newobj [$obj getNext]]!=""} {
+        my selectObject $newobj
+        my enterObject $newobj
+    }
+}
+GuiEditor instproc selectparent obj {
+    my instvar datawidget_arr
+    if {[set newobj [$obj getParent]]!=""} {
+        my selectObject $newobj
+        my enterObject $newobj
+    }
+}
+GuiEditor instproc selectprev obj {
+    my instvar selectedObj
+    if {[set newobj [$obj getPrev]]!=""} {
+        my selectObject $newobj
+        my enterObject $newobj
+    }
+}
+GuiEditor instproc start_drag object {
+    my instvar drag_object win
+    set drag_object $object
+    $win configure -cursor hand2
+}
+@ GuiEditor instproc try_enddrag {} {
+description {Diese Prozedur wird am Ende der Drag&Drop Operation ausgeführt
+ loslassen der Maustaste. Es wird das Ziel ermittelt und die entsprechende
+ command für Bewegung Operation wird mittels 'searchDropCommand'
+ abgefragt}
+}
+GuiEditor instproc try_enddrag {dwin posx posy} {
+    my instvar win drag_object depositorywin workbench rootframe newwidget
+    #puts "try_enddrag $dwin $posx $posy"
+    if {$drag_object==""} {
+        # Neues Widget Einfügen
+        if {$newwidget!=""} {
+            my try_newwidget $dwin $posx $posy
+        }
+        return
+    }
+    #puts "$dwin $posx $posy well"
+    $win configure -cursor {}
+    if {[my pointInWindow $dwin $posx $posy]} then {
+        # Nichts Das Objekt wurde nicht bewegt (Maus-Button
+        # wieder über das Objekt losgelasssen
+        #puts "No Drag&Drop"
+    } elseif {[my pointInWindow $depositorywin $posx $posy] &&
+        ![string match *depository* $dwin]} then {
+        # Das Objekt wurde in die Ablage verschoben
+        # und es war nicht in der Ablage
+        my moveDepository $drag_object
+    } elseif {[my pointInWindow $workbench $posx $posy]} {
+        set command [$rootframe searchDropCommand $posx $posy]
+        #puts "Drop command $command"
+        if {$command!=""} {
+            $drag_object release
+            if {[string match *depository* [$drag_object set win]]} {
+                # Wenn sich der Object in der Anlage befindet muß
+                # das Window name neu gemacht werden
+                set winname [winfo name [$drag_object set win]]
+                $drag_object unmap
+                $drag_object map $workbench.$winname
+                $drag_object foreach_do "[self] bindObject"
+            }
+            eval [format $command $drag_object]
+        }
+    }
+    set drag_object {}
+}
+@ GuiEditor instproc try_newwidget {} {
+description {Aufgerufen von ButtonPress Callback
+ Sucht das Zeil für Einfügen von neuem Widget}
+}
+GuiEditor instproc try_newwidget {dwin posx posy} {
+    my instvar newwidget win workbench depositorywin rootframe
+    #puts "end_newwidget"
+    if {$newwidget==""} { return }
+    if {[my pointInWindow $depositorywin $posx $posy]} then {
+        # Das Objekt soll in die Ablage entstehen
+        set widget [EditWidget makeWidget $newwidget [self]::[Object autoname widget]]
+        my moveDepository $widget
+    } elseif {[my pointInWindow $workbench $posx $posy]} {
+        set command [$rootframe searchDropCommand $posx $posy]
+        #puts "Drop command $command"
+        if {$command!=""} {
+            set name [Object autoname widget]
+            set widget [EditWidget makeWidget $newwidget [self]::$name]
+            $widget map $workbench.$name
+            my bindObject $widget
+            eval [format $command $widget]
+            if {[$widget exists data]} {
+                my dataset_add $widget [keylget ${widget}::data data]
+            }
+        }
+    }
+    $win configure -cursor {}
+    set newwidget {}
+}
+@ Class DBGuiEditor {
+description {Diese Klasse implementiert XML und DB Formular spezifische Funktionnen
+ auch die Erzeugung von Widget und Packer}
+}
+Class DBGuiEditor -superclass ::GuiEditor -parameter {
+    {schema_node {}}
+}
+@ ::DBGuiEditor idemeta component xdobry::GUIEditor
+@ DBGuiEditor instproc changeObject {} {
+description {Überträgt die Anderungen auf Dateherkunft der Objekte auf datawidget_attr}
+}
+DBGuiEditor instproc changeObject {obj newdata} {
+    my dataset_minus $obj [keylget ${obj}::data data]
+    my dataset_add $obj $newdata
+}
+DBGuiEditor instproc dataset_add {obj data} {
+    my instvar datalist win dataset_win datawidget_arr alldataKL  red_style
+    set tlist [$dataset_win subwidget tlist]
+    if {[info exists datawidget_arr($data)]} {
+        lappend datawidget_arr($data) $obj
+    } else {
+        if {$alldataKL==""} {
+            $tlist insert end -itemtype text  -text $data
+            lappend datalist $data
+        } else {
+            if {[lcontain [keylkeys alldataKL] $data]} {
+                # Voraussetzung es wird bereit angezeigt aber grünn
+                set id [lsearch $datalist $data]
+                $tlist entryconfigure $id -style {}
+            } else {
+                $tlist insert end -itemtype text  -text $data -style $red_style
+                lappend datalist $data
+            }
+        }
+        set datawidget_arr($data) $obj
+    }
+}
+DBGuiEditor instproc dataset_minus {obj data} {
+    my instvar datalist win dataset_win datawidget_arr alldataKL green_style
+    set tlist [$dataset_win subwidget tlist]
+    if {[info exists datawidget_arr($data)]} {
+        set actobjs $datawidget_arr($data)
+        if {[llength $actobjs]==1} {
+            unset datawidget_arr($data)
+            set id [lsearch $datalist $data]
+            if {$id<0} {
+                error {Zustand inkosistent}
+            }
+            if {$alldataKL=="" || ![lcontain [keylkeys alldataKL] $data]} {
+                set datalist [lreplace $datalist $id $id]
+                $tlist delete $id
+            } else {
+                $tlist entryconfigure $id -style $green_style
+            }
+        } else {
+            # Objekt-Eintrag aus der Liste entfernen
+            set datawidget_arr($data) [minusMenge $actobjs $obj]
+        }
+    }
+}
+@ DBGuiEditor instproc editFormProperties {} {
+description {Dialog für allgemeine FormEigenschaften}
+}
+DBGuiEditor instproc editFormProperties {} {
+    my instvar form_node schema_node
+    set values [tdom_attr2keyl $form_node {table name primarykey insertonly nodelete noinsert noupdate}]
+    set prop1 {{type OLabelEntry} {name name} {label name} {textwidth 20}}
+    set prop2 {{type OLabelEntry} {name table} {label table}}
+    set prop3 {{type OLabelEntry} {name primarykey} {label primarykey} {textwidth 20}}
+    set modi {
+        {{type OCheckButton} {name insertonly} {label insertonly}}
+        {{type OCheckButton} {name nodelete} {label nodelete}}
+        {{type OCheckButton} {name noinsert} {label noinsert}}
+        {{type OCheckButton} {name noupdate} {label noupdate}}
+    }
+    if {$schema_node!=""} {
+        keylset prop2 type OComboBox
+        keylset prop2 valuelist [tdom_extractAttributes [$schema_node selectNodes //descendant::table/attribute::name]]
+    }
+    OInputDialog [self]::propdialog [concat [list $prop1 $prop2 $prop3] $modi] $values
+    if {[set ret [[self]::propdialog execute]]!=""} {
+        foreach ckey [keylkeys ret] {
+            $form_node setAttribute $ckey [keylget ret $ckey]
+            if {$ckey=="name"} {
+                # Ändern von Anzeige wenn Namensänderung !!!
+                FormEditor applyChanges $form_node
+            }
+        }
+    }
+    [self]::propdialog destroy
+}
+DBGuiEditor instproc end_edit {} {
+    my instvar form_node rootframe win
+    if {[IDE::Dialog yesNo [mc "Apply Changes?"]]} {
+        set tdom [$rootframe asTDom [$form_node ownerDocument]]
+        # Hier werden die alte Form mit der neuen ersetz
+        # Eigentlich nur das erste Frame die
+        # Es müssten noch die neue Form Attribute hier geschrieben werden
+        foreach childnode [$form_node childNodes] {
+            if {[$childnode nodeType]=="ELEMENT_NODE" && 
+                [$childnode nodeName]=="frame"} {
+                $form_node replaceChild $tdom $childnode
+                # Wie löscht man Nodes ????
+                #$childnode delete
+                break
+            }
+        }
+        #puts [$tdom asXML]
+        #puts "Vor dem Destroy"
+        #global .myDBGuiEditor0.swworkbench.f2.window.myWidget0
+        #puts "ARRNAMES [array names .myDBGuiEditor0.swworkbench.f2.window.myWidget0]"
+    }
+    destroy $win
+    #puts "Nach dem Destroy"
+    my destroy
+}
+@ DBGuiEditor instproc enterObject {} {
+description {Diese Prozedur wird als ein Callback aufgerufen wenn ein Pointer über ein
+ Objekt sich befindet. Es wird eine Meldung in Statusleiste ausgegeben}
+}
+DBGuiEditor instproc enterObject objekt {
+    my instvar newwidget
+    # Wenn Ziel für neues Widget gesucht wird dann keine Informationen
+    if {$newwidget!=""} { return }
+    set statusinfo [$objekt getinfo]
+    my setStatusInfo $statusinfo
+}
+@ DBGuiEditor instproc getFormNames {} {
+description {Aufgerufen bei Editieren der Widget Attributen}
+}
+DBGuiEditor instproc getFormNames {} {
+    my instvar form_node
+    return [tdom_extractAttributes [$form_node selectNodes //child::form/attribute::name]]
+}
+DBGuiEditor instproc init args {
+    my instvar win datawidget_arr form_node schema_node workbench depositorywin rootframe
+    next
+    # Windows Titel setzen
+    if {[$form_node hasAttribute name]} {
+        wm title $win [$form_node getAttribute name]
+    }
+    #set datawidget_arr(test) ew
+    update idletask
+    grid propagate $win 0
+    set rootframe [mffactory makeeditable_fromdom $form_node [self]]
+    array set datawidget_arr [array get mffactory::data]
+    #puts "DATAWIDGET [array names datawidget_arr]"
+    $rootframe map $workbench
+    # Initiere Depository (Ablage) als EPackFrame
+    EPackFrame [self]::depository    
+    [self]::depository set win $depositorywin
+    [self]::depository set create_id -1
+    # Setzt die Bindings für alle Widget
+    # außer workbench und depositorywin
+    foreach child [my info children] {
+        if {[$child exists win]} {
+            set cwin [$child set win]
+            # Ignoriere Workbench Window
+            if {$cwin==$workbench || $cwin==$depositorywin} { continue }
+            my bindObject $child
+        }
+    }
+    my initDataSet
+    my postInit
+}
+@ DBGuiEditor instproc initDataSet {} {
+description {Initiealisiere Daten Auswahl Liste}
+}
+DBGuiEditor instproc initDataSet {} {
+    my instvar dataset_win datalist alldataKL datawidget_arr green_style red_style
+    set tlist [$dataset_win subwidget tlist]
+    my searchAllData
+    set datalist {}
+    # Problem die Reihenfolge ist zufällig
+    foreach data [array names datawidget_arr] {
+        #puts "adding $data"
+        if {$alldataKL==""} {
+            $tlist insert end -itemtype text  -text $data
+            lappend datalist $data
+        } else {
+            if {[lcontain [keylkeys alldataKL] $data]} {
+                $tlist insert end -itemtype text  -text "$data ([[keylget alldataKL $data] getAttribute type])"
+                lappend datalist $data
+            } else {
+                $tlist insert end -itemtype text  -text "$data" -style $red_style
+                lappend datalist $data
+            }
+        }
+    }
+    if {$alldataKL!=""} {
+        foreach data [keylkeys alldataKL] {
+            if {![lcontain $datalist $data]} {
+                $tlist insert end -itemtype text  -text "$data ([[keylget alldataKL $data] getAttribute type])" -style $green_style
+                lappend datalist $data
+            }
+        }
+    }
+    $tlist configure -command "[self] selectByData"
+}
+@ DBGuiEditor instproc searchAllData {} {
+description {Durschucht schema nach attributen und Kompletiert eine KeydList
+ key=Name des Attribut
+ value=tDom node}
+}
+DBGuiEditor instproc searchAllData {} {
+    my instvar alldataKL schema_node form_node
+    if {$schema_node!=""} {
+        foreach attrnode [$schema_node selectNodes child::node()\[not(self::table)\]/descendant-or-self::attr] {
+            keylset alldataKL  [$attrnode getAttribute name] $attrnode
+        }
+    } else {
+        set alldataKL {}
+    }
+}
+DBGuiEditor instproc selectByData index {
+    my instvar datalist win dataset_win datawidget_arr selectedObj
+    set tlist [$dataset_win subwidget tlist]
+    set index [$tlist info selection]
+    if {$index==""} { return }
+    set data [lindex $datalist $index]
+    if {[info exists datawidget_arr($data)]} {
+        if {![lcontain $datawidget_arr($data) $selectedObj]} {
+            set nobj [lindex $datawidget_arr($data) 0]
+            my selectObject $nobj
+        } elseif {[llength [set olist $datawidget_arr($data)]]>1} {
+            set id [lsearch -glob $olist $selectedObj]
+            incr id
+            if {$id==[llength $olist]} {
+                set id 0
+            }
+            my selectObject [lindex $olist $id]
+        }
+    }
+}
+@ DBGuiEditor instproc setStatusInfo {} {
+description {Information in der StatusZeile setzten}
+}
+DBGuiEditor instproc setStatusInfo text {
+    my instvar win
+    $win.statusbar configure -text $text
+}
+

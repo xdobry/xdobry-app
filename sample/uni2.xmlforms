@@ -1,0 +1,152 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE dbforms SYSTEM "xmlforms.dtd">
+<dbforms name="xdobryuni">
+    <?dbschema /home/artur/programs/xotclIDE/sample/uni.xmldbschema?>
+    <form name="Angestellte" table="Angestellte" primarykey="PersNr">
+        <frame manager="pack">
+            <pack>
+                <numeric label="PersNr" data="PersNr" dbtype="int" dbdefault="0"/>
+                <text label="Name" textwidth="20" data="Name" dbtype="varchar"/>
+                <formlink label="AngestellteVorlesung" data="PersNr" refattribute="PersNr" form="Vorlesung"/>
+                <formlink label="pruefen" data="PersNr" refattribute="PersNr" form="pruefen" reftable="pruefen">
+                    <objectlink form="Student" refattribute="MatrNr" label="Student"/>
+                    <objectlink form="Vorlesung" refattribute="VorlesungNr" label="Vorlesung"/>
+                </formlink>
+                <inheritform data="PersNr">
+                    <child label="Assistent" form="Assistent" inheritkey="PersNr"/>
+                    <child label="Professor" form="Professor" inheritkey="PersNr"/>
+                </inheritform>
+            </pack>
+        </frame>
+    </form>
+    <form name="Assistent" table="Assistent" primarykey="PersNr">
+        <frame manager="pack">
+            <pack>
+                <numeric label="PersNr" data="PersNr" dbtype="int" dbdefault="0"/>
+                <text label="Fachgebiet" textwidth="20" data="Fachgebiet" dbtype="varchar"/>
+                <numeric label="Professor" data="Professor" dbtype="int"/>
+            </pack>
+        </frame>
+    </form>
+    <form name="Professor" table="Professor" primarykey="PersNr">
+        <frame manager="pack">
+            <pack>
+                <numeric label="PersNr" data="PersNr" dbtype="int" dbdefault="0"/>
+                <text label="Rang" textwidth="20" data="Rang" dbtype="varchar"/>
+                <numeric label="Raum" data="Raum" dbtype="int"/>
+            </pack>
+        </frame>
+    </form>
+    <form name="Student" table="Student" primarykey="MatrNr">
+        <frame manager="pack">
+            <pack>
+                <numeric label="MatrNr" data="MatrNr" dbtype="int" state="disabled"/>
+                <text label="Name" textwidth="20" data="Name" dbtype="varchar"/>
+                <numeric label="Semester" data="Semester" dbtype="int"/>
+                <formlink label="pruefen" data="MatrNr" refattribute="MatrNr" form="pruefen" reftable="pruefen">
+                    <objectlink form="Angestellte" refattribute="PersNr" label="Angestellte"/>
+                    <objectlink form="Vorlesung" refattribute="VorlesungNr" label="Vorlesung"/>
+                </formlink>
+                <formlink label="hoeren" data="MatrNr" refattribute="MatrNr" form="hoeren" reftable="hoeren">
+                    <objectlink form="Vorlesung" refattribute="VorlesungNr" label="Vorlesung"/>
+                </formlink>
+            </pack>
+        </frame>
+    </form>
+    <form name="Vorlesung" table="Vorlesung" primarykey="VorlesungNr">
+        <frame manager="pack">
+            <pack>
+                <numeric label="VorlesungNr" data="VorlesungNr" dbtype="int" state="disabled"/>
+                <text label="Titel" textwidth="20" data="Titel" dbtype="varchar"/>
+                <numeric label="SWS" data="SWS" dbtype="int"/>
+                <reference data="PersNr" dbtype="int" form="Angestellte" label="Angestellte" columns="2" columnslabel="PersNr Name">
+                    <sqlquery>SELECT PersNr,Name FROM Angestellte</sqlquery>
+                </reference>
+                <formlink label="hoeren" data="VorlesungNr" refattribute="VorlesungNr" form="hoeren" reftable="hoeren">
+                    <objectlink form="Student" refattribute="MatrNr" label="Student"/>
+                </formlink>
+                <formlink label="pruefen" data="VorlesungNr" refattribute="VorlesungNr" form="pruefen" reftable="pruefen">
+                    <objectlink form="Student" refattribute="MatrNr" label="Student"/>
+                    <objectlink form="Angestellte" refattribute="PersNr" label="Angestellte"/>
+                </formlink>
+                <nestedform label="Termin" data="VorlesungNr" form="Termin" refattribute="VorlesungNr"/>
+                <formlink label="vorgänger" data="VorlesungNr" refattribute="VorgaengerNr" form="voraussetzten"/>
+                <formlink label="nachfolger" data="VorlesungNr" refattribute="NachfolgerNr" form="voraussetzten"/>
+            </pack>
+        </frame>
+    </form>
+    <form name="Termin" table="Termin" primarykey="VorlesungNr Wochentag Zeit">
+        <frame manager="pack">
+            <pack>
+                <numeric label="VorlesungNr" data="VorlesungNr" dbtype="int" dbdefault="0"/>
+                <list label="Wochentag" data="Wochentag" dbtype="enum">
+                    <valuelist>
+                        <item>Montag</item>
+                        <item>Dienstag</item>
+                        <item>Mittwoch</item>
+                        <item>Donnerstag</item>
+                        <item>Freitag</item>
+                    </valuelist>
+                </list>
+                <text label="Zeit" textwidth="5" data="Zeit" dbtype="varchar"/>
+            </pack>
+        </frame>
+    </form>
+    <form name="hoeren" table="hoeren" primarykey="MatrNr VorlesungNr">
+        <frame manager="pack">
+            <pack>
+                <reference data="VorlesungNr" dbtype="int" form="Vorlesung" label="Vorlesung" columns="2" columnslabel="VorlesungNr Titel">
+                    <sqlquery>SELECT VorlesungNr,Titel FROM Vorlesung</sqlquery>
+                </reference>
+                <reference data="MatrNr" dbtype="int" form="Student" label="Student" columns="2" columnslabel="MatrNr Name">
+                    <sqlquery>SELECT MatrNr,Name FROM Student</sqlquery>
+                </reference>
+            </pack>
+        </frame>
+    </form>
+    <form name="pruefen" table="pruefen" primarykey="MatrNr VorlesungNr PersNr">
+        <frame manager="pack">
+            <pack>
+                <list label="Pruefnote" data="Pruefnote" dbtype="enum">
+                    <valuelist>
+                        <item>sehr gut</item>
+                        <item>gut</item>
+                        <item>befriedigend</item>
+                        <item>ausreichend</item>
+                        <item>mangelhaft</item>
+                    </valuelist>
+                </list>
+                <reference data="MatrNr" dbtype="int" form="Student" label="Student" columns="2" columnslabel="MatrNr Name">
+                    <sqlquery>SELECT MatrNr,Name FROM Student</sqlquery>
+                </reference>
+                <reference data="PersNr" dbtype="int" form="Angestellte" label="Angestellte" columns="2" columnslabel="PersNr Name">
+                    <sqlquery>SELECT PersNr,Name FROM Angestellte</sqlquery>
+                </reference>
+                <reference data="VorlesungNr" dbtype="int" form="Vorlesung" label="Vorlesung" columns="2" columnslabel="VorlesungNr Titel">
+                    <sqlquery>SELECT VorlesungNr,Titel FROM Vorlesung</sqlquery>
+                </reference>
+            </pack>
+        </frame>
+    </form>
+    <form name="voraussetzten" table="voraussetzten" primarykey="VorgaengerNr NachfolgerNr">
+        <frame manager="pack">
+            <pack>
+                <reference data="VorgaengerNr" dbtype="int" form="Vorlesung" label="Vorlesung" columns="2" columnslabel="VorlesungNr Titel">
+                    <sqlquery>SELECT VorlesungNr,Titel FROM Vorlesung</sqlquery>
+                </reference>
+                <reference data="NachfolgerNr" dbtype="int" form="Vorlesung" label="Vorlesung" columns="2" columnslabel="VorlesungNr Titel">
+                    <sqlquery>SELECT VorlesungNr,Titel FROM Vorlesung</sqlquery>
+                </reference>
+            </pack>
+        </frame>
+    </form>
+    <tableoverview name="StudentOvw" table="Student" primarykey="MatrNr" detailsform="Student" rows="10">
+        <columns>
+            <column name="MatrNr" dbexpresion="MatrNr"/>
+            <column name="Name" dbexpresion="Name"/>
+            <column name="Semester" dbexpresion="Semester"/>
+        </columns>
+    </tableoverview>
+</dbforms>
+
+

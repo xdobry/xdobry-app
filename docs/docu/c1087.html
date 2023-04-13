@@ -1,0 +1,200 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>Xdobry aus Quelldateien installieren</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Dokumentation des Programms Xdobry"
+HREF="book1.html"><LINK
+REL="PREVIOUS"
+TITLE="Unterstützung"
+HREF="c1084.html"></HEAD
+><BODY
+CLASS="CHAPTER"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Dokumentation des Programms Xdobry</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c1084.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+>&nbsp;</TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="INSTALL"
+></A
+>Xdobry aus Quelldateien installieren</H1
+><P
+>Es wird empfohlen die gepackte und vorkompielierte Starkpacks zu verwenden.
+Diese benötigen keine besondere Kompilierung oder Installation.
+Zur Zeit werden die Starpacks für Linux x86 und Windows angeboten.</P
+><P
+>Das Xdobry System besteht aus verschiedenen Tcl-Skripten und braucht deswegen keine Kompilierung.
+Es benutzt allerdings viele Tcl-Erweiterung (Bibliotheken), die in C oder C++ programmiert wurden.
+Dazu gehören Tk,Tix die zu jeder Standard Linux-Distribution gehören, also bereits auf Ihren Rechner installiert sein sollten oder von der Linux-Distribution nachinstalliert werden können.
+Die Windows-Benutzer können auf eine kostenlose Active-State Tcl-Distribution zurückgreifen.</P
+><P
+>Weitere Tcl-Erweiterungen müssen wahrscheinlich separat installiert werden:
+<P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+> XOTcl (objektorientierte Erweiterung des Tcl)</P
+></LI
+><LI
+><P
+>tDom - ist eine DOM (Document Object Modell) Schnittstelle für Bearbeitung von XML-Dokumenten.</P
+></LI
+><LI
+><P
+>mysqltcl - ist eine Tcl Schnittstelle zu MySql Datenbank.</P
+></LI
+><LI
+><P
+>pgtcl - ist eine Tcl Schnittstelle zu Postgersqll Datenbank. Gehört zu auch zu neuesten RedHat Distribution.</P
+></LI
+></OL
+>
+Die Installation von obigen Erweiterungen kann problematisch sein, da es einige Erfahrung bei Kompilierung abverlangt.</P
+><P
+>Xdobry analysiert beim Start welche DB-Schnittstellen vorhanden sind und bietet nur diese zur Auswahl.
+Für die Überprüfung wird Tcl-Kommando <B
+CLASS="COMMAND"
+>package require</B
+> benutzt.
+Folgende packages werden gesucht:
+<P
+></P
+><UL
+><LI
+><P
+>mysqltcl für MySql Datenbanksystem</P
+></LI
+><LI
+><P
+>sqlite für Sqlite Datenbanksystem</P
+></LI
+><LI
+><P
+>Pgtcl für Postgres</P
+></LI
+><LI
+><P
+>ORATcl für Oracle</P
+></LI
+><LI
+><P
+>tclodbc für ODBC</P
+></LI
+><LI
+><P
+>tclodbc für MS Access (nur Windows)</P
+></LI
+><LI
+><P
+>tclodbc für MS SQL-Server (nur Windows)</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c1084.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Zum Anfang</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>&nbsp;</TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Unterstützung</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>&nbsp;</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

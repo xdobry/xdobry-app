@@ -1,0 +1,1837 @@
+# automatically generated from XOTclIDE
+# script require component {IDEBaseGUI xdobry::Base}
+package provide xdobry::SchemaEditor 0.33
+package require IDEBaseGUI
+package require xdobry::Base
+@ Class DomSchemaVisitor {
+description {Ein Visitor für extrahieren des Schema von DB Struktur
+(mit HIlfe des MySqlSchemaExtractor Objects)}
+}
+Class DomSchemaVisitor -parameter {
+    guiobject
+    rdom_doc
+    dbname
+}
+@ ::DomSchemaVisitor idemeta categories {testing init-release}
+@ ::DomSchemaVisitor idemeta categoriesMethods {{checkAttributeName checkSchema checkTableHasAttribute checkTableName checkName} {init destroy}}
+@ ::DomSchemaVisitor idemeta component xdobry::SchemaEditor
+DomSchemaVisitor instproc addaptByTypeChange attrNode {
+    set type [$attrNode getAttribute type]
+    if {[lsearch [XDBase noLengthDBTypes] $type]>=0} {
+        if {[$attrNode hasAttribute lenght]} {
+            $attrNode removeAttribute length
+        }
+    } else {
+        if {![$attrNode hasAttribute length]} {
+            if {$type eq "decimal"} {
+                $attrNode setAttribute length 10
+            } else {
+                $attrNode setAttribute length 50
+            }
+        }
+    }
+    if {[lsearch [XDBase precisionDBTypes] $type]<0} {
+        if {[$attrNode hasAttribute precision]} {
+            $attrNode removeAttribute precision
+        }
+    } else {
+        if {![$attrNode hasAttribute precision]} {
+            $attrNode setAttribute precision 0
+        }
+    }
+}
+DomSchemaVisitor instproc checkAttributeName attrNode {
+    if {![my checkName [$attrNode getAttribute name]]} {
+        return [mc "wrong attribute name"]
+    }
+    return
+}
+DomSchemaVisitor instproc checkName name {
+    regexp {^\w+[\w\d]+$} $name
+}
+DomSchemaVisitor instproc checkNameWithMessage name {
+    if {![my checkName $name]} {
+        return [mc "wrong attribute name"]
+    }
+    return
+}
+DomSchemaVisitor instproc checkSchema {} {
+    set a [my checkTableHasAttribute]
+    if {$a!=""} {return $a}
+    return
+}
+DomSchemaVisitor instproc checkTableHasAttribute {} {
+    my instvar rdom_doc databaseNode
+    foreach tableNode [$databaseNode selectNodes descendant::table] {
+        if {[llength [my getAttributes $tableNode]]==0} {
+            return [format [mc "Table %s has no attributes"] [$tableNode getAttribute name]]
+        }
+    }
+    return
+}
+DomSchemaVisitor instproc checkTableName name {
+    if {![my checkName $name]} {
+        return [mc "wrong table name"]
+    }
+    return
+}
+DomSchemaVisitor instproc clearXSL {} {
+    my instvar xsltdoc
+    if {[info exists xsltdoc] && $xsltdoc!=""} {
+        $xsltdoc delete
+        set xsltdoc ""
+    }
+}
+DomSchemaVisitor instproc createAttribute {tableNode name} {
+    my instvar rdom_doc guiobject
+    set node [$rdom_doc createElement attr]
+    $node setAttribute name $name
+    $node setAttribute type int
+    $tableNode appendChild $node
+    $guiobject addElem $node $tableNode 1
+    return $node
+}
+DomSchemaVisitor instproc deleteTable node {
+    my instvar guiobject
+    [$node parentNode] removeChild $node
+    $guiobject deleteElem $node
+}
+DomSchemaVisitor instproc destroy {} {
+    my clearXSL
+    next
+}
+DomSchemaVisitor instproc getAttributeCreateStatement attrNode {
+    my instvar xsltdoc
+    my initXSL
+    set tmpDoc [dom createDocument database]
+    set tmpDom [$tmpDoc documentElement]
+    $tmpDom appendFromList [$attrNode asList]
+    $tmpDom xslt $xsltdoc outschema
+    # add variables (outschema)
+    set resultRoot [$outschema documentElement]
+    set ret [$resultRoot nodeValue]
+    $outschema delete
+    $tmpDoc delete
+    return $ret
+}
+DomSchemaVisitor instproc getAttributeNode {tableDom name} {
+    $tableDom selectNodes descendant::attr\[@name=\"$name\"\]
+}
+DomSchemaVisitor instproc getAttributeTypes tableDom {
+    set tables [$tableDom selectNodes {child::node()[not(self::table)]/descendant-or-self::attr/attribute::type}]
+    tdom_extractAttributes $tables
+}
+DomSchemaVisitor instproc getAttributes tableDom {
+    set tables [$tableDom selectNodes {child::node()[not(self::table)]/descendant-or-self::attr/attribute::name}]
+    tdom_extractAttributes $tables
+}
+DomSchemaVisitor instproc getAttributesNodes tableDom {
+    $tableDom selectNodes {child::node()[not(self::table)]/descendant-or-self::attr}
+}
+DomSchemaVisitor instproc getCreateStatment {{database mysqltcl}} {
+    my instvar rdom_doc xsltdoc databaseNode
+    my initXSL
+    $databaseNode xslt -parameters [my getDBParameters $database] $xsltdoc outschema 
+    # add variables (outschema)
+    set resultRoot [$outschema documentElement]
+    set ret [$resultRoot nodeValue]
+    $outschema delete
+    return $ret
+}
+DomSchemaVisitor instproc getDBParameters database {
+    set params [list database $database]
+    switch $database {
+        mysqltcl {
+            lappend params default true
+            lappend params usesequence false
+            lappend params autoincrement auto_increment
+        }
+        postgres {
+            lappend params default true
+            lappend params usesequence true
+            lappend params autoincrement " "
+        }
+        sqlite {
+            lappend params default true
+            lappend params usesequence false
+            lappend params autoincrement " "
+        }
+        MSAccess {
+            lappend params default false
+            lappend params usesequence false
+            lappend params texttype memo
+            lappend params autoincrement COUNTER
+        }
+        MSSql {
+            lappend params default true
+            lappend params usesequence false
+            lappend params autoincrement identity(1,1)
+        }
+        Oracle {
+            lappend params default true
+            lappend params usesequence true
+            lappend params autoincrement " "
+        }
+        ODBC {
+            lappend params default true
+            lappend params usesequence false
+            lappend params autoincrement " "
+        }
+    }
+    return $params
+}
+DomSchemaVisitor instproc getTableCreateStatement {tableNode {database mysqltcl}} {
+    my instvar xsltdoc
+    my initXSL
+    set tmpDoc [dom createDocument database]
+    set tmpDom [$tmpDoc documentElement]
+    $tmpDom appendFromList [$tableNode asList]
+    $tmpDom xslt -parameters [my getDBParameters $database] $xsltdoc outschema
+    # add variables (outschema)
+    set resultRoot [$outschema documentElement]
+    set ret [$resultRoot nodeValue]
+    $outschema delete
+    $tmpDoc delete
+    return $ret
+}
+DomSchemaVisitor instproc getTableNode tableName {
+    [my set databaseNode] selectNodes descendant::table\[@name=\"$tableName\"\]
+}
+DomSchemaVisitor instproc getTables {} {
+    my instvar rdom_doc databaseNode
+    set tables [$databaseNode selectNodes descendant::table/attribute::name]
+    set tables [tdom_extractAttributes $tables]
+}
+DomSchemaVisitor instproc getTablesNodes {} {
+    my instvar databaseNode
+    $databaseNode selectNodes descendant::table
+}
+DomSchemaVisitor instproc init {} {
+    my instvar guiobject dbname rdom_doc databaseNode
+    set databaseNode [$rdom_doc documentElement]
+    # if dbname exists it signifs that it is empty new create shema and need to be
+    # initialized
+    if {[info exists dbname]} {
+        $databaseNode setAttribute name $dbname
+        $guiobject addElem $databaseNode root 1
+    }
+}
+DomSchemaVisitor instproc initXSL {} {
+    my instvar xsltdoc
+    if {![info exists xsltdoc] || $xsltdoc==""} {
+        global progdir
+        set xsltdoc [dom parse -keepEmpties [tDOM::xmlReadFile [file join $progdir createtables.xsl]]]
+    }
+}
+DomSchemaVisitor instproc newAttribute attr {
+    my instvar hlist table_node rdom_doc guiobject
+    set node [$rdom_doc createElement attr]
+    set knowntypes [XDBase supportedDBTypes]
+    set nolengthtypes [XDBase noLengthDBTypes]
+    set precisiontype [XDBase precisionDBTypes]
+    
+    if {[lsearch $knowntypes [keylget attr type]]<0} {
+        set answer [IDE::Dialog yesNo [format [mc "Found unsupported SQL column type '%s'. Press Yes for addapt to varchar and No for ignore this column"] [keylget attr type]]]
+        if {$answer} {
+            keylset attr type varchar
+        } else {
+            return
+        }
+    }
+    foreach key [keylkeys attr] {
+        set value [keylget attr $key]
+        if {$key eq "length" && [lsearch $nolengthtypes [keylget attr type]]>=0} {
+            # ignore length attribute by this types
+            continue
+        }
+        # ignore precision by no precision types
+        if {$key eq "precision" && [lsearch $precisiontype [keylget attr type]]<0} {
+            continue
+        }
+        # ignore defualt setting by null
+        if {$key eq "null" && [keylget attr null] eq "0"} {
+            continue
+        }
+        if {$key=="valuelist"} {
+            tdom_setvaluelist $node $value
+        } else {
+            $node setAttribute $key $value
+        }
+        if {$key=="primary_key" && $value=="1"} {
+            $node setAttribute $key $value
+        }
+    }
+    $table_node appendChild $node
+    $guiobject addElem $node $table_node 1
+    return $node
+}
+DomSchemaVisitor instproc newTable newtable {
+    my instvar hlist table_node rdom_doc guiobject databaseNode
+    set table_node [$rdom_doc createElement table]
+    $table_node setAttribute name $newtable
+    $databaseNode appendChild $table_node
+    $guiobject addElem $table_node $databaseNode 1
+    return $table_node
+}
+DomSchemaVisitor instproc newattribute attr {
+    my newAttribute $attr
+}
+DomSchemaVisitor instproc newtable newtable {
+    my newTable $newtable
+}
+DomSchemaVisitor instproc removeAttribute node {
+    my instvar guiobject
+    [$node parentNode] removeChild $node
+    $guiobject deleteElem $node
+    return $node
+}
+Class DomSchemaSynchronizator -superclass ::DomSchemaVisitor
+@ ::DomSchemaSynchronizator idemeta component xdobry::SchemaEditor
+DomSchemaSynchronizator instproc endSyncAttributes {} {
+    my instvar syncAttributes table_node
+    if {$table_node==""} return
+    foreach attr [my getAttributesNodes $table_node] {
+        if {[lsearch $syncAttributes $attr]<0} {
+            my incr changesCount
+            my removeAttribute $attr
+        }
+    }
+    set syncAttributes [list]
+}
+DomSchemaSynchronizator instproc finishSynchronize {} {
+    my instvar synchTables
+    my endSyncAttributes
+    foreach table [my getTables] {
+        if {[lsearch $synchTables $table]<0} {
+            my deleteTable [my getTableNode $table]
+            my incr changesCount
+        }
+    }
+}
+DomSchemaSynchronizator instproc newAttribute attr {
+    my instvar table_node syncAttributes
+    set attrName [keylget attr name]
+    if {[set attrNode [my getAttributeNode $table_node $attrName]]==""} {
+        set attrNode [next]
+        my incr changesCount
+    }
+    lappend syncAttributes $attrNode
+}
+DomSchemaSynchronizator instproc newTable newtable {
+    my instvar hasTable table_node synchTables
+    my endSyncAttributes
+    if {[set table_node [my getTableNode $newtable]]==""} {
+        next
+        my incr changesCount
+    }
+    lappend synchTables $newtable
+}
+DomSchemaSynchronizator instproc startSynchronize {} {
+    my set synchTables [list]
+    my set table_node ""
+    my set changesCount 0
+}
+Class SQLFileExporter -parameter {filehandle interface}
+@ ::SQLFileExporter idemeta component xdobry::SchemaEditor
+SQLFileExporter instproc escape value {
+   string map [list \0 {\0} ' '' \\ \\\\] $value
+}
+SQLFileExporter instproc execute sqlstatment {
+    my instvar filehandle
+    puts $filehandle "$sqlstatment;"
+    return 1
+}
+SQLFileExporter instproc getMaskedValue {value type} {
+    if {$type eq "datetime" || $type eq "timestamp"} {
+        return [my getTimeValue $value]
+    } elseif {$type eq "boolean" && [my interface] eq "postgres"} {
+        if {$value} {
+            return true
+        } else {
+            return false
+        }
+    } elseif {$type eq "longblob" && [my interface] eq "postgres"} {
+        return [my maskBytea $value]
+    } elseif {[my needEscape $type]} {
+        return '[my escape $value]' 
+    } else {
+        return $value
+    }
+}
+SQLFileExporter instproc getTimeStampFunction {} {
+    return "NOW()"
+}
+SQLFileExporter instproc getTimeValue time {
+    if {[my interface] eq "postgres" || [my interface] eq "MSAccess"} {
+        if {[string first 0000-00-00 $time]>0} {
+            return NULL
+        }
+        # Access do not accept Time Format 00:00:00.000
+        # also cut last digits
+        set ret [regsub {(.*\d\d:\d\d:\d\d).\d+} $time {\1}]
+        return '$ret'
+    }
+    return '$time'
+}
+SQLFileExporter instproc insertRow {table attributes values types} {
+    if {[llength $attributes]==0} return
+    set vals {}
+    foreach val $values type $types {
+        if {$vals ne ""} {append vals ,}
+        if {$val eq "NULL" || $val eq [my getTimeStampFunction]} {
+            append vals $val
+        } else {
+            append vals [my getMaskedValue $val $type]
+        }
+    }
+    set mattr [list]
+    foreach a $attributes {
+        lappend mattr [my maskColumnName $a]
+    }
+    my execute "INSERT INTO [my maskTableName $table] ([join $mattr ,]) VALUES ($vals)"
+}
+SQLFileExporter instproc maskBytea value {
+    binary scan $value c* bytes
+    set ret '
+    foreach byte $bytes {
+        append ret {\\\\}
+        append ret [format %03o [expr {($byte + 0x100 ) % 0x100}]]
+    }
+    append ret '
+    return $ret
+}
+SQLFileExporter instproc maskColumnName columnName {
+    my maskTableName $columnName
+}
+SQLFileExporter instproc maskTableName tableName {
+    if {[string first " " $tableName]>=0} {
+        return "\[$tableName\]" 
+    }
+    return $tableName
+}
+SQLFileExporter instproc needEscape type {
+    expr {[lsearch {decimal int boolean smallint} $type]<0}
+}
+Class SQLXMLExporter -parameter {dataNode dataDoc {interface XML}}
+@ ::SQLXMLExporter idemeta component xdobry::SchemaEditor
+SQLXMLExporter instproc encodeBase64 text {
+    package require base64
+    ::base64::encode $text
+}
+SQLXMLExporter instproc init {} {
+    my set lastTable ""
+}
+SQLXMLExporter instproc insertRow {table rows values types} {
+    my instvar dataDoc dataNode lastTable
+    set tableName [string map {" " _spc_} $table]
+    set rowNode [$dataDoc createElement $tableName]
+    $dataNode appendChild $rowNode
+    foreach attr $rows cell $values type $types {
+        set cellNode [$dataDoc createElement $attr]
+        if {$lastTable ne $table} {
+            $cellNode setAttribute dbtype $type
+        }
+        if {$cell eq "NULL"} {
+            $cellNode setAttribute isnull 1
+        } else {
+            if {$type eq "longblob"} {
+                $cellNode setAttribute encoding base64
+                $cellNode appendChild [$dataDoc createTextNode [my encodeBase64 $cell]]
+            } else {
+                $cellNode appendChild [$dataDoc createTextNode $cell]
+            }
+        }
+        $rowNode appendChild $cellNode
+    }
+    set lastTable $table
+    return 1
+}
+Class SchemaEditorWin -superclass {::IDE::Browser ::IDE::GUICommands} -parameter {{atHead 1}}
+@ ::SchemaEditorWin idemeta categories {init-release tree-manipulations height-concept-manipulations private user-action testing action-schema schema-manipulation migration}
+@ ::SchemaEditorWin idemeta categoriesMethods {{getMenuStruct initVariables getTitle stopSystem createSystemMenu specificInit fillMenuStruct} {addElem deleteElem deleteGroup deleteNestedTable deleteAssoziation menusAssoziationtarget addMenuCommand deleteAttribute menusAttribut menusAssoziation menusAssoziationcollection menusAttrgroup menusDatabase popmenuTree menusTable} {aggr2ass ass2aggr defineLabel addInheritance newAttrGroup} {mlist_sel selectPerNode showValueAsReport disconnectDatabase} {reverseEngeneering addAggregation addAssocion addAssociacion saveasxml seeXMLSchema} {hasSchema hasDatabaseConnection hasSchemaManipulation} {showSchemaChanges newSchema clearSchemaChanges showSchema synchronizeSchema synchronizeDatabase loadSchema newSchemaFromDB createDBFromSchema} {addPendingSchemaChanges createTable createAttribute} {createInsertSQL exportXML migrateDatabase convertXML2SQL exportSQL importXML}}
+@ ::SchemaEditorWin idemeta component xdobry::SchemaEditor
+SchemaEditorWin instproc addAggregation {} {
+    if {![my hasSchema]} return
+    AggrAssistent execute [my set data_node]
+}
+SchemaEditorWin instproc addAssociacion {} {
+    if {![my hasSchema]} return
+    AssAssistent execute [my set data_node]
+}
+SchemaEditorWin instproc addAssocion {} {
+    if {![my hasSchema]} return
+    AssAssistent execute [my set data_node]
+}
+SchemaEditorWin instproc addElem {node pos child} {
+    my instvar pathnode hlist
+    set nodedisplay {
+        {database database} {table table} 
+        {attr attribut} {attrgroup attr_group}
+        {assoziationcollection assoziationcollection}
+        {assoziationtarget assoziationtarget}
+        {label label}
+    }
+    if {[$node nodeName]=="attr"} {
+        if {[$node hasAttribute primary_key] && 
+            [$node getAttribute primary_key]} {
+            set imagetyp [tix getimage primary_key]
+        } else {
+            set imagetyp [tix getimage attribut]
+        }
+    } else {
+        set imagetyp [tix getimage [keylget nodedisplay [$node nodeName]]]
+    }
+    if {[$node nodeName]=="label"} {
+        set ntext label
+    } else {
+        set ntext [$node getAttribute name] 
+    }
+    if {$child} {
+        if {$pos=="root"} {
+            set newpath $node
+        } else {
+            set newpath $pathnode($pos).$node
+        }
+        $hlist add $newpath -itemtype imagetext  -text $ntext  -image $imagetyp  -data $node
+    } else {
+        set parent [$hlist info parent $pathnode($pos)]
+        set newpath $parent.$node
+        $hlist add $newpath -itemtype imagetext  -text $ntext  -image $imagetyp  -data $node -before $pathnode($pos)
+    }
+    set pathnode($node) $newpath
+    # Tabellen Icon Anpassen !!! hack
+    if  {[$node nodeName]=="table"} {
+        my applyChanges $node
+    }
+}
+SchemaEditorWin instproc addInheritance {} {
+    if {![my hasSchema]} return
+    InheritAssistent execute [my set data_node]
+}
+SchemaEditorWin instproc addMenuCommand {m label command} {
+    $m add command -label $label -command $command
+}
+SchemaEditorWin instproc addPendingSchemaChanges {domElement action typ {add {}}} {
+    my instvar pendingSchemaChanges win
+    lappend pendingSchemaChanges [list $domElement $action $typ $add]
+}
+SchemaEditorWin instproc aggr2ass table {
+    my instvar data_node dom_doc
+    set col_table [lindex [$table selectNode ancestor::table] 0]
+    set collectionname "[$col_table getAttribute name][$table getAttribute name]"
+    # Was wenn gleichnammige collection bereits existiert (to chuj)
+    set ac_node [$dom_doc createElement assoziationcollection]
+    $ac_node setAttribute name $collectionname
+    $ac_node setAttribute type reference
+    set p_node [$dom_doc createElement participant]
+    $p_node setAttribute reference [$table getAttribute reference]
+    $p_node setAttribute table [$col_table getAttribute name]
+    $ac_node appendChild $p_node
+    serviceSEdit addElem $ac_node $table 
+
+    set at_node [$dom_doc createElement assoziationtarget]
+    $at_node setAttribute table [$table getAttribute name]
+    $at_node setAttribute name $collectionname
+
+    serviceSEdit addElem $at_node $col_table 
+
+    $table removeAttribute reference
+    serviceSEdit moveElem $table $data_node
+}
+SchemaEditorWin instproc applyChanges node {
+    my instvar pathnode hlist
+    set path $pathnode($node)
+    if {[$node nodeName]=="table"} {
+        set image_now [$hlist entryconfigure $path -image] 
+        if {[$node hasAttribute type]} {
+            set image_new "table[$node getAttribute type]"
+            
+        } else {
+            set image_new table
+        }
+        if {[tix getimage $image_new]!=$image_now} {
+           $hlist entryconfigure $path -image [tix getimage $image_new] 
+        }
+    } elseif {[$node nodeName]=="attr"} {
+        set image_now [$hlist entryconfigure $path -image] 
+        if {[$node hasAttribute primary_key] && 
+            [$node getAttribute primary_key]} {
+            set image_new primary_key
+        } else {
+            set image_new attribut
+        }
+        if {[tix getimage $image_new]!=$image_now} {
+           $hlist entryconfigure $path -image [tix getimage $image_new] 
+        }        
+    }
+}
+SchemaEditorWin instproc applySchemaSqlToConnection {sql connection} {
+    regsub -all {(\)\s*);} $sql \\1\0 sql
+    regsub -all {(?i)(\s+end\s*);} $sql \\1\0 sql
+    # mark if ;  is last element in the line
+    regsub -all {(?n);$} $sql \0 sql
+    foreach command [split $sql \0] {
+        if {[string trim $command]==""} continue
+        if {[$connection execute $command]==""} {
+            if {![IDE::Dialog yesNo [mc "Error by creating schema %s. Yes for continue No for abort" [$connection errorMessage]]]} {
+                break
+            }
+        }
+    }
+}
+SchemaEditorWin instproc ass2aggr node {
+    my instvar data_node
+    set table [lindex [$node selectNode ancestor::table] 0]
+    set reference [tdom_extractAttributes [$node selectNodes child::participant/attribute::reference]]
+    set container [tdom_extractAttributes [$node selectNodes child::participant/attribute::table]]
+    set col_table [$data_node selectNodes descendant::table\[@name=\"$container\"\]]
+    # Entferne die Assoziatione Collection und Target
+    serviceSEdit deleteElem $node
+    serviceSEdit deleteElem [$col_table selectNodes  child::assoziationtarget\[@table=\"[$table getAttribute name]\"\]]
+    # Neue Attributte bei Element-Tabelle setzten und einbetten
+    $table setAttribute reference $reference
+    serviceSEdit moveElem $table $col_table
+}
+SchemaEditorWin instproc autosetmode {} {
+   [my set treeWin] autosetmode
+}
+SchemaEditorWin instproc changeAttribute node {
+    my addPendingSchemaChanges $node update attribute [$node getAttribute name]
+}
+SchemaEditorWin instproc changeButtonEnablement {} {
+   my instvar win
+   if {[my hasSchema]} {
+       set state normal
+   } else {
+       set state disabled
+   }
+   foreach but {box.ass box.aggr box.inherit box.up box.down box.edit} {
+       $win.$but configure -state $state
+   }
+}
+SchemaEditorWin instproc changeTable node {
+    my addPendingSchemaChanges $node update table [$node getAttribute name]
+}
+SchemaEditorWin instproc changeView {} {
+    my instvar v_attr v_attr_group v_ass_target  v_ass_collection v_aggr_table v_child_table  v_ass_table v_table_label hlist data_node
+    set top [$hlist info children]
+    for {set path [$hlist info next $top]} {$path!=""} {set path [$hlist info next $path]} {
+        set hidden [$hlist info hidden $path]
+        set node [$hlist entrycget $path -data]
+        set nodename [$node nodeName]
+        # Überprüfe wenn direkte entsprechung
+        array set namehash {attr v_attr attrgroup v_attr_group 
+            assoziationcollection v_ass_collection 
+            assoziationtarget v_ass_target
+            label v_table_label} 
+        if {[info exists namehash($nodename)]} {
+            set var $namehash($nodename)
+            if {$hidden==[set $var]} {
+                if {[set $var]} {
+                    $hlist show entry $path
+                } else {
+                    $hlist hide entry $path
+                }
+            }
+            continue
+        }
+        switch $nodename {
+            table {
+                if {[$node hasAttribute type]} {
+                    set type [$node getAttribute type]
+                    switch $type {
+                        child {
+                            if {$hidden==$v_child_table} {
+                                if {$v_child_table} {
+                                    $hlist show entry $path
+                                } else {
+                                    $hlist hide entry $path
+                                }
+                            }
+                        }
+                        relationship {
+                            if {$hidden==$v_ass_table} {
+                                if {$v_ass_table} {
+                                    $hlist show entry $path
+                                } else {
+                                    $hlist hide entry $path
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    # Aggregierte Tabelle
+                    if {[[$node parentNode] nodeName]=="table"} {
+                        if {$hidden==$v_aggr_table} {
+                            if {$v_aggr_table} {
+                                $hlist show entry $path
+                            } else {
+                                $hlist hide entry $path
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+SchemaEditorWin instproc cleanPendingSchemaChanges {} {
+    my instvar pendingSchemaChanges schemaVisitor
+    set ignoreNodes [list]
+    set ignoreChanges [list]
+    set ret [list]
+    set createlements [list]
+    set deleteelements [list]
+    # ignore attribute changes by new or deleted table
+    foreach change $pendingSchemaChanges {
+        foreach {domElement action typ add} $change {}
+        if {[lsearch $ignoreNodes $domElement]>=0} continue
+        if {$typ eq "table"} {
+            set ignoreNodes [concat $ignoreNodes [$schemaVisitor getAttributesNodes $domElement]]
+        }
+        lappend ret $change
+    }
+    set pendingSchemaChanges $ret
+    # created and deleted elements will be ignored
+    # changes by created elements will be ignored
+    foreach change $pendingSchemaChanges {
+        foreach {domElement action typ add} $change {}
+        if {$action eq "create"} {
+            lappend createlements $domElement
+        }
+        if {$action eq "delete"} {
+            if {[lsearch $createlements $domElement]>=0} {
+                lappend ignoreNodes $domElement
+            }
+        }
+        if {$action eq "update"} {
+            if {[lsearch $createlements $domElement]>=0} {
+                lappend ignoreChanges $change
+            }
+        }
+    }
+    # ignore computed changes
+    set ret [list]
+    set updateChanges [list]
+    foreach change $pendingSchemaChanges {
+        if {[lsearch $ignoreChanges $change]>=0} continue
+        if {[lsearch $updateChanges [lrange $change 0 2]]>=0} continue
+        foreach {domElement action typ add} $change {}
+        if {[lsearch $ignoreNodes $domElement]>=0} continue
+        if {$action eq "update"} {
+            lappend updateChanges [lrange $change 0 2]
+        }
+        lappend ret $change
+    }
+    set pendingSchemaChanges $ret
+}
+SchemaEditorWin instproc clearSchema {} {
+    my instvar dom_doc hlist pathnode actuel_edit schemaVisitor
+    catch {my editSchemaUpdate}
+    my clearSchemaChanges
+    if {[info exists dom_doc] && $dom_doc!=""} {
+        $dom_doc delete
+        set dom_doc ""
+    }
+    if {[info exists schemaVisitor] && $schemaVisitor!=""} {
+        $schemaVisitor destroy
+        set schemaVisitor ""
+    }
+    if {$actuel_edit!=""} {
+        pack forget [$actuel_edit set win]
+        set actuel_edit {}
+    }
+    $hlist delete all
+    my changeButtonEnablement
+}
+SchemaEditorWin instproc clearSchemaChanges args {
+    my set pendingSchemaChanges [list]
+}
+SchemaEditorWin instproc closeWindow {} {
+    catch {[self] editSchemaUpdate}
+    if {[IDE::Dialog yesNo [mc "Do you want to terminate FormServer?"]]} {
+       my stopSystem
+       my destroy
+    }
+}
+SchemaEditorWin instproc connectDatabase {{newdatabase 0}} {
+    my instvar sqlconnect
+    my disconnectDatabase
+    if {[set sqlconnect [ConnectCreator getconnect {} 1 0 $newdatabase]]=="" || ![$sqlconnect isConnected]} { 
+        global errorInfo lan
+        if {$sqlconnect!=""} {
+            $sqlconnect destroy
+            set sqlconnect ""
+        }
+        my setTitleAddition [mc "disconnected"]
+        return 0 
+    }
+    my setTitleAddition [format [mc "connected to DB %s"] [$sqlconnect set dbank]]
+    if {[$sqlconnect interface] eq "mysql"} {
+        # set binary encoding for transfer binary data
+        ::mysql::encoding [$sqlconnect set handle] binary
+    }
+    return 1
+}
+SchemaEditorWin instproc convertXML2SQL {} {
+    set types {
+        {"XML Dump File" .xmldump}
+        {"All files" *}
+    }
+    set file [tk_getOpenFile -filetypes $types -parent .]
+    if {$file == ""} { return }
+    set fileh [open $file r]
+    fconfigure $fileh -encoding utf-8
+    set domImpDoc [dom parse [read $fileh]]
+    close $fileh
+    set dataImpNode [[$domImpDoc documentElement] select database]
+    if {$dataImpNode==""} {
+        $domImpDoc delete
+        set domImpDoc ""
+        IDE::Dialog error [mc "wrong database migration format"]
+        return
+    }
+    set outFile [IDE::Dialog getSaveFile data.sql]
+    if {$outFile eq ""} return
+    set dbtype [my getDBType]
+    if {$dbtype eq ""} return
+    set f [open $outFile w]
+    fconfigure $fileh -encoding binary
+    
+    set dom_doc [dom parse [$dataImpNode asXML]]
+    set file_name $file
+    my changeButtonEnablement
+    set schemaHelper [DomSchemaVisitor new -childof [self] -guiobject [self] -rdom_doc $dom_doc]
+    set schema [$schemaHelper getCreateStatment $dbtype]
+    puts $f $schema
+    set export [SQLFileExporter new -filehandle $f -interface $dbtype]
+    my readXML [[$domImpDoc documentElement] select data] $export
+    $schemaHelper destroy
+    $dom_doc delete
+    $domImpDoc delete
+    close $f
+    $export destroy
+    IDE::Dialog message [mc "XML was successful converted"]
+}
+SchemaEditorWin instproc createAttribute node {
+    set ret [IDE::IDialogEntry getValueWithCancel [mc "New Attribute"]]
+    if {$ret!="_cancel"} {
+        my instvar sqlconnect schemaVisitor
+        if {[$schemaVisitor checkName $ret]} {
+            if {[lsearch [$schemaVisitor getAttributes $node] $ret]<0} {
+                set node [$schemaVisitor createAttribute $node $ret]
+                my addPendingSchemaChanges $node create attribute
+            } else {
+                IDE::Dialog error [mc "Attribute already exists"]
+            }
+        } else {
+            IDE::Dialog error [mc "Wrong attribute name"]
+        }
+    }
+}
+SchemaEditorWin instproc createDBFromSchema {} {
+    my instvar schemaVisitor sqlconnect
+    if {[set mess [$schemaVisitor checkSchema]]==""} {
+        if {![my connectDatabase 1]} return
+        set schema [$schemaVisitor getCreateStatment [$sqlconnect interface]]
+        my applySchemaSqlToConnection $schema $sqlconnect
+        my clearSchemaChanges
+    } else {
+        IDE::Dialog error $mess
+    }
+}
+SchemaEditorWin instproc createInsertSQL {table attributes data} {
+    if {[llength $attributes]==0} return
+    set values [list]
+    foreach v $data {
+        if {$v eq ""} {
+            # !!! this is quite problematic some databases know empty string und NULL
+            # for example mysql
+            lappend values NULL
+        } else {
+            set v [string map "\0 {\\0} ' ''" $v]
+            lappend values "'$v'"
+            
+        }
+    }
+    if {[string first " " $table]>=0} {
+        set tableExpr "\[$table\]" 
+    } else {
+        set tableExpr $table
+    }
+    return "INSERT INTO $tableExpr ([join $attributes ,]) VALUES ([join $values ,]);"
+}
+SchemaEditorWin instproc createSystemMenu {} {
+    my instvar win
+    if {[winfo toplevel $win]=="."} {
+        set twin {}
+    } else {
+        set twin $win
+    }
+    set ms [my getViewMenu]
+    $ms createTkMenu $twin.mb.view $twin
+    $twin.mb add cascade -label [$ms set name] -menu $twin.mb.view -underline 0
+    set ms [my getReverseEngMenu]
+    $ms createTkMenu $twin.mb.rev $twin
+    $twin.mb add cascade -label [$ms set name] -menu $twin.mb.rev -underline 0
+    
+    menu $twin.mb.help -tearoff 0
+    $twin.mb add cascade -label [mc "Help"] -menu $twin.mb.help  -underline 0
+    XDBase installHelpMenu $twin.mb.help SchemaEditor
+    $twin.mb.help add separator
+    $twin.mb.help add command -label "view XML Forms"  -command [list [self] seeXMLSchema]
+    
+    [winfo toplevel $win] configure -menu $twin.mb
+}
+SchemaEditorWin instproc createTable {} {
+    set ret [IDE::IDialogEntry getValueWithCancel [mc "New Table"]]
+    if {$ret!="_cancel"} {
+        my instvar sqlconnect schemaVisitor
+        if {[$schemaVisitor checkName $ret]} {
+            if {[lsearch [$schemaVisitor getTables] $ret]<0} {
+                set node [$schemaVisitor newTable $ret]
+                my addPendingSchemaChanges $node create table
+            } else {
+                IDE::Dialog error [mc "Table already exists"]
+            }
+        } else {
+            IDE::Dialog error [mc "Wrong table name"]
+        }
+    }
+}
+SchemaEditorWin instproc defineLabel node {
+    set node [$node firstChild]
+    # Setzt Label als erstes Child in der Tabelle node
+    set doc [$node ownerDocument]
+    set lnode [$doc createElement label]
+    serviceSEdit addElem $lnode $node 0
+    my editSchemaNode $lnode
+}
+SchemaEditorWin instproc deleteAssoziation node {
+    set assname [$node getAttribute name]
+    set anodes [$node selectNodes /descendant::assoziationtarget\[@name=\"$assname\"\]]
+    # Suche assoztioncontainer
+    set cnodes [$node selectNodes /descendant::assoziationcollection\[@name=\"$assname\"\]]
+    set anodes [concat $anodes $cnodes]
+    set rltable [[lindex $cnodes 0] parentNode]
+     if {[$rltable hasAttribute type] && [$rltable getAttribute type]=="relationship"} {
+        $rltable removeAttribute type
+        my applyChanges $rltable
+        #puts HIER
+    }
+    foreach dnode $anodes {
+        serviceSEdit deleteElem $dnode
+    }
+}
+SchemaEditorWin instproc deleteAttribute node {
+    my instvar schemaVisitor
+    set table [lindex [$node selectNodes ancestor::table] 0]
+    set table_name [$table getAttribute name]
+    $schemaVisitor removeAttribute $node
+    my addPendingSchemaChanges $node delete attribute $table_name
+}
+SchemaEditorWin instproc deleteElem node {
+    my instvar pathnode hlist edit_node
+    set path $pathnode($node)
+    #puts "delete $node $path"
+    $hlist delete entry $path
+    unset pathnode($node)
+    if {[info exists edit_node] && $edit_node==$node} {
+        my editForget
+    }
+}
+SchemaEditorWin instproc deleteGroup node {
+    set posnode [$node nextSibling]
+    foreach ch_node [$node childNodes] {
+        serviceSEdit moveElem $ch_node $posnode 0
+    }
+    serviceSEdit deleteElem $node
+}
+SchemaEditorWin instproc deleteNestedTable node {
+    my instvar data_node
+    foreach delattr {type reference inherittype inheritkey} {
+        if {[$node hasAttribute $delattr]} {
+            $node removeAttribute $delattr
+        }
+    }
+    serviceSEdit moveElem $node $data_node 1
+    my applyChanges $node
+}
+SchemaEditorWin instproc deleteTable node {
+    my instvar schemaVisitor
+    $schemaVisitor deleteTable $node
+    my addPendingSchemaChanges $node delete table
+}
+SchemaEditorWin instproc destroy {} {
+    my disconnectDatabase
+    next
+}
+SchemaEditorWin instproc disconnectDatabase {} {
+    my instvar sqlconnect
+    if {[info exists sqlconnect] && $sqlconnect!=""} {
+        $sqlconnect destroy
+        set sqlconnect ""
+        my setTitleAddition [mc disconnected]
+    }
+}
+SchemaEditorWin instproc editForget {} {
+    my instvar actuel_edit
+    if {$actuel_edit!=""} {
+        pack forget [$actuel_edit set win]
+        set actuel_edit {}
+    }    
+}
+SchemaEditorWin instproc editNode {} {
+    my instvar hlist
+    my mlist_sel [$hlist info selection]
+}
+SchemaEditorWin instproc editSchemaNode node {
+    my instvar win editframe actuel_edit edit_node
+    if {![my editSchemaUpdate 0]} return
+    # Typ der Node ermitteln
+    set nodeType [$node nodeName]
+    set objname {
+        {attr SchemaEditAttribute}
+        {database SchemaEditDatabase}
+        {table SchemaEditTable}
+        {attrgroup SchemaEditGroup}
+        {label SchemaEditLabel}
+        {assoziationcollection SchemaEditCollection}
+        {assoziationtarget SchemaEditTarget}
+    }
+    set objtyp [keylget objname $nodeType]
+    # Wenn ein Objekt dieses Types nicht Existiert dann init und map
+    if {[my info children my$objtyp]==""} {
+        $objtyp [self]::my${objtyp} 
+        [self]::my${objtyp} map $editframe.edit_$nodeType
+    }
+    # Wenn neues Objekt ungleich altes von Typ dann forget (aus der Sicht)
+    if {$actuel_edit!="" && $objtyp!=[$actuel_edit info class]} {
+        pack forget [$actuel_edit set win]
+        set actuel_edit {}
+    }
+    if {$actuel_edit==""} {
+        set actuel_edit [self]::my${objtyp}
+        #puts "WIN [$actuel_edit set win]"
+        pack [$actuel_edit set win] -side left -anchor nw
+    }
+    # Aktualisiere die Anzeige auf Node
+    $actuel_edit handleNewNode $node
+    set edit_node $node
+    # Die veränderungen müssen auch auf die GUI abgebildet werden
+    # z.B. Name
+}
+SchemaEditorWin instproc editSchemaUpdate {{force 1}} {
+    my instvar actuel_edit
+    if {$actuel_edit!=""} {
+        set mes [$actuel_edit applyChanges]
+        if {!$force && $mes!=""} {
+            IDE::Dialog message $mes
+            return 0
+        }
+    }    
+    return 1
+}
+SchemaEditorWin instproc elemMoveable node {
+    set type [$node nodeName]
+    switch $type {
+        attr {
+            if {[$node hasAttribute primary_key] && 
+                [$node getAttribute primary_key]} {
+                return 0
+            } else {
+                return 1
+            }
+        }
+        table {
+            return 1
+        }
+        attrgroup {
+            return 1
+        }
+    }
+    return 0
+}
+SchemaEditorWin instproc elementDown {} {
+    my instvar hlist
+    set entry [$hlist info selection]
+    if {$entry==""} return
+    set node [$hlist info data $entry]
+    if {$node==""} return
+    if {![my elemMoveable $node]} return
+    if {[set next_node [$node nextSibling]]==""} return
+    if {![my elemMoveable $next_node]} return
+    if {[set nn_node [$next_node nextSibling]]!=""} {
+        serviceSEdit moveElem $node $nn_node 0
+    } else {
+        serviceSEdit moveElem $node [$node parentNode] 1
+    }
+    my selectPerNode $node
+}
+SchemaEditorWin instproc elementUp {} {
+    my instvar hlist
+    set entry [$hlist info selection]
+    if {$entry==""} return
+    set node [$hlist info data $entry]
+    if {$node==""} return
+    if {![my elemMoveable $node]} return
+    if {[set prev_node [$node previousSibling]]==""} return
+    if {![my elemMoveable $prev_node]} return
+    serviceSEdit moveElem $node $prev_node 0
+    my selectPerNode $node
+}
+SchemaEditorWin instproc exportSQL {} {
+    my instvar win data_node dom_doc file_name schemaVisitor sqlconnect
+    set outFile [IDE::Dialog getSaveFile data.sql]
+    if {$outFile eq ""} return
+    set dbtype [my getDBType]
+    if {$dbtype eq ""} return
+    set schema [$schemaVisitor getCreateStatment $dbtype]
+    set f [open $outFile w]
+    fconfigure $f -encoding utf-8
+    puts $f $schema
+    set export [SQLFileExporter new -filehandle $f -interface $dbtype]
+    my readDataTo $export
+    close $f
+    $export destroy
+}
+SchemaEditorWin instproc exportXML {} {
+    my instvar win data_node dom_doc file_name schemaVisitor sqlconnect
+    if {![IDE::Dialog yesNo [mc "warning! this function load all database to in memory XML DOM structure. This action can overload your computer. In spite of this process?"]]} {
+        return
+    }
+    set types {
+        {"XML Dump files"         {.xmldump}  }
+        {"All files"            *}
+    }
+    set outFile [IDE::Dialog getSaveFile data.xmldump $types .xmldump]
+    if {$outFile eq ""} return
+    set f [open $outFile w]
+    set expDomDoc [dom createDocument databaseexport]
+    set expDataExpNode [$expDomDoc documentElement]
+    $expDataExpNode appendXML [$data_node asXML]
+    set expDataNode [$expDomDoc createElement data]
+    $expDataExpNode appendChild $expDataNode
+    set writer [SQLXMLExporter new -dataDoc $expDomDoc -dataNode $expDataNode]
+    my readDataTo $writer
+    $writer destroy
+    puts -nonewline $f [$expDataExpNode asXML]
+    $expDomDoc delete
+    close $f
+}
+SchemaEditorWin instproc extend_view {} {
+    my instvar treeWin
+    $treeWin open 
+    
+}
+SchemaEditorWin instproc fillMenuStruct aMenuStruct {
+    $aMenuStruct enablementHandler [self]
+
+    $aMenuStruct addCommand [mc "New Schema"] [list [self] newSchema]
+    $aMenuStruct addCommand [mc "New from DB"] [list [self] newSchemaFromDB]
+    $aMenuStruct addCommand [mc "Read Repository from file"] [list [self] loadSchema]
+    $aMenuStruct addCommand3 [mc "Save as XML-file"] [list [self] saveasxml] hasSchema
+    $aMenuStruct addSeparator
+    $aMenuStruct addCommand3 [mc "Connect To Database"] [list [self] connectDatabase] {hasNoDatabaseConnection}
+    $aMenuStruct addCommand3 [mc "Disconnect from Database"] [list [self] disconnectDatabase] {hasDatabaseConnection}
+    IDE::MenuStruct ${aMenuStruct}::migration [mc "Migration"]
+    $aMenuStruct addCascadeMenu ${aMenuStruct}::migration
+    ${aMenuStruct}::migration addCommand3 [mc "Database to XML-Dump"] [list [self] exportXML] {hasSchema hasDatabaseConnection}
+    ${aMenuStruct}::migration addCommand3 [mc "Database to SQL-Dump"] [list [self] exportSQL] {hasSchema hasDatabaseConnection}
+    ${aMenuStruct}::migration addCommand [mc "create Database from XML-Dump"] [list [self] importXML]
+    ${aMenuStruct}::migration addCommand [mc "XML-Dump to SQL"] [list [self] convertXML2SQL]
+    ${aMenuStruct}::migration addCommand3 [mc "Migrate Database"] [list [self] migrateDatabase] {hasSchema hasDatabaseConnection}
+    IDE::MenuStruct ${aMenuStruct}::spezial [mc "Schema Operations"]
+    $aMenuStruct addCascadeMenu ${aMenuStruct}::spezial
+    ${aMenuStruct}::spezial addCommand3 [mc "Show SQL Create"] [list [self] showSchema] hasSchema
+    ${aMenuStruct}::spezial addCommand3 [mc "Show Schema Changes"] [list [self] showSchemaChanges] {hasSchema hasPendingSchemaChanges}
+    ${aMenuStruct}::spezial addCommand2 [mc "Apply Schema changes to DB"] [list [self] synchronizeDatabase] {hasSchema hasPendingSchemaChanges hasDatabaseConnection}
+    ${aMenuStruct}::spezial addCommand2 [mc "Synchronize Schema with DB"] [list [self] synchronizeSchema] {hasSchema}
+    ${aMenuStruct}::spezial addCommand2 [mc "Create Database from Schema"] [list [self] createDBFromSchema] {hasSchema}
+    $aMenuStruct addCommand2 [mc "Exit"] [list [self] closeWindow]
+}
+SchemaEditorWin instproc getChangeForattribute {node mode additional} {
+   set table [lindex [$node selectNodes ancestor::table] 0]
+   if {$table!=""} {
+       set table_name [$table getAttribute name]
+   } else {
+       set table_name $additional
+   }
+   set attr_name [$node getAttribute name]
+   my instvar schemaVisitor
+   switch $mode {
+        create {
+           set attrdef [$schemaVisitor getAttributeCreateStatement $node]
+           return "ALTER TABLE $table_name ADD COLUMN $attrdef"
+        }
+        update {
+           set attrdef [$schemaVisitor getAttributeCreateStatement $node]
+           return "ALTER TABLE $table_name CHANGE COLUMN $additional $attrdef"
+        }
+        delete {
+           return "ALTER TABLE $table_name DELETE COLUMN $attr_name"
+        }
+    }
+}
+SchemaEditorWin instproc getChangeFortable {node mode additional} {
+   set table_name [$node getAttribute name]
+   my instvar schemaVisitor
+   switch $mode {
+        create {
+           return [$schemaVisitor getTableCreateStatement $node]
+        }
+        update {
+           return "RENAME TABLE $additional TO $table_name"
+        }
+        delete {
+           return "DROP TABLE $table_name"
+        }
+    }
+}
+SchemaEditorWin instproc getDBType {} {
+    IDE::IDialogList getListItem [mc "Choose your database"] [Sqlinterface getInterfacesNames] mysqltcl
+}
+SchemaEditorWin instproc getMenuStruct {} {
+    IDE::MenuStruct create [self]::ms {Schema Editor} 0
+}
+SchemaEditorWin instproc getReverseEngMenu {} {
+    set ms [IDE::MenuStruct new -childof [self] [mc "Reverse engineering"] 0]
+    $ms enablementHandler [self]
+    $ms enableList hasSchema
+    $ms addCommand [mc "Find foreign keys"] [list [self] reverseEngeneering foreignkeys]
+    $ms addCommand [mc "Find heritage (subtypes)"] [list [self] reverseEngeneering heritage]
+    $ms addCommand [mc "Find Relationship tables"] [list [self] reverseEngeneering assoziation_rel]
+    $ms addCommand [mc "Suggest aggregation of the tables"] [list [self] reverseEngeneering aggregation]
+    return $ms 
+}
+SchemaEditorWin instproc getSchemaChanges {} {
+    my instvar pendingSchemaChanges
+    my cleanPendingSchemaChanges
+    set ret [list]
+    foreach change $pendingSchemaChanges {
+        set node [lindex $change 0]
+        set mode [lindex $change 1]
+        set type [lindex $change 2]
+        set add [lindex $change 3]
+        lappend ret [my getChangeFor$type $node $mode $add]
+    }
+    return $ret
+}
+SchemaEditorWin instproc getTitle {} {
+    return "Schema Editor"
+}
+SchemaEditorWin instproc getViewMenu {} {
+    set ms [IDE::MenuStruct new -childof [self] [mc "View"] 0]
+    $ms enablementHandler [self]
+    $ms enableList hasSchema
+    my requireNamespace
+    $ms addCommand [mc "Adapt tree"] [list [self] autosetmode]
+    $ms addSeparator
+    $ms addCheckButton [mc "Attributes"] [self]:v_attr [list [self] changeView] 
+    $ms addCheckButton [mc "Groups of attributes"] [self]::v_attr_group [list [self] changeView] 
+    $ms addCheckButton [mc "Association-targets"] [self]::v_ass_target [list [self] changeView]
+    $ms addCheckButton [mc "Association-collections"] [self]::v_ass_collection [list [self] changeView]
+    $ms addCheckButton [mc "Aggregated tables"] [self]::v_aggr_table [list [self] changeView]
+    $ms addCheckButton [mc "Children tables"] [self]::v_child_table [list [self] changeView]
+    $ms addCheckButton [mc "Relationship tables"] [self]::v_ass_table [list [self] changeView]
+    $ms addCheckButton [mc "Table labels"] [self]::v_table_label [list [self] changeView]
+    return $ms 
+}
+SchemaEditorWin instproc hasDatabaseConnection {} {
+    my instvar sqlconnect
+    expr {
+        [info exists sqlconnect] && 
+        $sqlconnect!="" &&
+        [$sqlconnect isConnected]
+    }
+}
+SchemaEditorWin instproc hasNoDatabaseConnection {} {
+    expr {![my hasDatabaseConnection]}
+}
+SchemaEditorWin instproc hasPendingSchemaChanges {} {
+    my instvar pendingSchemaChanges
+    expr {[llength $pendingSchemaChanges]>0}
+}
+SchemaEditorWin instproc hasSchema {} {
+   my instvar data_node
+   expr {[info exists data_node] && $data_node!=""}
+}
+SchemaEditorWin instproc hasSchemaManipulation {} {
+    return 1
+}
+SchemaEditorWin instproc importXML {} {
+    my instvar win data_node dom_doc file_name schemaVisitor
+    set types {
+        {"XML Dump File" .xmldump}
+        {"All files" *}
+    }
+    set file [tk_getOpenFile -filetypes $types -parent .]
+    if {$file == ""} { return }
+    set fileh [open $file r]
+    fconfigure $fileh -encoding utf-8
+    my clearSchema
+    set domImpDoc [dom parse [read $fileh]]
+    close $fileh
+    set dataImpNode [[$domImpDoc documentElement] select database]
+    if {$dataImpNode==""} {
+        $domImpDoc delete
+        set domImpDoc ""
+        IDE::Dialog error [mc "wrong database migration format"]
+        return
+    }
+    set dom_doc [dom parse [$dataImpNode asXML]]
+    set data_node [$dom_doc documentElement]
+    set file_name $file
+    my changeButtonEnablement
+    xmlSchemaExtractor extract_schema [self] $data_node
+    set schemaVisitor [DomSchemaVisitor new -childof [self] -guiobject [self] -rdom_doc $dom_doc]
+    my createDBFromSchema
+    my readXML [[$domImpDoc documentElement] select data] [my set sqlconnect]
+    $domImpDoc delete
+    my autosetmode
+}
+SchemaEditorWin instproc initVariables {} {
+    my instvar actuel_edit editframe   v_foreignkey_attr v_attr v_attr_group v_ass_target  v_ass_collection v_aggr_table v_child_table v_ass_table v_table_label
+
+    set v_foreignkey_attr 1
+    set v_attr 1
+    set v_attr_group 1
+    set v_ass_target  1
+    set v_ass_collection  1
+    set v_aggr_table  1
+    set v_child_table  1
+    set v_ass_table 1
+    set v_table_label 1
+    set actuel_edit {}
+}
+SchemaEditorWin instproc loadSchema {{file {}}} {
+    my instvar win data_node dom_doc file_name schemaVisitor
+    set types {
+        {"XML DB Schema"            {.xmldbschema}     }
+        {"All files"            *}
+    }
+    if {$file==""} {
+        set file [tk_getOpenFile -filetypes $types -parent .]
+    }
+    if {$file == ""} { return }
+    set fileh [open $file r]
+    fconfigure $fileh -encoding utf-8
+    my clearSchema
+    set dom_doc [dom parse [read $fileh]]
+    close $fileh
+    set data_node [$dom_doc documentElement]
+    if {[$data_node nodeName]!="database"} {
+        $dom_doc delete
+        set dom_doc ""
+        IDE::Dialog error [mc "False XML file. Expect one \".dbform\" XML file."]
+        return
+    }
+    set file_name $file
+    my changeButtonEnablement
+    xmlSchemaExtractor extract_schema [self] $data_node
+    set schemaVisitor [DomSchemaVisitor new -childof [self] -guiobject [self] -rdom_doc $dom_doc]
+    my autosetmode
+}
+SchemaEditorWin instproc menusAssoziation {m data_node node} {
+    $m add command -label [mc "delete Association"]  -command [list [self] deleteAssoziation $node]
+    $m add command -label [mc "Edit association"]  -command [list AssAssistent execute $data_node $node]
+}
+SchemaEditorWin instproc menusAssoziationcollection {m data_node node} {
+    my menusAssoziation $m $data_node $node
+    set tname [tdom_extractAttributes [$node selectNodes child::assoziationcollection/child::paticipant/attribute::table]]
+    if {[$node getAttribute type]=="reference" && $tname!=[$node getAttribute name]} {
+        $m add command -label [mc "Association to aggregation"]  -command "[self] ass2aggr $node "
+    }
+}
+SchemaEditorWin instproc menusAssoziationtarget {m data_node node} {
+    my menusAssoziation $m $data_node $node
+}
+SchemaEditorWin instproc menusAttrgroup {m data_node node} {
+    $m add command -label [mc "delete Group"]  -command [list [self] deleteGroup $node]
+}
+SchemaEditorWin instproc menusAttribut {m data_node node} {
+    if {[my hasSchemaManipulation]} {
+        my addMenuCommand $m [mc "delete"] [list [self] deleteAttribute $node]
+    }
+    if {[[$node parentNode] nodeName]!="attrgroup"} {
+        $m add command -label [mc "new Group"]  -command [list [self] newAttrGroup $node]
+    }
+}
+SchemaEditorWin instproc menusDatabase {m data_node node} {
+    if {[my hasSchemaManipulation]} {
+        my addMenuCommand $m [mc "new table"] [list [self] createTable]
+    }
+}
+SchemaEditorWin instproc menusTable {m data_node node} {
+    if {[my hasSchemaManipulation]} {
+        my addMenuCommand $m [mc "new Attribute"] [list [self] createAttribute $node]
+    }
+    if {[[$node parentNode] nodeName]!="attrgroup"} {
+        $m add command -label [mc "new Group"]  -command [list [self] newAttrGroup $node]
+    }
+    if {[[$node parentNode] nodeName]=="table"} {
+        $m add command -label [mc "separate Table"]  -command [list [self] deleteNestedTable $node]
+        # Aggregation zu Assoziation umwandeln
+        if {[$node hasAttribute reference]} {
+            $m add command -label [mc "Aggregation to association"]  -command [list [self] aggr2ass $node]
+        }
+    }
+    if {[$node selectNodes child::label]==""} {
+        $m add command -label [mc "Define table label"]  -command [list [self] defineLabel $node]
+    }
+    # $m add command -label [mc "ignore Table in schema"]  -command [list serviceSEdit deleteElem $node]
+    if {[my hasSchemaManipulation]} {
+        $m add command -label [mc "delete Table"]  -command [list [self] deleteTable $node]
+    }
+}
+SchemaEditorWin instproc migrateDatabase {} {
+    my instvar win data_node dom_doc file_name schemaVisitor sqlconnect
+    if {[set outconnect [ConnectCreator getconnect {} 0 0 1]]=="" || ![$outconnect isConnected]} { 
+        if {$outconnect!=""} {
+            $outconnect destroy
+            set sqlconnect ""
+        }
+        return
+    }
+    if {[$outconnect interface] eq "mysql"} {
+        # set binary encoding for transfer binary data
+        ::mysql::encoding [$outconnect set handle] binary
+    }
+    set schema [$schemaVisitor getCreateStatment [$outconnect interface]]
+    my applySchemaSqlToConnection $schema $outconnect
+    my readDataTo $outconnect
+    IDE::Dialog message [mc "database was successful migrated"]
+    $outconnect destroy
+}
+SchemaEditorWin instproc mlist_sel list {
+    my instvar hlist
+    if {$list!=""} {
+        my editSchemaNode [$hlist info data $list]
+    }
+}
+SchemaEditorWin instproc moveElem {node pos child} {
+    my instvar pathnode hlist
+    set path $pathnode($node)
+    set pathlen [expr [string length $path]-1]
+    # Hier werden alle nachkommen (auch Kinder der Kinder u.s.w) der Node
+    # Ermittelt
+    for {set moveitem $path} {[string range $moveitem 0 $pathlen]==$path} {set moveitem [$hlist info next $moveitem]} {
+        lappend movelist [list  $moveitem  [$hlist entrycget $moveitem -itemtype]  [$hlist entrycget $moveitem -text]  [$hlist entrycget $moveitem -image]  [$hlist entrycget $moveitem -data]]
+    }
+    $hlist delete entry $path
+    set pathlen [string length $path]
+    if {$child} {
+        if {$pos=="root"} {
+            set newpath $node
+        } else {
+            set newpath $pathnode($pos).$node
+        }
+    } else {
+        set parent [$hlist info parent $pathnode($pos)]
+        set newpath $parent.$node
+    }
+    #puts "MV $movelist"
+    foreach item $movelist {
+        set mpath [string range [lindex $item 0] $pathlen end]
+        set itemtype [lindex $item 1]
+        set text [lindex $item 2]
+        set image [lindex $item 3]
+        set data [lindex $item 4]
+        set pathnode($data) ${newpath}${mpath}
+        #puts "mp $mpath it $itemtype text $text image $image $data"
+        if {$child || $mpath!=""} {
+            $hlist add ${newpath}${mpath} -itemtype $itemtype  -text $text -image $image -data $data
+        } else {
+            $hlist add ${newpath}${mpath} -itemtype $itemtype  -text $text -image $image -data $data -before $pathnode($pos)
+        }
+    }
+}
+SchemaEditorWin instproc newAttrGroup node {
+    my instvar win hlist
+    set doc [$node ownerDocument]
+    set gnode [$doc createElement attrgroup]
+    set name [Object autoname group]
+    $gnode setAttribute name $name
+    if {[$node nodeName]=="table"} {
+        set node [$node firstChild]
+    }
+    [$node parentNode] insertBefore $gnode $node
+    my addElem $gnode $node 0
+    my editSchemaNode $gnode
+}
+SchemaEditorWin instproc newName {node name} {
+    my instvar pathnode hlist
+    set path $pathnode($node)
+    #puts "configure name $node $path"
+    $hlist entryconfigure $path -text $name
+}
+SchemaEditorWin instproc newSchema {} {
+    my instvar win data_node dom_doc hlist file_name sqlconnect schemaVisitor
+    set ret [IDE::IDialogEntry getValueWithCancel [mc "give name of new schema"]]
+    if {$ret!="_cancel"} {
+        my disconnectDatabase
+        my clearSchema
+        set dom_doc [dom createDocument database]
+        set data_node [$dom_doc documentElement]
+        # xml <? dbconnect setzten ?>
+        set schemaVisitor [DomSchemaVisitor new -childof [self] -guiobject [self] -rdom_doc $dom_doc  -dbname $ret]
+        my changeButtonEnablement
+        $win.tree autosetmode 
+        set file_name {}
+    }
+}
+SchemaEditorWin instproc newSchemaFromDB {} {
+    my instvar win data_node dom_doc hlist file_name sqlconnect schemaVisitor
+    if {![my connectDatabase]} return
+    my clearSchema
+    set dom_doc [dom createDocument database]
+    set data_node [$dom_doc documentElement]
+    # xml <? dbconnect setzten ?>
+    keylset attrlist interface [$sqlconnect set interface]
+    foreach par [$sqlconnect getconnectargs] {
+        set attr [lindex $par 0]
+        if {$attr=="password"} continue
+        if {[$sqlconnect exists $attr]} {
+            keylset attrlist $attr [$sqlconnect set $attr]
+        }
+    }
+    $data_node appendChild [$dom_doc createProcessingInstruction  dbconnect $attrlist]
+    #Schema aus DB DataDictionary auslesen und zu XML umwandeln
+    
+    set schemaVisitor [DomSchemaVisitor new -childof [self] -guiobject [self] -rdom_doc $dom_doc  -dbname [$sqlconnect set dbank]]
+    $sqlconnect extract_schema $schemaVisitor 
+    # Puszeichen bei Tree setzten
+    my changeButtonEnablement
+    my autosetmode
+    set file_name {}
+}
+SchemaEditorWin instproc popMenuTree {x y} {
+    my instvar win hlist data_node
+    set entry [$hlist info selection]
+    if {$entry==""} { return }
+    set node [$hlist info data $entry]
+    if {$node==""} { return }
+    set type [$node nodeName]
+
+    set m $win.popmenu
+    destroy $m
+    menu $m -tearoff 0
+    if {[lcontain {table attr} $type] && 
+        [[$node parentNode] nodeName]!="attrgroup"} {
+        $m add command -label [mc "New group"]  -command [list [self] newAttrGroup $node]
+    }
+    switch $type {
+        attr { my menusAttribut $m $data_node $node}
+        attrgroup { my menusAttrgroup $m $data_node $node}
+        assoziationtarget { my menusAssoziationtarget $m $data_node $node}
+        assoziationcollection { my menusAssoziationcollection $m $data_node $node}
+        table { my menusTable $m $data_node $node}
+        database { my menusDatabase $m $data_node $node}        
+    }
+    $m add command -label [mc "Properties"]  -command [list [self] editSchemaNode $node]
+    tk_popup $m $x $y
+}
+SchemaEditorWin instproc popmenuTree {x y} {
+    my instvar win hlist data_node
+    set entry [$hlist info selection]
+    if {$entry==""} { return }
+    set node [$hlist info data $entry]
+    if {$node==""} { return }
+    set type [$node nodeName]
+
+    set m $win.popmenu
+    destroy $m
+    menu $m -tearoff 0
+    switch $type {
+        attr { my menusAttribut $m $data_node $node}
+        attrgroup { my menusAttrgroup $m $data_node $node}
+        assoziationtarget { my menusAssoziationtarget $m $data_node $node}
+        assoziationcollection { my menusAssoziationcollection $m $data_node $node}
+        table { my menusTable $m $data_node $node}
+        database { my menusDatabase $m $data_node $node}        
+    }
+    $m add command -label [mc "Properties"]  -command [list [self] editSchemaNode $node]
+    tk_popup $m $x $y
+}
+SchemaEditorWin instproc readDataTo writer {
+    my instvar schemaVisitor sqlconnect
+    foreach tableNode [$schemaVisitor getTablesNodes] {
+        set table [$tableNode getAttribute name]
+        if {[$writer interface] eq "MSSql"} {
+            $writer execute "SET IDENTITY_INSERT [$writer maskTableName $table] ON"
+        }
+        set attributes [$schemaVisitor getAttributes $tableNode]
+        set types [$schemaVisitor getAttributeTypes $tableNode]
+        set mcolumns [list]
+        foreach c $attributes {
+            lappend mcolumns [$sqlconnect maskColumnName $c]
+        }
+        set select "select [join $mcolumns ,] from [$sqlconnect maskTableName $table]"
+        set q [$sqlconnect query $select]
+        if {$q eq ""} {
+            if {[IDE::Dialog yesNo [format [mc "DB error by selecting data %s from %s. (Yes) Continue or No (break migration)"] [$sqlconnect errorMessage] $table]]} {
+                continue
+            } else {
+                break
+            }
+        }
+        set break ""
+        while 1 {
+            set data [$q fetch]
+            if {[llength $data]==0} break;
+            set ndata [list]
+            foreach d $data t $types {
+                if {[$sqlconnect isNull $d]} {
+                    lappend ndata NULL
+                } else {
+                    # postgres longblob must be converted to binary
+                    if {$t eq "longblob" && [$sqlconnect interface] eq "postgres"} {
+                        lappend ndata [$sqlconnect convertBytea $d]
+                    } elseif {$t eq "money"} {
+                        # MS Access can return .56 for 0.56 for money type
+                        if {[string index $d 0]=="."} {
+                            lappend ndata "0$d"   
+                        } else {
+                            lappend ndata $d
+                        }
+                    } else {
+                        lappend ndata $d
+                    }
+                }
+            }
+            set iret [$writer insertRow $table $attributes $ndata $types]
+            if {$iret eq ""} {
+                if {[IDE::Dialog yesNo [format [mc "DB error by inserting data %s int %s. (Yes) Continue or No (break migration)"] [$writer errorMessage] $table]]} {
+                    continue
+                } else {
+                    set break break
+                    break
+                }
+            }
+        }
+        $q destroy
+        if {[$writer interface] eq "MSSql"} {
+            $writer execute "SET IDENTITY_INSERT [$writer maskTableName $table] OFF"
+        }
+
+        if {$break eq "break"} { break }
+    }
+}
+SchemaEditorWin instproc readXML {dataNode export} {
+    set types [list]
+    foreach rowNode [$dataNode childNodes] {
+        set attrs [list]
+        set values [list]
+        set newtypes [list]
+        foreach cellNode [$rowNode childNode] {
+            lappend attrs [$cellNode nodeName]
+            if {[$cellNode hasAttribute isnull] && [$cellNode getAttribute isnull] eq "1"} {
+                lappend values NULL
+            } elseif {[$cellNode hasAttribute encoding] && [$cellNode getAttribute encoding] eq "base64"} {
+                package require base64
+                lappend values [::base64::decode [$cellNode text]]
+            } else {
+                lappend values [$cellNode text]
+            }
+            if {[$cellNode hasAttribute dbtype]} {
+                lappend newtypes [$cellNode getAttribute dbtype]
+            }
+        }
+        if {[llength $newtypes]>0} {
+            set types $newtypes
+        }
+        if {[llength $attrs]>0} {
+            set tableName [string map {_spc_ " "} [$rowNode nodeName]]
+            set iret [$export insertRow $tableName $attrs $values $types]
+            if {$iret eq ""} {
+                IDE::Dialog message [format [mc "DB error by inserting data %s in %s."] [$export errorMessage] $tableName]
+            }
+        }
+    }
+}
+SchemaEditorWin instproc restrict_view {} {
+    my instvar treeWin
+    $treeWin open 
+}
+SchemaEditorWin instproc reverseEngeneering type {
+    my instvar data_node
+    if {[my info children reverse]!=""} {
+        return
+    }
+    RE_$type [self]::reverse -schema_node $data_node
+    [self]::reverse execute
+}
+SchemaEditorWin instproc saveasxml {} {
+   my instvar data_node file_name window sqlconnect
+    if {![info exists data_node] || $data_node==""} return
+    set types {
+        {"XML files"         {.xmldbschema}  }
+        {"All files"            *}
+    }
+    if {![info exists file_name] && $file_name!=""} {
+        set file_name [$sqlconnect set dbank].xmldbschema
+    }
+    set f_name [tk_getSaveFile -filetypes $types -parent .  -initialfile $file_name -defaultextension .xmldbschema]
+    if {$f_name != ""} {
+        set file_name $f_name
+        set fh [open $file_name w]
+        fconfigure $fh -encoding utf-8
+        puts $fh "<?xml version='1.0' encoding='utf-8'?>\n<!DOCTYPE database SYSTEM \"dbschema.dtd\">\n[$data_node asXML]"
+        close $fh
+    }
+}
+SchemaEditorWin instproc seeXMLSchema {} {
+    my instvar data_node
+    if {![info exists data_node]} {
+        return
+    }
+    my showValueAsReport [$data_node asXML]
+}
+SchemaEditorWin instproc selectPerNode node {
+    my instvar hlist pathnode
+    set path $pathnode($node)
+    $hlist selection clear
+    $hlist selection set $path
+}
+SchemaEditorWin instproc showSchema {} {
+    my instvar schemaVisitor
+    set database [my getDBType]
+    if {$database eq "_cancel"} return
+    my showValueAsReport [$schemaVisitor getCreateStatment $database]
+}
+SchemaEditorWin instproc showSchemaChanges {} {
+    my showValueAsReport [my getSchemaChanges]
+}
+SchemaEditorWin instproc showValueAsReport value {
+    my instvar data_node
+    set win .xmlview
+    if {![winfo exist $win]} {
+          toplevel $win
+          text $win.text -yscroll [list $win.scroll set] -width 80 -height 24
+          scrollbar $win.scroll -command [list $win.text yview] -takefocus 0
+          
+          pack $win.scroll -side right -fill y
+          pack $win.text -expand yes -fill both
+    }
+   $win.text delete 1.0 end
+   $win.text insert 1.0 $value
+}
+SchemaEditorWin instproc specificInit {} {
+    my instvar win hlist actuel_edit editframe treeWin
+    
+    panedwindow $win.panedwin -orient horizontal
+    set treeWin $win.tree
+    tixTree $treeWin -command [list [self] mlist_sel] -options {hlist.separator "."}
+    set hlist [$win.tree subwidget hlist]
+    set editframe [frame $win.lframe]
+    frame $win.box -relief raised -bd 2
+    button $win.box.edit -text [mc "Modify"] -command [list [self] editNode] -width 10
+
+    button $win.box.ass -text [mc "+Association"] -command [list [self] addAssociacion] -width 10 -state disabled
+    button $win.box.aggr -text [mc "+Aggregation"] -command [list [self] addAggregation] -width 10 -state disabled
+    button $win.box.inherit -text [mc "+Subtypes"] -command [list [self] addInheritance] -width 10 -state disabled
+
+    button $win.box.up -image [tix getimage up]  -command [list [self] elementUp]  -takefocus 0 -bg #c0c0c0 -highlightbackground #c0c0c0 -state disabled
+    button $win.box.down -image [tix getimage down]  -command [list [self] elementDown]  -takefocus 0 -bg #c0c0c0 -highlightbackground #c0c0c0  -state disabled
+
+    pack $win.box.edit $win.box.ass $win.box.aggr $win.box.inherit  $win.box.up $win.box.down -side top -anchor w
+    
+    pack $win.box -side right -anchor e -fill y -expand yes -in $win.lframe
+
+    $win.panedwin add $win.tree -sticky news
+    $win.panedwin add $win.lframe -sticky news -width 400 -height 400
+    pack $win.panedwin -expand yes -fill both 
+    
+    bind $hlist <ButtonPress-3> [list [self] popMenuTree %X %Y]
+    
+    next
+}
+SchemaEditorWin instproc stopSystem {} {
+    catch {my clearSchema}
+    XDBase stopSystem
+}
+SchemaEditorWin instproc synchronizeDatabase {} {
+    my instvar sqlconnect dom_doc
+    if {[my hasDatabaseConnection] && [my hasPendingSchemaChanges]} {
+        foreach command [my getSchemaChanges] {
+            if {[$sqlconnect execute $command]==""} {
+                IDE::Dialog error [$sqlconnect errorMessage]
+                return
+            }
+        }
+        IDE::Dialog message [mc "database was successful updated"]
+        my clearSchemaChanges
+    }
+}
+SchemaEditorWin instproc synchronizeSchema {} {
+    my instvar sqlconnect dom_doc schemaVisitor
+    if {[my hasDatabaseConnection]} {
+        my clearSchemaChanges
+        $schemaVisitor class DomSchemaSynchronizator
+        $schemaVisitor startSynchronize
+        $sqlconnect extract_schema $schemaVisitor
+        $schemaVisitor finishSynchronize
+        $schemaVisitor class DomSchemaVisitor
+        IDE::Dialog message [format [mc "%s changes was made"] [$schemaVisitor set changesCount]]
+    }
+}
+SchemaEditorWin proc startSystem {} {
+    my instvar win
+    if {![Object isobject ProgGUI]} {
+        XDBase initSystem
+        SchemaEdit create serviceSEdit
+        if {![Object isobject IDE::Component]} {
+             frame .schemaEditor
+             pack .schemaEditor -fill both -expand yes
+        }
+        set inst [my create ProgGui .schemaEditor]
+        $inst initVariables
+    }
+}
+@ Object xmlSchemaExtractor {
+description {xmlSchemaExtraktor tranversiert das tDom Struktur
+der DB Schema un setzt es auf die anrufe (callback)
+des Visitors Object
+alle Attribute werden unverändert als keyedlist zurückgegeben}
+}
+Object xmlSchemaExtractor
+@ ::xmlSchemaExtractor idemeta component xdobry::SchemaEditor
+xmlSchemaExtractor proc extract_schema {guiobject schema_node} {
+    # tDom
+    $guiobject addElem $schema_node root 1
+    foreach table_node [$schema_node childNodes] {
+        if {[$table_node nodeType]=="ELEMENT_NODE"
+            && [$table_node nodeName]=="table"} {
+            $guiobject addElem $table_node $schema_node 1
+            my extract_table $guiobject $table_node
+        }
+    }
+
+}
+xmlSchemaExtractor proc extract_table {guiobject table_node} {
+    # tDom
+    foreach attr_node [$table_node childNodes] {
+        if {[$attr_node nodeType]=="ELEMENT_NODE"
+            && [$attr_node nodeName]=="attr"} {
+            $guiobject addElem $attr_node $table_node 1
+        } elseif {[$attr_node nodeType]=="ELEMENT_NODE"
+                  && [$attr_node nodeName]=="attrgroup"} {
+            # Attribut Gruppe; kann hier als Tabelle behandelt werden
+            $guiobject addElem $attr_node $table_node 1
+            my extract_table $guiobject $attr_node
+        } elseif {[$attr_node nodeType]=="ELEMENT_NODE"
+                  && [$attr_node nodeName]=="table"} {
+            # Aggregation oder Vererbung geschaftelete Tablellen
+            $guiobject addElem $attr_node $table_node 1
+            my extract_table $guiobject $attr_node
+        } elseif {[$attr_node nodeType]=="ELEMENT_NODE"
+                  && ([$attr_node nodeName]=="assoziationtarget" || 
+                      [$attr_node nodeName]=="assoziationcollection")} {
+            $guiobject addElem $attr_node $table_node 1
+        } elseif {[$attr_node nodeType]=="ELEMENT_NODE"
+                  && ([$attr_node nodeName]=="label")} {
+            $guiobject addElem $attr_node $table_node 1
+        }
+    }
+}
+

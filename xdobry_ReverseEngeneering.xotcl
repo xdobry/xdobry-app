@@ -1,0 +1,356 @@
+# automatically generated from XOTclIDE
+package provide xdobry::ReverseEngeneering 0.31
+Class ReverseEngeneering -parameter schema_node
+@ ::ReverseEngeneering idemeta component xdobry::ReverseEngeneering
+ReverseEngeneering instproc apply {} {
+    foreach obj [my info children] {
+        $obj apply
+    }
+    my destroy
+}
+ReverseEngeneering instproc destroy {} {
+    my instvar win
+    #puts destroy
+    ::destroy $win
+    next
+}
+ReverseEngeneering instproc execute {} {
+    my instvar textwin messagewin
+    my map
+    my search
+}
+ReverseEngeneering instproc infoText {} {
+    error "should be overwritten"
+}
+ReverseEngeneering instproc map {{window .reverse}} {
+    my instvar win textwin messagewin
+    set win $window
+    catch {destroy $win}
+    toplevel $win -class Dialog
+    wm title $win "Reverse Engeneering [my info class]"
+    wm iconname $win Dialog
+    wm protocol $win WM_DELETE_WINDOW "[self] destroy"
+    message $win.info -width 550  -text [my infoText]
+        
+    set textwin [[tixScrolledText $win.stext] subwidget text]
+    set messagewin [message $win.message]
+    tixButtonBox $win.buttons -orientation horizontal
+    $win.buttons add ok -text [mc "Ok"] -command "[self] apply"
+    $win.buttons add cancel -text [mc "Cancel"] -command "[self] destroy"
+    pack $win.info -fill x -expand 1
+    pack $win.stext -side top -fill both -expand 1
+    pack $win.buttons -side bottom -fill x -expand 1
+
+    focus $win
+}
+ReverseEngeneering instproc search {} {
+    my instvar textwin
+    if  {[my info children]==""} {
+        $textwin insert end [mc "No unidentified structures found"]
+    }
+    $textwin configure -state disabled
+}
+Class RE_aggregation -superclass ::ReverseEngeneering
+@ ::RE_aggregation idemeta component xdobry::ReverseEngeneering
+RE_aggregation instproc infoText {} {
+    return [mc "This Reverse engineering technique based on the step &quot; finds foreign keys&quot;.  The aggregation (composition) of the tables strikes forwards (embedded tables).  Algorithm shows only the suggestions, which aggregation semantics can do only determined by user.  Suggestions:  1.  All tables only one foreign key have. Can exist to still far aggregation.  Check they the 1:n associations"]
+}
+RE_aggregation instproc search {} {
+    my instvar schema_node textwin
+    # Untersuche die Referenzen (Frendschlüssel) in den Tabellen
+
+
+    foreach table [$schema_node selectNodes child::table\[not(@type)\ or\ @type!=\"relationship\"\]] {
+        set ass_col [$table selectNodes child::assoziationcollection]
+        if {[llength $ass_col]!=1} { continue }
+        # Primärschlüssel werden nicht berücksichtigt
+        # set primattr [tdom_getprimattr $table]
+        #set tname [$table getAttribute name]
+        set container  [$table selectNodes child::assoziationcollection/child::participant/attribute::table]
+        set container [tdom_extractAttributes $container]
+        if {[llength $container]!=1} { continue }
+        RE_aggregation::Executor new -childof [self] -container $container -table $table -textwin $textwin
+    }
+    next
+}
+Class RE_aggregation::Executor -parameter {container table textwin}
+@ ::RE_aggregation::Executor idemeta component xdobry::ReverseEngeneering
+RE_aggregation::Executor instproc apply {} {
+    my instvar check_apply container table
+    if {$check_apply} {
+        set domNode [[my info parent] set schema_node]
+        set tname [$table getAttribute name]
+        set reference [tdom_extractAttributes [$table selectNodes child::assoziationcollection/child::participant\[@table=\"$container\"\]/attribute::reference]]
+        set col_table [$domNode selectNodes descendant::table\[@name=\"$container\"\]]
+        # Entferne die Assoziatione Collection und Target
+        serviceSEdit deleteElem [$table selectNodes  child::assoziationcollection\[child::participant/attribute::table=\"$container\"\]]
+        serviceSEdit deleteElem [$col_table selectNodes  child::assoziationtarget\[@table=\"$tname\"\]]
+        # Neue Attributte bei Element-Tabelle setzten und einbetten
+        $table setAttribute reference $reference
+        serviceSEdit moveElem $table $col_table
+    }
+}
+RE_aggregation::Executor instproc init args {
+    my instvar check_apply container table textwin
+    my requireNamespace 
+    set check_apply 0
+    set wpost [namespace tail [self]]
+    checkbutton $textwin.c$wpost -text [mc "Accept"] -variable [self]::check_apply
+    $textwin window create end -window $textwin.c$wpost
+    $textwin insert end " [mc "Item"] [$table getAttribute name] [mc "Container"]: $container\n"
+}
+Class RE_assoziation_rel -superclass ::ReverseEngeneering
+@ ::RE_assoziation_rel idemeta component xdobry::ReverseEngeneering
+RE_assoziation_rel instproc infoText {} {
+    return [mc "This Reverse engineering technique are based on the step &quot;finds foreign keys&quot;. The tables should be determined, the Relationship model (e.g. n:m relationship).  Algorithm:  Find all tables, whose primary key consists several foreign keys of several foreign key or and have no unique primary key.  Internal message:  The Relationship tables are particularly drawn.  N:m or n:m:z.. relations is detected.  Relations may have own attributes."]
+}
+RE_assoziation_rel instproc search {} {
+    my instvar schema_node textwin
+    # Untersuche die Referenzen (Frendschlüssel) in den Tabellen
+    # Hat die Tabelle keinen eigenen Primärschlüssel oder alle 
+    # Fremdschlüssel-Attr  zu 
+    # Primärschlüssel gehören dann modelliert
+    # die Tabelle eine Relation
+    # Fasse zwei 1:n und 1:m zu n:m Beziehung
+
+    foreach table [$schema_node selectNodes child::table\[not(@type)\ or\ @type!=\"relationship\"\]] {
+        set ass_col [$table selectNodes child::assoziationcollection]
+        if {[llength $ass_col]<=1} { continue }
+        set primattr [tdom_getprimattr $table]
+        set tname [$table getAttribute name]
+        set references  [$table selectNodes child::assoziationcollection/child::participant/attribute::reference]
+        set references [tdom_extractAttributes $references]
+        set attributen [$table selectNodes {child::node()[not(self::table)]/descendant-or-self::attr/attribute::name}]
+        set attributen [tdom_extractAttributes $attributen]
+        # Kein Primärschlüssel
+        # Oder gehören alle Fremdschlüüsel-Attr zu Prim-Attributen
+        if {$primattr=="" || [minusMenge $references $primattr]==""} {
+            RE_assoziation_rel::Executor new -childof [self] -references $references  -reftables [tdom_extractAttributes [$table selectNodes child::assoziationcollection/child::participant/attribute::table]]  -ass_attr [minusMenge $attributen $references]  -textwin $textwin  -table $tname
+        }
+    }
+    next
+}
+Class RE_assoziation_rel::Executor -parameter {references reftables ass_attr table textwin}
+@ ::RE_assoziation_rel::Executor idemeta component xdobry::ReverseEngeneering
+RE_assoziation_rel::Executor instproc apply {} {
+    my instvar check_apply references reftables ass_attr table
+    if {$check_apply} {
+        set domNode [[my info parent] set schema_node]
+        set t_node  [$domNode selectNodes  descendant::table\[@name=\"$table\"\]]
+        $t_node setAttribute type relationship
+        ProgGui applyChanges $t_node
+        set ass_col [$t_node selectNodes child::assoziationcollection]
+        set fac_node [lindex $ass_col 0]
+        #Ändern von Collenction name
+        $fac_node setAttribute name [$t_node getAttribute name]
+        serviceSEdit newName $fac_node
+        $fac_node setAttribute type reftable
+        foreach ac_node [lrange $ass_col 1 end] {
+            foreach p_node [$ac_node selectNodes child::participant] {
+                $ac_node removeChild $p_node
+                $fac_node appendChild $p_node
+            }
+            serviceSEdit deleteElem $ac_node
+        } 
+        foreach otable $reftables  {
+            set tg_node [$domNode selectNodes  descendant::table\[@name=\"$otable\"\]/child::assoziationtarget\[@table=\"$table\"\]]
+            $tg_node setAttribute name $table
+            serviceSEdit newName $tg_node
+        } 
+    }
+}
+RE_assoziation_rel::Executor instproc init args {
+    my instvar check_apply references reftables ass_attr table textwin
+    my requireNamespace 
+    set check_apply 1
+    set wpost [namespace tail [self]]
+    checkbutton $textwin.c$wpost -text [mc "Accept"] -variable [self]::check_apply
+    $textwin window create end -window $textwin.c$wpost
+    $textwin insert end " [mc "Relationship table"] \"$table\" [mc "Degree"]: [llength $references]\n\t [mc "Foreign key"] \"[join $references ,]\"\n\t[mc "Associated tables"] \"[join $reftables ,]\"\n\t [mc "Association of attributes"] \"[join $ass_attr ,]\"\n"
+}
+Class RE_foreignkeys -superclass ::ReverseEngeneering
+@ ::RE_foreignkeys idemeta component xdobry::ReverseEngeneering
+RE_foreignkeys instproc infoText {} {
+    return [mc "find all attributes those exactly called the same like the primary keys of the other tables.  Limitation:  Key of the object tables consist of only one attribute.  No recursive relations!   Internal work:  A simple reference is created.  Association-container receives the foreign key.  Association-target receives the primary key"]
+}
+RE_foreignkeys instproc search {} {
+    my instvar schema_node textwin
+    # Finde alle Attribute, die ganua so heißen wie Primärschlüssel der anderen
+    # Tabellen abel nicht Prim-Attribut sind oder nicht 
+    # einziges Primatribut sind
+    
+    # Finde Alle Ein Attributige Primärschlüssel
+    foreach table [$schema_node selectNodes descendant::table] {
+        set primattr [tdom_getprimattr $table]
+        set tname [$table getAttribute name]
+        #puts "PA $primattr $tname"
+        if {[llength $primattr]==1} {
+            lappend obj_prims($primattr) $tname
+        }
+    }
+    # Überprüfe ob es Korespondierende Fremdschlüssel gibt
+    foreach aname [array names obj_prims] {
+        # Suche die Fremdschlüssel
+        set fkattr [$schema_node selectNodes descendant::table/child::node()\[not(self::table)\]/descendant-or-self::attr\[@name=\"$aname\"\]]
+        foreach fkey $fkattr {
+            set fktable [lindex [$fkey selectNodes ancestor::table] 0]
+            set fktable_name [$fktable getAttribute name]
+            # Referenz auf sich Selbs oder Mögliche Vererbung auschließen
+            if {[lcontain $obj_prims($aname) $fktable_name]} {
+                continue
+            }
+            # Existiert der Fremdschlüssel bereit als in assoziationcollenction
+            if {[$fktable selectNodes child::assoziationcollection/child::participant\[@reference=\"$aname\"\]]!=""} {
+                continue
+            }
+            # Ist es bereit als Aggregation modelliert
+            if {[$fktable hasAttribute reference] && [$fktable getAttribute reference]==$aname} {
+                continue
+            }            
+            RE_foreignkeys::Executor new -childof [self] -primattr $aname  -primtables $obj_prims($aname)  -foreigntable $fktable_name -foreignattr $aname -textwin $textwin
+            
+        }
+    }
+    foreach aname [array names obj_prims] {
+        # Suche die Fremdschlüssel
+        foreach table $obj_prims($aname) {
+            set forkeyName "$table$aname"
+            set fkattr [$schema_node selectNodes descendant::table/child::node()\[not(self::table)\]/descendant-or-self::attr\[@name=\"$forkeyName\"\]]
+            foreach fkey $fkattr {
+                set fktable [lindex [$fkey selectNodes ancestor::table] 0]
+                set fktable_name [$fktable getAttribute name]
+                # Referenz auf sich Selbs oder Mögliche Vererbung auschließen
+                if {$table eq $fktable_name} {
+                    continue
+                }
+                # Existiert der Fremdschlüssel bereit als in assoziationcollenction
+                if {[$fktable selectNodes child::assoziationcollection/child::participant\[@reference=\"$forkeyName\"\]]!=""} {
+                    continue
+                }
+                # Ist es bereit als Aggregation modelliert
+                if {[$fktable hasAttribute reference] && [$fktable getAttribute reference]==$forkeyName} {
+                    continue
+                }
+                RE_foreignkeys::Executor new -childof [self] -primattr $aname  -primtables $table -foreigntable $fktable_name -foreignattr $forkeyName  -textwin $textwin
+            }
+            
+        }
+    }
+    #puts [array get obj_prims]
+    next
+}
+Class RE_foreignkeys::Executor -parameter {primattr primtables foreigntable textwin foreignattr}
+@ ::RE_foreignkeys::Executor idemeta component xdobry::ReverseEngeneering
+RE_foreignkeys::Executor instproc apply {} {
+    my instvar primattr foreigntable check_apply primtable foreignattr
+    if {$check_apply} {
+        # !!! Voraussetzung parent hat Attribut schema_node
+        set domNode [[my info parent] set schema_node]
+        # generiere zuert assoziationtarget
+        set t_node  [$domNode selectNodes  descendant::table\[@name=\"$primtable\"\]]
+        set at_node [[$domNode ownerDocument] createElement assoziationtarget]
+        $at_node setAttribute name ${primtable}$foreigntable
+        $at_node setAttribute table $foreigntable
+        # wieder eine Voraussetzung (nicht modular)
+        serviceSEdit addElem $at_node $t_node
+        # generiere Assoziation Collection
+        set t_node  [$domNode selectNodes  descendant::table\[@name=\"$foreigntable\"\]]
+        
+        set ac_node [[$domNode ownerDocument] createElement assoziationcollection]
+        $ac_node setAttribute name ${primtable}$foreigntable
+        $ac_node setAttribute type reference
+        set p_node [[$domNode ownerDocument] createElement participant]
+        $p_node setAttribute reference $foreignattr
+        $p_node setAttribute table $primtable
+        $ac_node appendChild $p_node
+        serviceSEdit addElem $ac_node $t_node
+    }
+}
+RE_foreignkeys::Executor instproc init args {
+    my instvar primattr primtables foreigntable textwin check_apply primtable
+    my requireNamespace 
+    set check_apply 1
+    set wpost [namespace tail [self]]
+    checkbutton $textwin.c$wpost -text [mc "Accept"] -variable [self]::check_apply
+    $textwin window create end -window $textwin.c$wpost
+    $textwin insert end " [format [mc "Primary key %s from table"] $primattr] "
+    if {[llength $primtables]>1} {
+        eval tk_optionMenu $textwin.op$wpost [self]::primtable $primtables
+        $textwin window create end -window $textwin.op$wpost
+    } else {
+        set primtable [lindex $primtables 0]
+        $textwin insert end " \"$primtable\""
+    }
+    $textwin insert end "\n      [mc "found in"] \"$foreigntable\"\n"
+}
+Class RE_heritage -superclass ::ReverseEngeneering
+@ ::RE_heritage idemeta component xdobry::ReverseEngeneering
+RE_heritage instproc infoText {} {
+    return [mc "Search subtypes.  Find all tables which same primary keys. You must determine the father table."]
+}
+RE_heritage instproc search {} {
+    my instvar schema_node textwin
+    # Finde alle Tabellen mit gleichnammigen Primärschlüssel-Attribut 
+    # Finde Alle Ein Attributige Primärschlüssel
+    foreach table [$schema_node selectNodes child::table] {
+        set primattr [tdom_getprimattr $table]
+        set tname [$table getAttribute name]
+        #puts "PA $primattr $tname"
+        if {[llength $primattr]==1} {
+            lappend obj_prims($primattr) $tname
+        }
+    }
+    foreach aname [array names obj_prims] {
+        if {[llength $obj_prims($aname)]>1} {
+            RE_heritage::Executor new -childof [self] -primattr $aname  -textwin $textwin  -htables $obj_prims($aname)
+        }
+    }
+    next
+}
+Class RE_heritage::Executor -parameter {primattr roottable htables textwin}
+@ ::RE_heritage::Executor idemeta component xdobry::ReverseEngeneering
+RE_heritage::Executor instproc apply {} {
+    my instvar primattr check_apply roottable check_tables
+    if {$check_apply} {
+        # !!! Voraussetzung parent hat Attribut schema_node
+        set domNode [[my info parent] set schema_node]
+        set htables {}
+        foreach ctable [array names check_tables] {
+            if {$check_tables($ctable)} {
+                lappend htables $ctable
+            }
+        }
+        set t_node  [$domNode selectNodes  descendant::table\[@name=\"$roottable\"\]]
+        if {[lcontain $htables $roottable] && [llength $htables]>1} {
+            foreach ctable $htables {
+                if {$ctable==$roottable} { continue }
+                set p_node  [$domNode selectNodes  descendant::table\[@name=\"$ctable\"\]]
+                $p_node setAttribute type child
+                $p_node setAttribute inheritkey $primattr
+                serviceSEdit moveElem $p_node $t_node
+                ProgGui applyChanges $p_node
+            }
+        }
+    }
+}
+RE_heritage::Executor instproc init args {
+    my instvar primattr htables check_apply roottable check_tables textwin
+    my requireNamespace 
+    set check_apply 1
+    set wpost [namespace tail [self]]
+    checkbutton $textwin.c$wpost -text [mc "accept subtype"] -variable [self]::check_apply
+    $textwin window create end -window $textwin.c$wpost
+    $textwin insert end " [mc "Child tables"]:\n"
+    foreach table $htables {
+        set check_tables($table) 1
+        $textwin insert end "\t"
+        checkbutton $textwin.ct_$table -text [mc "accept table"] -variable [self]::check_tables($table)
+        $textwin window create end -window $textwin.ct_$table
+        $textwin insert end "[mc "Table"] \"$table\"\n"
+    }
+    eval tk_optionMenu $textwin.op$wpost [self]::roottable $htables
+    $textwin insert end "\t[mc "Father table"] :"
+    $textwin window create end -window $textwin.op$wpost
+    $textwin insert end "\n"
+}
+

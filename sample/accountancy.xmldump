@@ -1,0 +1,159 @@
+<databaseexport>
+    <database name="accountancy">
+        <?dbconnect {interface mysql} {hostname localhost} {user root} {dbank accountancy}?>
+        <table name="cust_order">
+            <attr name="orderId" type="int" primary_key="1" auto_increment="1"/>
+            <attr name="custId" type="int" null="1"/>
+            <attr name="paid" type="smallint" null="1"/>
+            <attr name="order_date" type="datetime" null="1"/>
+            <attr name="transport" type="enum" null="1" default="unknown">
+                <valuelist>
+                    <item>unknown</item>
+                    <item>post</item>
+                    <item>ship</item>
+                    <item>air</item>
+                    <item>pizzaboy</item>
+                </valuelist>
+            </attr>
+            <assoziationtarget name="item" table="item"/>
+            <assoziationcollection name="customercust_order" type="reference">
+                <participant reference="custId" table="customer"/>
+            </assoziationcollection>
+        </table>
+        <table name="customer">
+            <label>
+                <valuelist>
+                    <item>name</item>
+                </valuelist>
+            </label>
+            <attr name="custId" type="int" primary_key="1" auto_increment="1"/>
+            <attr name="name" length="20" type="varchar" null="1"/>
+            <attr name="street" length="20" type="varchar" null="1"/>
+            <attr name="postcode" length="10" type="varchar" null="1"/>
+            <attr name="city" length="20" type="varchar" null="1"/>
+            <attr name="country" length="20" type="varchar" null="1"/>
+            <attr name="comment" type="text" null="1"/>
+            <assoziationtarget name="customercust_order" table="cust_order"/>
+        </table>
+        <table name="item" type="relationship">
+            <attr name="productId" type="int" primary_key="1" default="0"/>
+            <attr name="orderId" type="int" primary_key="1" default="0"/>
+            <attr name="count" type="int" null="1" default="1"/>
+            <assoziationcollection name="item" type="reftable">
+                <participant reference="orderId" table="cust_order"/>
+                <participant reference="productId" table="product"/>
+            </assoziationcollection>
+        </table>
+        <table name="product">
+            <label>
+                <valuelist>
+                    <item>name</item>
+                </valuelist>
+            </label>
+            <attr name="name" length="20" type="varchar" null="1"/>
+            <attr name="productId" type="int" primary_key="1" auto_increment="1"/>
+            <attr name="price" type="int" null="1"/>
+            <assoziationtarget name="item" table="item"/>
+        </table>
+    </database>
+    <data>
+        <cust_order>
+            <orderId dbtype="int">1</orderId>
+            <custId dbtype="int">1</custId>
+            <paid dbtype="smallint">0</paid>
+            <order_date dbtype="datetime">2000-10-01 00:00:00</order_date>
+            <transport dbtype="enum">air</transport>
+        </cust_order>
+        <cust_order>
+            <orderId>2</orderId>
+            <custId>1</custId>
+            <paid>1</paid>
+            <order_date>1999-05-23 00:00:00</order_date>
+            <transport>pizzaboy</transport>
+        </cust_order>
+        <cust_order>
+            <orderId>3</orderId>
+            <custId isnull="1"/>
+            <paid>1</paid>
+            <order_date>2000-10-02 00:00:00</order_date>
+            <transport>air</transport>
+        </cust_order>
+        <customer>
+            <custId dbtype="int">1</custId>
+            <name dbtype="varchar">Rebeca Rab</name>
+            <street dbtype="varchar">Möllig 4</street>
+            <postcode dbtype="varchar">23001</postcode>
+            <city dbtype="varchar">Erlangen</city>
+            <country dbtype="varchar">Deutschland</country>
+            <comment dbtype="text">Blond</comment>
+        </customer>
+        <customer>
+            <custId>2</custId>
+            <name>Reiner Hinterwald</name>
+            <street>immer gerade aus dan</street>
+            <postcode>002031</postcode>
+            <city>Nest</city>
+            <country>Deutschland</country>
+            <comment>Kauft alles</comment>
+        </customer>
+        <customer>
+            <custId>3</custId>
+            <name>Varus Academicus</name>
+            <street>Bahnhofstr 4</street>
+            <postcode>34501</postcode>
+            <city>Würzberg</city>
+            <country>Deutschland</country>
+            <comment>Mißtrauisch</comment>
+        </customer>
+        <item>
+            <productId dbtype="int">2</productId>
+            <orderId dbtype="int">1</orderId>
+            <count dbtype="int">2</count>
+        </item>
+        <item>
+            <productId>3</productId>
+            <orderId>1</orderId>
+            <count>1</count>
+        </item>
+        <item>
+            <productId>4</productId>
+            <orderId>1</orderId>
+            <count>10</count>
+        </item>
+        <item>
+            <productId>1</productId>
+            <orderId>2</orderId>
+            <count>1</count>
+        </item>
+        <item>
+            <productId>2</productId>
+            <orderId>3</orderId>
+            <count>3</count>
+        </item>
+        <item>
+            <productId>1</productId>
+            <orderId>3</orderId>
+            <count>2</count>
+        </item>
+        <product>
+            <name dbtype="varchar">Ball</name>
+            <productId dbtype="int">1</productId>
+            <price dbtype="int">21</price>
+        </product>
+        <product>
+            <name>Vase</name>
+            <productId>2</productId>
+            <price>59</price>
+        </product>
+        <product>
+            <name>Lineal</name>
+            <productId>3</productId>
+            <price>2</price>
+        </product>
+        <product>
+            <name>Buch der Bücher</name>
+            <productId>4</productId>
+            <price>239</price>
+        </product>
+    </data>
+</databaseexport>

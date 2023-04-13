@@ -1,0 +1,814 @@
+# automatically generated from XOTclIDE
+@ Component xdobry::AssAssistent {
+description {Die Objekte könnten hier als Classen implementiert werden. Vor allem weil die Methoden z.B button:ok sich wiederholen}
+}
+package provide xdobry::AssAssistent 0.33
+@ Object AggrAssistent {
+description {Objekt für Dialog (Definieren von Aggregationen)}
+}
+Object AggrAssistent
+@ ::AggrAssistent idemeta component xdobry::AssAssistent
+@ AggrAssistent proc applyToXml {} {
+description {Diese Prozedur schreibt die Aggregation zu XML Struktur und gibt
+die Änderungen an ProgGui weiter}
+}
+AggrAssistent proc applyToXml {} {
+    my instvar domNode aggr_table minOccurs maxOccurs container reference
+    if {$aggr_table==$container} { 
+        error "Die Tabelle kann sich nicht selber beinhalten"
+        return 
+    }
+    set tba_node  [$domNode selectNodes  descendant::table\[@name=\"$aggr_table\"\]]
+    set c_node  [$domNode selectNodes  descendant::table\[@name=\"$container\"\]]
+    # Entferne die eventuel bestehende Assoziation
+    # collection
+    set acoll  [$tba_node selectNodes child::assoziationcollection\[child::participant\[@table=\"$container\"\]\]]
+    if {$acoll!=""} {
+        foreach node $acoll {
+            serviceSEdit deleteElem $node
+        }
+        # target 
+        set atarg [$c_node selectNodes child::assoziationtarget\[@table=\"$aggr_table\"\]]
+            foreach node $atarg {
+            serviceSEdit deleteElem $node
+        }
+    }
+    keylset v minOccurs $minOccurs
+    keylset v maxOccurs $maxOccurs
+    tdom_keyl2attr $tba_node $v {
+        {maxOccurs {}}
+        {minOccurs {}}
+    }
+    $tba_node setAttribute reference $reference
+    [$tba_node parentNode] removeChild $tba_node
+    $c_node appendChild $tba_node
+    # Änderungen an GUI weitergeben
+    ProgGui moveElem $tba_node $c_node 1
+}
+@ AggrAssistent proc chooseTable {} {
+description {Ein Callback wenn die Aggregierte-Tabelle ausgewält wurde}
+}
+AggrAssistent proc chooseTable value {
+    my instvar domNode
+    #puts "Notify $value"
+    if {$value!="****"} {
+        set tables [tdom_extractAttributes [$domNode selectNodes descendant::table\[@name=\"$value\"\]/descendant::attr/attribute::name]]
+        set attrlist [concat **** $tables]
+        [self]::inputframe::reference setvaluelist $attrlist
+    }
+}
+AggrAssistent proc execute dom {
+    my instvar domNode win evaluator ehistory relarray
+    set domNode $dom
+    # Build InputFrame
+    if {[my info children inputframe]==""} {
+        set tablelist [my gettables object]
+        foreach attr [keylkeys [self]::input_spec] {
+            set klist [keylget [self]::input_spec $attr]
+            # Label sprachspezifisch setzten
+            keylset klist label [mc [keylget klist label]]
+            # Name setzen genau so wie die Attribut Name
+            keylset klist name $attr
+            if {$attr=="container" || $attr=="aggr_table"} {
+                keylset klist valuelist $tablelist
+            }
+            lappend inputlist $klist
+        }
+        WidgetFactory make_inputs_keylist [self]::inputframe $inputlist
+    }
+    set dialog [ODialog new -volatile -title [mc "Define the aggregation of the tables.  An object from the table \"container\" possesses many items from the sub-table."]  -message [mc "give connecting parameters"] -inputframe [self]::inputframe -type okcancel]
+    if {[$dialog execute]=="cancel"} { return }
+    my inputToVars [$dialog set values]
+    my instvar aggr_table container reference
+    if {$aggr_table=="****" || $container=="****" || $reference=="****"} {
+        IDE::Dialog error [mc "Input incomletely!. You must specify the container-table and the table and foreign key in it"]
+    } else {
+        my applyToXml
+    }
+}
+AggrAssistent proc getreferences type {
+    # tDom
+    my instvar domNode table_rel
+    set tables [tdom_extractAttributes [$domNode selectNodes descendant::table\[@name="$table_rel"\]/descendant::attr/attribute::name]]
+    return [concat **** $tables]
+}
+@ AggrAssistent proc gettables {} {
+description {Stellt eine Liste mit Allen Tabellen}
+}
+AggrAssistent proc gettables type {
+    # tDom
+    my instvar domNode
+    set tables [$domNode selectNodes descendant::table\[not(@type)\ or\ @type!=\"relationship\"\]/attribute::name]
+    set tables [tdom_extractAttributes $tables]
+    return [concat **** $tables]
+}
+AggrAssistent proc initializeAfterLoad {} {
+AggrAssistent set input_spec {
+    {container {{type OComboBox} {label {Container object}}}}
+    {aggr_table {{type OComboBoxN} {notifyproc {AggrAssistent chooseTable}} {label {Aggregated object}}}}
+    {reference  {{type OComboBox}  {valuelist ****} {label Reference}}}
+    {maxOccurs {{type OLabelEntry} {textwidth 20} {label {max Occurs}}}}
+    {minOccurs {{type OLabelEntry} {textwidth 20} {label {min Occurs}}}}
+}
+   # enable mc parsing by some dummy objects
+   return
+   set dummy [mc "Container object"]
+   set dummy [mc "Aggregated object"]
+   set dummy [mc "Reference"]
+   set dummy [mc "max Occurs"]
+   set dummy [mc "min Occurs"]
+}
+@ AggrAssistent proc inputToVars {} {
+description {Transeriert die Werte aus InputFrame zu objekt Variablen}
+}
+AggrAssistent proc inputToVars tval {
+    set values $tval
+    foreach val [keylkeys values] {
+        my set $val [keylget values $val]
+    }
+}
+Object AssAssistent
+@ ::AssAssistent idemeta add prop
+@ ::AssAssistent idemeta component xdobry::AssAssistent
+@ ::AssAssistent idemeta prop {
+    {relationship_count {count}}
+    {rekursiv_reltable {rekursiv relationshiptable}}
+    {relation_table {table_rel collectionname description}}
+    {reference_table {table_rel collectionname ref_minoccurs ref_rolename description}}
+    {relation {object_num table_object rolename maxOccurs minOccurs ondelete onupdate reference}}
+}
+@ ::AssAssistent idemeta propspec {
+    {count {{type OLabelControl} {default 2}}}
+    {rekursiv {{type OCheckButton}}}
+    {relationshiptable {{type OCheckButton}}}
+    {table_object {{type OComboBox} }}
+    {table_rel {{type OComboBox}  }}
+    {reference {{type OComboBox} }}
+    {collectionname {{type OLabelEntry} {textwidth 20}}}
+    {rolename {{type OLabelEntry} {textwidth 20}}}
+    {ref_rolename {{type OLabelEntry} {textwidth 20}}}
+    {description {{type OLabelEntry} {textwidth 20}}}
+    {table {{type OComboBox} {valuelist {} }}}
+    {maxOccurs {{type OLabelEntry} {textwidth 20}}}
+    {minOccurs {{type OLabelEntry} {textwidth 20}}}
+    {object_num {{type OLabelEntry} {textwidth 5} {state disabled}}}
+    {ref_minoccurs {{type ORadioButtons} {valuelist {0 1}} }}
+    {ondelete {{type OComboBox} {valuelist {nothing delete setnull}} }}
+    {onupdate {{type OComboBox} {valuelist {nothing update setnull}} }}
+}
+@ AssAssistent proc applyToXml {} {
+description {Diese Prozedur schreibt die Assoziazion zu XML Struktur und gibt
+die Änderungen an ProgGui weiter}
+}
+AssAssistent proc applyToXml {} {
+    my instvar domNode collectionname relationshiptable table_rel  relarray count description ref_rolename ref_minoccurs
+    set domDoc [$domNode ownerDocument]
+    # wenn nicht vorhanden dann collectionname generieren
+    if {$collectionname==""} {
+        if {$relationshiptable} {
+            set collectionname $table_rel
+        } else {
+            set collectionname "[keylget relarray(0) table_object]$table_rel"
+        }
+    }
+    # Allte Assoziation falls vorhanden löschen
+    set anodes [$domNode selectNodes /descendant::assoziationtarget\[@name=\"$collectionname\"\]]
+    if {$anodes!=""} {
+        # Suche assoztioncontainer
+        set cnodes [$domNode selectNodes /descendant::assoziationcollection\[@name=\"$collectionname\"\]]
+        set anodes [concat $anodes $cnodes]
+        set rltable [[lindex $cnodes 0] parentNode]
+        if {[$rltable hasAttribute type] && [$rltable getAttribute type]=="relationship"} {
+            $rltable removeAttribute type
+            ProgGui applyChanges $rltable
+            #puts HIER
+        }
+        foreach dnode $anodes {
+            serviceSEdit deleteElem $dnode
+        }
+    }
+    # generiere Relationship-eintrag (node assoziationcollection)
+    if {$relationshiptable} {
+        # Suche Table Node
+        set rt_node [$domNode selectNodes  descendant::table\[@name="$table_rel"\]]
+        $rt_node setAttribute type relationship
+        # GUI verändern
+        ProgGui applyChanges $rt_node
+        set ac_node [$domDoc createElement assoziationcollection]
+        $ac_node setAttribute name $collectionname
+        $ac_node setAttribute type reftable
+        tdom_setpername $ac_node description $description
+        $rt_node appendChild $ac_node
+        # Veränderungen an GUI weitergeben
+        ProgGui addElem $ac_node $rt_node 1
+        # Erster Durchauf nachsehen ob es rekursive Beziehungen gibt
+        # und möglicherweise RolenNamen ergänzen
+        set relobj {}; set rek_obj {}
+        for {set x 0} {$x<$count} {incr x} {
+            set table [keylget relarray($x) table_object]
+            if {[lcontain $relobj $table]} {
+                lappend rek_obj $table
+            } else {
+                lappend relobj $table
+            }
+        }
+        #puts "rek_obj $rek_obj relobj $relobj"
+        # Zwieter Durchlauf participiant und associationtarget Tag erzeugen
+        for {set x 0} {$x<$count} {incr x} {
+            set attr $relarray($x)
+            set p_node [$domDoc createElement participant]
+            $p_node setAttribute reference [keylget attr reference]
+            set table [keylget attr table_object]
+            $p_node setAttribute table $table
+            if {[lcontain $rek_obj $table] &&
+                [keylget attr rolename]==""} {
+                keylset attr rolename [keylget attr reference]
+                #puts "seting rolename"
+            }
+            if {[keylget attr rolename]!=""} {
+                $p_node setAttribute rolename [keylget attr rolename]
+            }
+            $ac_node appendChild $p_node
+            # generiere Beziehungs-Objekte-Beschreibung 
+            # (node assoziationtarget)
+            my targetToXml $attr $collectionname
+        }
+    } else {
+        # Suche Table Node
+        set rt_node [$domNode selectNodes  descendant::table\[@name="$table_rel"\]]
+        set ac_node [$domDoc createElement assoziationcollection]
+        keylset nattr name $collectionname
+        keylset nattr type reference
+        keylset nattr minOccurs $ref_minoccurs
+        keylset nattr rolename $ref_rolename
+        tdom_keyl2attr $ac_node $nattr {
+            {rolename {}}
+            {minOccurs {}}
+        }
+        tdom_setpername $ac_node description $description
+        $rt_node appendChild $ac_node
+        # Veränderungen an GUI weitergebe
+        ProgGui addElem $ac_node $rt_node 1
+        set attr $relarray(0)
+        set p_node [$domDoc createElement participant]
+        $p_node setAttribute reference [keylget attr reference]
+        $p_node setAttribute table [keylget attr table_object]
+        # RollenName setzen falls existiert
+        if {[lcontain [keylkeys attr] rolename]} {
+            $p_node setAttribute rolename [keylget attr rolename]
+        }
+        # Wenn rekursive Beziehung und keine Rollen Namen dann FremdSchlüssel
+        # wird zum Rollen Namen
+        if {$table_rel==[keylget attr table_object] && [keylget attr rolename]==""} {
+            $p_node setAttribute rolename [keylget attr reference]
+            keylset attr rolename [keylget attr reference]
+        }
+        $ac_node appendChild $p_node
+        # generiere Beziehungs-Objekte-Beschreibung 
+        # Beschreibung des Ziels des Verweis (Reference)
+        # (node assoziationtarget)
+        my targetToXml $attr $collectionname
+    }     
+}
+@ AssAssistent proc buildCard {} {
+description {Baut einem FrameImput Container mit Input-Widget nach prop und
+propspec Spezifikation und setzt ihn in das Fenster
+die Felder werden wie Objectvarioablen initiert
+
+Beim tabel_rel wird spezielle prozedur Aufgerufen
+um valuelist zu spezifizieren}
+}
+AssAssistent proc buildCard name {
+    my instvar win defaultref count
+    # Wenn eine Inputframe existiert dann löschen
+    if {[my info children inputframe]!=""} {
+        [self]::inputframe unmap
+    }
+    set propspec [my set propspec]
+    set prop [my set prop]
+    foreach attr [keylget prop $name] {
+        set klist [keylget propspec $attr]
+        # Label sprachspezifisch setzten
+        keylset klist label [mc [keylget klist label]]
+        # Name setzen genau so wie die Attribut Name
+        keylset klist name $attr
+        #puts "info vars  [my info invar]"
+        if {[lcontain [my info vars] $attr]} {
+            my instvar $attr
+            #puts "default 1 $attr"
+            set val [set $attr]
+            if {$val!=""} {
+                #puts "default $attr $val"
+                keylset klist default $val
+            }
+        }
+        if {[info exists defaultref($attr)]} {
+            foreach key [keylkeys defaultref($attr)] {
+                keylset klist $key [keylget defaultref($attr) $key]
+            }
+        }
+        lappend inputlist $klist
+    }
+    WidgetFactory make_inputs_keylist [self]::inputframe $inputlist
+    [self]::inputframe map $win.inputframe.if
+    pack $win.inputframe.if
+    if {[info exists defaultref]} {
+        unset defaultref
+    }
+}
+AssAssistent proc buildWindow {} {
+    my instvar win
+    catch {destroy $win}
+    toplevel $win -class Dialog
+    wm title $win [mc "Association assistant"]
+    wm iconname $win Dialog
+    wm protocol $win WM_DELETE_WINDOW [list [self] button_cancel]
+    message $win.message
+    frame $win.inputframe -relief sunken
+    tixButtonBox $win.buttons -orientation horizontal
+    $win.buttons add ok -text [mc "Ok"] -command [list AssAssistent button_ok]
+    $win.buttons add back -text [mc "Back"] -command [list AssAssistent button_back]
+    $win.buttons add cancel -text [mc "Cancel"] -command [list AssAssistent button_cancel]
+
+    pack $win.message -side top -fill x -expand 1
+    pack $win.inputframe -side top -fill both -expand 1
+    pack $win.buttons -side bottom -fill x -expand 1
+
+    focus $win
+}
+AssAssistent proc button_back {} {
+    my instvar evaluator ehistory
+    set last [lindex $ehistory end]
+    set evaluator [lindex $last 0]
+    if {[my info procs p$evaluator]!=""} {
+        my p$evaluator
+    }
+    my buildCard [lindex $last 1]
+    set hlen [llength $ehistory]
+    if {$hlen>1} {
+        set ehistory [lrange $ehistory 0 [expr $hlen-2]]
+    }
+}
+AssAssistent proc button_cancel {} {
+    my instvar win inputframe
+    destroy $win
+    [self]::inputframe destroy
+}
+AssAssistent proc button_ok {} {
+    my instvar evaluator
+    my inputToVars
+    set nextcard [my $evaluator]
+    if {$nextcard=="END"} {
+        my applyToXml
+        my button_cancel
+    } elseif {$nextcard!="HALT"} {
+        # Gibt es einen Prepare Schritt
+        if {[my info procs p$evaluator]!=""} {
+            my p$evaluator
+        }
+        my buildCard $nextcard
+    }
+}
+AssAssistent proc ev_reference_table {} {
+    my instvar evaluator relcount ehistory defaultref table_rel
+    if {$table_rel=="" || $table_rel=="****"} {
+        IDE::Dialog error [mc "Input incompletely! You must specify the table"]
+        return HALT
+    }
+    lappend ehistory {ev_reference_table reference_table}
+    set relcount 0
+    set evaluator ev_relation
+    return relation
+}
+AssAssistent proc ev_rekursiv_reltable {} {
+    my instvar evaluator ehistory defaultref relationshiptable
+    lappend ehistory {ev_rekursiv_reltable rekursiv_reltable}
+    # Vorbereiten nächstes Schritt
+    if {$relationshiptable} {
+        set evaluator ev_relation_table
+        return relation_table
+    } else {
+        set evaluator ev_reference_table
+        return reference_table
+    }
+}
+AssAssistent proc ev_relation {} {
+    my instvar evaluator relcount count relationshiptable table_object reference
+    if {$table_object=="" || $table_object=="****" || 
+        $reference=="" || $reference=="****"} {
+        IDE::Dialog error [mc "Input incompletely!  You must specify the table and the foreign key in the reference table"]
+        return HALT
+    }
+    my saveRelation
+    incr relcount
+    if {$relcount!=$count && $relationshiptable} {
+        my expandRelation
+        set evaluator ev_relation
+        return relation
+    }
+    return END
+}
+AssAssistent proc ev_relation_table {} {
+    my instvar evaluator relcount ehistory table_rel
+    if {$table_rel=="" || $table_rel=="****"} {
+        IDE::Dialog error [mc "Input incompletely!  You must specify the table and the foreign key in the reference table"]
+        return HALT
+    }
+    lappend ehistory {ev_relation_table relation_table}
+    # Vorbereiten nächstes Schritt
+    set relcount 0
+    set evaluator ev_relation
+    return relation
+}
+@ AssAssistent proc ev_relationship_count {} {
+description {Hier ist die ganze Logik des Assistenten eingebaut
+Wenn ein OK Button gedrückt wird, wird die Prozedur in Varibale
+evaluator ausgeführt er gibt auch den nächsten Card das Angezeigt werden soll
+durch Array defaultref werden die Attributen den einzelnen Inputfelder
+(s. propspec) überschrieben
+Die Evaluator Prozedur kann auch zwei spezielle Kommand weitergeben
+"END" für die Letzte Karte
+und "HALT" für nichts machen (z.B. wenn Inputs unvollstätndig)
+!! Problem - Keine Übermittlung von Letzten Karte, was ein Button "Fertig"
+möglich machen konnte. Der Benutzter weiß nicht wann er
+am Ende des Assistents ist.
+ehistory ist ein Liste, die für die Funktion zurück zuständigt ist.
+jeder Evaluator fügt dazu sein name und name des Cards (GUI)}
+}
+AssAssistent proc ev_relationship_count {} {
+    my instvar evaluator count defaultref relationshiptable ehistory rekursiv
+    lappend ehistory {ev_relationship_count relationship_count}
+    if {$count>2} {
+        keylset defaultref(table_rel) valuelist  [my gettables rel]
+        set evaluator ev_relation_table
+        set relationshiptable 1
+        set rekursiv 0
+        return relation_table
+    } else {
+        set evaluator ev_rekursiv_reltable
+        return rekursiv_reltable
+    }
+}
+@ AssAssistent proc execute {} {
+description {Edit Node ist ein Init Node, das für initzierung genuztz wird}
+}
+AssAssistent proc execute {dom {editNode {}}} {
+    my instvar domNode win evaluator ehistory relarray  defaultref
+    set win .assistent
+    set domNode $dom
+    lappend ehistory {ev_relationship_count relationship_count}
+    set propspec [my set propspec]
+    foreach var [keylkeys propspec] {
+        my instvar $var
+        set $var {}
+    }
+    if {[info exists relarrey]} {
+        unset relarray
+    }
+    if {[info exists ehistory]} {
+        set ehistory {}
+    }
+    if {[info exists defaultref]} {
+        unset defaultref
+    }
+    if {$editNode!=""} {
+        my initFromNode $editNode
+    }
+    my buildWindow
+    my buildCard relationship_count
+    set evaluator ev_relationship_count
+}
+@ AssAssistent proc expandRelation {} {
+description {Transferiert die Daten einer Beziehung (gespeicert in Array relarray)
+zu Objektvariablen}
+}
+AssAssistent proc expandRelation {} {
+    my instvar relcount relarray
+    if {[info exists relarray($relcount)]} {
+        set values $relarray($relcount)
+        #puts "expanding $relcount $values"
+        foreach attr [keylkeys values] {
+            #puts "expanding $attr"
+            my instvar $attr
+            set $attr [keylget values $attr]
+        }
+    }
+}
+AssAssistent proc getreferences type {
+    # tDom
+    my instvar domNode table_rel
+    set tables [tdom_extractAttributes [$domNode selectNodes descendant::table\[@name="$table_rel"\]/descendant::attr/attribute::name]]
+    return [concat **** $tables]
+}
+@ AssAssistent proc gettables {} {
+description {Stellt eine Liste mit Allen Tabellen}
+}
+AssAssistent proc gettables type {
+    # tDom
+    my instvar domNode
+    if {$type=="object"} {
+        my instvar table_rel
+        set tables [$domNode selectNodes descendant::table\[@name!=\"$table_rel\"\]/attribute::name]
+    } else {
+        set tables [$domNode selectNodes descendant::table\[not(@type)\ or\ @type!=\"relationship\"\]/attribute::name]
+    }
+    set tables [tdom_extractAttributes $tables]
+    return [concat **** $tables]
+}
+@ AssAssistent proc initFromAC {} {
+description {extrahiere assoziationcollection Node}
+}
+AssAssistent proc initFromAC node {
+    my instvar count rekursiv relationshiptable table_object  table_rel reference collectionname rolename ref_rolename  description table maxOccurs minOccurs ref_minoccurs ondelete onupdate  editNode
+    set collectionname [$node getAttribute name]
+    set table_rel [tdom_extractAttributes [$node selectNodes ancestor::table/attribute::name]]
+    set description [tdom_getpername $node description]
+    set p_nodes [$node selectNodes child::participant] 
+    set count [llength $p_nodes]
+    set relcount 0
+    foreach p_node $p_nodes {
+        my initFromP $p_node $relcount
+        incr relcount 
+    }
+    if {[$node getAttribute type]=="reftable"} {
+        set  relationshiptable 1
+    } else {
+        incr count
+        set  relationshiptable 0
+        if {[$node hasAttribute rolename]} {
+            set ref_rolename [$node getAttribute rolename]
+        }
+        if {[$node hasAttribute minOccurs]} {
+            set ref_minoccurs [$node getAttribute minOccurs]
+        }
+    }
+}
+AssAssistent proc initFromNode node {
+    my instvar count rekursiv relationshiptable table_object  table_rel reference collectionname rolename ref_rolename  description table maxOccurs minOccurs ref_minoccurs ondelete onupdate  editNode
+    set editNode $node
+    if {[$node nodeName]=="assoziationcollection"} {
+        my initFromAC $node
+    } elseif {[$node nodeName]=="assoziationtarget"} {
+        set cnodes [$node selectNodes /descendant::assoziationcollection\[@name=\"[$node getAttribute name]\"\]]
+        my initFromAC [lindex $cnodes 0]
+    }
+}
+@ AssAssistent proc initFromP {} {
+description {kann nur von initFromAC aufgerufen werden
+gewisse Objektvariablen müssen bereit existieren}
+}
+AssAssistent proc initFromP {node id} {
+    my instvar relarray collectionname table_rel
+    keylset attr table_object [$node getAttribute table]
+    keylset attr reference [$node getAttribute reference]
+    # Suche den entsprechenden assoziationtarget
+    if {[$node hasAttribute rolename]} {
+        set at_node [$node selectNodes "//descendant::assoziationtarget\[@name=\"$collectionname\" and @rolename=\"[$node getAttribute rolename]\"\]"]
+    } else {
+        set at_node [$node selectNodes "//descendant::table\[@name=\"[$node getAttribute table]\"\]/child::assoziationtarget\[@name=\"$collectionname\"\]"]
+    }
+    if {$at_node==""} {
+        error "can't find assoziationtarget Node. Schema Corrupt"
+    }
+    append attr " " [tdom_attr2keyl $at_node]
+    set relarray($id) $attr
+}
+AssAssistent proc initializeAfterLoad {} {
+  my set propspec {
+    {count {{type OLabelControl} {default 2} {label {Number of objects}}}}
+    {rekursiv {{type OCheckButton} {label {Recursive relationship}}}}
+    {relationshiptable {{type OCheckButton} {label {is there table with references}}}}
+    {table_object {{type OComboBox} {label {Object table}}}}
+    {table_rel {{type OComboBox}  {label {Reference table}}}}
+    {reference {{type OComboBox} {label {corresponding foreign key}}}}
+    {collectionname {{type OLabelEntry} {textwidth 20} {label {Name of the relationship}}}}
+    {rolename {{type OLabelEntry} {textwidth 20} {label {Role name of the object}}}}
+    {ref_rolename {{type OLabelEntry} {textwidth 20} {label {Role name of the object}}}}
+    {description {{type OLabelEntry} {textwidth 20} {label Description}}}
+    {table {{type OComboBox} {valuelist {}} {label Table}}}
+    {maxOccurs {{type OLabelEntry} {textwidth 20} {label {max Occurs}}}}
+    {minOccurs {{type OLabelEntry} {textwidth 20} {label {min Occurs}}}}
+    {object_num {{type OLabelEntry} {textwidth 5} {state disabled} {label {Object NR}}}}
+    {ref_minoccurs {{type ORadioButtons} {valuelist {0 1}} {label {min Occurs}}}}
+    {ondelete {{type OComboBox} {valuelist {nothing delete setnull}} {label {on delete}}}}
+    {onupdate {{type OComboBox} {valuelist {nothing update setnull}} {label {on update}}}}
+  }
+  my set prop {
+    {relationship_count {count}}
+    {rekursiv_reltable {rekursiv relationshiptable}}
+    {relation_table {table_rel collectionname description}}
+    {reference_table {table_rel collectionname ref_minoccurs ref_rolename description}}
+    {relation {object_num table_object rolename maxOccurs minOccurs ondelete onupdate reference}}}
+   # enable mc parsing by some dummy objects
+   return
+   set dummy [mc "Number of objects"]
+   set dummy [mc "Recursive relationship"]
+   set dummy [mc "is there table with references"]
+   set dummy [mc "Object table"]
+   set dummy [mc "Reference table"]
+   set dummy [mc "corresponding foreign key"]
+   set dummy [mc "Name of the relationship"]
+   set dummy [mc "Role name of the object"]
+   set dummy [mc "Description"]
+   set dummy [mc "Table"]
+   set dummy [mc "max Occurs"]
+   set dummy [mc "min Occurs"]
+   set dummy [mc "Object NR"]
+   set dummy [mc "on update"]
+   set dummy [mc "on delete"]
+
+}
+@ AssAssistent proc inputToVars {} {
+description {Transeriert die Werte aus InputFrame zu objekt Variablen}
+}
+AssAssistent proc inputToVars {} {
+    [self]::inputframe update_values
+    set values [[self]::inputframe get_values]
+    #puts "Values $values"
+    foreach val [keylkeys values] {
+        my instvar $val
+        set $val [keylget values $val]
+    }
+}
+AssAssistent proc pev_reference_table {} {
+    my instvar defaultref
+    keylset defaultref(table_rel) valuelist  [my gettables rel]
+}
+@ AssAssistent proc pev_relation {} {
+description {Wird kurz bovor des Einzeigen von reltion card Ausgefürt um die
+Anzeige Daten vorzubereiten}
+}
+AssAssistent proc pev_relation {} {
+    my instvar defaultref tab_list ref_list relationshiptable  rekursiv table_rel defaultref relcount table_object relarray  reference rolename
+    set rolename {}
+    if {$relcount==0} {
+        set tab_list [my gettables object]
+        set ref_list [my getreferences object]
+        keylset defaultref(table_object) valuelist $tab_list
+        keylset defaultref(reference) valuelist $ref_list
+    } else {
+        keylset defaultref(table_object) valuelist $tab_list
+        for {set x 0} {$x<$relcount} {incr x} {
+            set attr $relarray($x)
+            lappend ref_old [keylget attr reference]
+        }
+        keylset defaultref(reference) valuelist [minusMenge $ref_list $ref_old]
+        set reference [lindex [keylget defaultref(reference) valuelist] 0]
+    }
+    my expandRelation
+    keylset defaultref(object_num) default [expr $relcount +1 ]
+    if {$rekursiv} {
+        if {$relcount!=0 || !$relationshiptable} {
+            # Beim n:m Rekursiv das Objekt wird nur das erste mal gewählt
+            if {!$relationshiptable} {
+                # Beim 1:n Rekursiv Objekt ist gleich Container (Verweis
+                # auf ein Objekt gleiches Typs
+                set table_object $table_rel
+            }
+            keylset defaultref(table_object) state disabled
+        }
+    }
+}
+AssAssistent proc pev_relation_table {} {
+    my instvar defaultref
+    keylset defaultref(table_rel) valuelist  [my gettables rel]
+}
+@ AssAssistent proc saveRelation {} {
+description {Speichert das Ergebniss von ev_relation als eine Struktur
+(keyed list in relarray)}
+}
+AssAssistent proc saveRelation {} {
+    my instvar relcount relarray
+    [self]::inputframe update_values
+    set relarray($relcount) [[self]::inputframe get_values]
+}
+AssAssistent proc targetToXml {attr collectionname} {
+    my instvar domNode table_rel
+    set t_node  [$domNode selectNodes  descendant::table\[@name="[keylget attr table_object]"\]]
+    set at_node [[$domNode ownerDocument] createElement assoziationtarget]
+    keylset attr name $collectionname
+    keylset attr table $table_rel
+    tdom_keyl2attr $at_node $attr {
+        {minOccurs {}}
+        {maxOccurs {}}
+        {rolename {}}
+        {ondelete nothing}
+        {onupdate nothing}
+    } {minOccurs maxOccurs rolename table ondelete onupdate name}
+    $t_node appendChild $at_node
+    # Änderungen an GUI weitergeben
+    ProgGui addElem $at_node $t_node 1
+}
+@ Object InheritAssistent {
+description {Objekt für Dialog (Definieren von Vererbung)}
+}
+Object InheritAssistent
+@ ::InheritAssistent idemeta component xdobry::AssAssistent
+@ InheritAssistent proc applyToXml {} {
+description {Diese Prozedur schreibt die Vererbung zu XML Struktur und gibt
+die Änderungen an ProgGui weiter}
+}
+InheritAssistent proc applyToXml {} {
+    my instvar domNode parent_table child_table minOccurs maxOccurs reference inherittype
+    if {$child_table==$parent_table} { 
+        error "Die Tabelle kann sich nicht selber erben"
+        return 
+    }
+    set p_node  [$domNode selectNodes  descendant::table\[@name=\"$parent_table\"\]]
+    set tba_node  [$domNode selectNodes  descendant::table\[@name=\"$child_table\"\]]
+    $tba_node setAttribute inherittype $inherittype
+    $tba_node setAttribute type child
+    $tba_node setAttribute inheritkey $reference
+    [$tba_node parentNode] removeChild $tba_node
+    $p_node appendChild $tba_node
+    # Änderungen an GUI weitergeben
+    ProgGui moveElem $tba_node $p_node 1
+    ProgGui applyChanges $tba_node
+}
+@ InheritAssistent proc chooseTable {} {
+description {Ein Callback wenn die Inheritegierte-Tabelle ausgewält wurde}
+}
+InheritAssistent proc chooseTable value {
+    my instvar domNode
+    #puts "Notify $value"
+    if {$value!="****"} {
+        set attrlist [concat **** [$domNode selectNodes descendant::table\[@name=\"$value\"\]/descendant::attr/attribute::name]]
+        set attrlist [tdom_extractAttributes $attrlist]
+        [self]::inputframe::reference setvaluelist $attrlist
+    }
+}
+InheritAssistent proc execute dom {
+    my instvar domNode win evaluator ehistory relarray
+    set domNode $dom
+    # Build InputFrame
+    if {[my info children inputframe]==""} { 
+        set tablelist [my gettables object] 
+        foreach attr [keylkeys [self]::input_spec] {
+            set klist [keylget [self]::input_spec $attr]
+            # Label sprachspezifisch setzten
+            keylset klist label [mc [keylget klist label]]
+            # Name setzen genau so wie die Attribut Name
+            keylset klist name $attr
+            if {$attr=="parent_table" || $attr=="child_table"} {
+                keylset klist valuelist $tablelist
+            }
+            lappend inputlist $klist
+        }
+        WidgetFactory make_inputs_keylist [self]::inputframe $inputlist
+    }
+    set connectdialog [ODialog new -volatile -title [mc "Define the subtypes of the object-class."]  -message [mc "give connecting parameters"] -inputframe [self]::inputframe -type okcancel]
+    if {[$connectdialog execute]=="cancel"} { return } 
+    my inputToVars [$connectdialog set values]
+    my instvar parent_table child_table reference
+    if {$parent_table=="****" || $child_table=="****" || $reference=="****"} {
+        IDE::Dialog error [mc "Input incomletely!. You must specify the father-table, the child-table and inherit key in child-table"]
+    } else {
+        my applyToXml
+    }
+}
+InheritAssistent proc getreferences type {
+    # tDom
+    # vielleicht nicht benutzt
+    my instvar domNode table_rel child_table
+    set names [$domNode selectNodes descendant::table\[@name="$child_table"\]/descendant::attr/attribute::name]
+    set names [tdom_extractAttributes $names]
+    return [concat **** $names]
+}
+@ InheritAssistent proc gettables {} {
+description {Stellt eine Liste mit Allen Tabellen}
+}
+InheritAssistent proc gettables type {
+    # tDom
+    my instvar domNode
+    set tables [$domNode selectNodes descendant::table\[not(@type)\ or\ @type!=\"relationship\"\]/attribute::name]
+    set tables [tdom_extractAttributes $tables]
+    return [concat **** $tables]
+}
+InheritAssistent proc initializeAfterLoad {} {
+InheritAssistent set input_spec {
+    {parent_table {{type OComboBox} {label {parent table}} }}
+    {child_table {{type OComboBoxN} {notifyproc {InheritAssistent chooseTable}} {label {child table}} }}
+    {reference  {{type OComboBox}  {valuelist ****} {label {reference}} }}
+    {inherittype {{type OComboBox} {valuelist {unknown notsubset subset {parent abstract}}} {label {inherit type}} }}
+}
+
+   # enable mc parsing by some dummy objects
+   return
+   set dummy [mc "parent table"]
+   set dummy [mc "child table"]
+   set dummy [mc "reference"]
+   set dummy [mc "inherit type"]
+}
+@ InheritAssistent proc inputToVars {} {
+description {Transeriert die Werte aus InputFrame zu objekt Variablen}
+}
+InheritAssistent proc inputToVars tvals {
+    set values $tvals
+    foreach val [keylkeys values] {
+        my set $val [keylget values $val]
+    }
+}
+AggrAssistent initializeAfterLoad
+AssAssistent initializeAfterLoad
+InheritAssistent initializeAfterLoad
+

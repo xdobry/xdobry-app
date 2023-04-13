@@ -1,0 +1,468 @@
+# automatically generated from XOTclIDE
+package provide xdobry::DBProxy 0.31
+Class DBProxy -parameter {sqlconnect table attrlist primarykey refvalue {refattribute {}} dbtypes}
+@ ::DBProxy idemeta component xdobry::DBProxy
+@ DBProxy instproc buildwhere {} {
+description {Baut die richtige WHERE Klausel aus tupelid (interne Benutzung)}
+}
+DBProxy instproc buildwhere {} {
+    my instvar tupelid refattribute refvalue
+    set where {}
+    foreach attr [keylkeys tupelid] {
+        if {$where!=""} { append where " AND " }
+        if {[set val  [keylget tupelid $attr]]!="NULL"} {
+            # !!! MS Access await that numeric is not masked
+            # quick hack
+            if {[string is digit $val]} {
+                append where "$attr=$val"
+            } else {
+                append where "$attr=[my maskstring $val]"
+            }
+        } else {
+            append where "$attr IS NULL"
+        }
+    }
+    # Bei Vererbung kann ein refattribute zum prim gehören
+    # also keine verdopplung
+    if {$refattribute!="" && ![lcontain [keylkeys tupelid] $refattribute]} {
+        append where " AND $refattribute=$refvalue"
+    }
+    return $where
+}
+@ DBProxy instproc delete {} {
+description {gibt 0 beim Erfolg oder  -1 sonst}
+}
+DBProxy instproc delete {} {
+    my instvar sqlconnect table
+    set ret [$sqlconnect execute "DELETE FROM [my tableExpresion] WHERE [my buildwhere]"]
+    if {$ret==""} {
+        return -1
+    } else {
+        return 0
+    }
+}
+DBProxy instproc destroy {} {
+    my instvar query 
+    if {[info exists query] && [Object isobject $query]} {
+        $query destroy
+    }
+    next
+}
+DBProxy instproc getType attr {
+    my instvar typesArr
+    if {[info exists typesArr($attr)]} {
+        return $typesArr($attr)
+    } else {
+        return 
+    }
+}
+@ DBProxy instproc gettupel {} {
+description {Nimmt ein Tupel als tclx keyedlist
+lastfetch ist ein ID des letzten genommenen Tuppels
+es wird immer die Identifikation des letzten Tuppel gespeichert
+als keyedlist tupelid
+um in nacher modifizieren oder löschen zu können}
+}
+DBProxy instproc gettupel id {
+    my instvar query lastfetch attrlist qdata tupelid primarykey
+    if {$id==[expr $lastfetch+1]} {
+        # Einfach der näschtr
+        set row [$query fetch]
+        incr lastfetch
+        if {$row eq ""} {
+            return
+        }
+    } else {
+        #Pointer setzten
+        $query seek $id
+        set lastfetch $id
+        set row [$query fetch]
+    }
+    #puts "GET $row"
+    set tupel {}
+    set index 0
+    foreach column $attrlist {
+        keylset tupel $column [lindex $row $index]
+        incr index
+    }
+    foreach keyattr $primarykey {
+        keylset tupelid $keyattr [lindex $row [lsearch $qdata $keyattr]]
+    }
+    return $tupel
+}
+DBProxy instproc init args {
+    my instvar attrlist primarykey qdata refattribute qfilter dbtypes typesArr
+    if {![lcontain $attrlist $refattribute] && $refattribute!=""} {
+        lappend attrlist $refattribute
+    }
+    foreach attr $attrlist type $dbtypes {
+        set typesArr($attr) $type
+    }
+    set notdata [minusMenge $primarykey $attrlist]
+    if {[lempty $notdata]} {
+        set qdata $attrlist
+    } else {
+        set qdata [concat $attrlist $notdata]
+    }
+    set qfilter {}
+}
+@ DBProxy instproc maskstring {} {
+description Es\ werden\ Zeichenketten\ als\ SQL\ Strings\ maskiert\nErsetzung\ von\ \"\ und\ \\\nund\ Umschließen\ mit\ \"............\"\nNULL\ wird\ nicht\ maskiert
+}
+DBProxy instproc maskstring string {
+    my instvar sqlconnect
+    if {$string=="NULL"} {return NULL}
+    return "'[$sqlconnect escape $string]'"
+}
+@ DBProxy instproc new {} {
+description {Gibt zurück den primärschlüssel des neuen Tupel fall aus einen Attribut
+sonst NOPRIM oder SQLERROR beim Fehler}
+}
+DBProxy instproc new values {
+    my instvar sqlconnect table refattribute refvalue primarykey typesArr
+    set newvalues {}
+    #puts "DB Proxy NEW [self]"
+    foreach attr [keylkeys values] {
+        lappend newvalues [keylget values $attr]
+        lappend collist $attr
+        lappend types [my getType $attr]
+    }
+    if {$refattribute!=""} {
+        lappend newvalues $refvalue
+        lappend collist $refattribute
+        lappend types [my getType $refattribute]
+    }
+    set ret [$sqlconnect insertRow $table $collist $newvalues $types]
+    if {$ret==""} {
+        return SQLERROR
+    }    
+    if {[llength $primarykey]!=1} {
+        return NOPRIM
+    } else {
+        if {[lcontain [keylkeys values] $primarykey]} {
+            return [keylget values $primarykey]
+        } else {
+            if {[$sqlconnect hasfunction getinsertid]} {
+                return [$sqlconnect getinsertid]
+            } else {
+                return
+            }
+        }
+    }
+}
+@ DBProxy instproc reload {} {
+description {gibt die Anzahl der Tupel zurück oder -1 wenn Fehler}
+}
+DBProxy instproc reload {} {
+    my instvar sqlconnect table attrlist qdata primarykey qfilter query lastfetch refattribute refvalue orderby
+    if {[info exists query]} {
+        $query destroy
+    }
+    set mcolumns [list]
+    foreach c $qdata {
+        lappend mcolumns [$sqlconnect maskColumnName $c]
+    }
+    set sqlstatment "SELECT [join $mcolumns ,] FROM [my tableExpresion]"
+    set where ""
+    if {$refattribute!=""} {
+        append where " WHERE $refattribute=$refvalue"
+    }
+    if {$qfilter!=""} {
+        if {$where==""} {
+            append where " WHERE $qfilter"
+        } else {
+            append where " AND ( $qfilter )"
+        }
+    }
+    append sqlstatment $where
+    if {[info exists orderby] && $orderby!=""} {
+        append sqlstatment " ORDER BY $orderby"
+    }
+    #puts "QUERY $sqlstatment"
+    set query [$sqlconnect query $sqlstatment]
+    if {$query eq ""} {
+        return 0
+    }
+    if {[$sqlconnect hasfunction rows]} {
+        my set rows [$query rows]
+    }
+    set lastfetch -1
+    return 1
+}
+@ DBProxy instproc setFilter {} {
+description {Baut einen Filter (oder Suchfunktion) über die Tupel
+filterattr - ist eine Keydlist (TclX) über die Attributen
+boolmode - kann "and" oder "or" sein (komplexe Abfragen so nicht möglich)
+filtermatch - kann "exact" "glob" oder "regexp" sein die Abfrage wird
+gebildet mit = Like und =~
+Die einzelnen Attributfilter können modifikatoren haben
+= > < >= <= ! (not)  ~ (regexp) * (glob)
+\ maskiert den Modifiekator}
+}
+DBProxy instproc setFilter {filterattr boolmode filtermatch} {
+    my instvar qfilter sqlconnect
+    set qfilter {}
+    foreach attr [keylkeys filterattr] {
+        if {$qfilter!=""} {
+            if {$boolmode=="and"} {
+                append qfilter " AND "
+            } else {
+                append qfilter " OR "
+            }
+        }
+        set val [keylget filterattr $attr]
+        set mod [string range $val 0 0]
+        set op {}
+        set noval 0
+        switch -- $mod {
+            = -
+            > -
+            < {
+                set val [string range $val 1 end]
+                set op $mod
+            }
+            * {
+                set val [string range $val 1 end]
+                set op LIKE
+            }
+            ~ {
+                set val [string range $val 1 end]
+                set op REGEXP
+            }
+            ! {
+                switch [string range $val 1 1] {
+                    = {
+                        set val [string range $val 2 end]
+                        set op !=
+                    }
+                    * {
+                        set val [string range $val 2 end]
+                        set op "NOT LIKE"
+                    }
+                    ~ {
+                        set val [string range $val 2 end]
+                        set op "NOT REGEXP"
+                    }
+                    default {
+                        set val [string range $val 1 end]
+                        set op !=
+                    }
+                }
+            }
+            \\ {
+                set val [string range $val 1 end]
+            }
+            default {
+                switch $val {
+                    "IS NULL" {
+                        set op "IS NULL"
+                        set noval 1
+                    }
+                    "IS NOT NULL" {
+                        set op "IS NOT NULL"
+                        set noval 1
+                    }
+                }
+            }
+        }
+        #puts "OP $op mod=$mod"
+        if {$op==""} {
+            switch $filtermatch {
+                glob {
+                    set op LIKE
+                }
+                regexp {
+                    set op REGEXP
+                }
+                exact -
+                default {
+                    set op =
+                }
+            }
+        }
+        if {$noval} {
+            append qfilter "$attr $op"
+        } else {
+            set type [my getType $attr]
+            if {[$sqlconnect needEscape $type]} {
+                append qfilter "$attr $op [my maskstring $val]"
+            } else {
+                append qfilter "$attr $op $val"
+            }
+        }
+    }
+    #puts "setFilter $filterattr $qfilter"
+}
+@ DBProxy instproc setOrder {} {
+description {Sortierung
+sortlist= {xattr1 xattr2 xattr3}
+xattr1 = {attr1 desc} | attr1
+Es wird zu liste by SQL Abfrage
+... ORDER BY xattr1, xattr2, xattr3}
+}
+DBProxy instproc setOrder sortlist {
+    my instvar orderby table
+    if {$sortlist eq ""} {
+        set orderby ""
+    } else {
+        set orderby [my tableExpresion].[join $sortlist ,[my tableExpresion].]
+    }
+}
+DBProxy instproc tableExpresion {} {
+    my instvar table sqlconnect
+    $sqlconnect maskTableName $table
+}
+@ DBProxy instproc update {} {
+description {Füht die Änderungen an dem letzten gelesenen Tupel
+0 Erfolg
+-1 Sql Fehler}
+}
+DBProxy instproc update changes {
+    my instvar sqlconnect table attrlist typesArr
+    set updateset {}
+    foreach attr [keylkeys changes] {
+        if {![lcontain $attrlist $attr]} continue
+        if {$updateset!=""} { append updateset "," }
+        set type [my getType $attr]
+        if {[$sqlconnect needEscape $type]} {
+            set value "'[$sqlconnect escape [keylget changes $attr]]'"
+        } else {
+            set value [keylget changes $attr]
+        }
+        append updateset "$attr=$value"
+    }
+    set ret [$sqlconnect execute "UPDATE [my tableExpresion] SET $updateset WHERE [my buildwhere]"]
+    if {$ret=={}} {
+        return -1
+    }
+    return 0
+}
+@ Class DBProxyRT {
+description {Diese Klasse wird für Formulare verwendet die
+ein ObjektLink zwischen n:m Bezihung repräsentieren
+Die Abfrage etwa
+select table.attrlist1,table.attrlist2,... from tabel,reftable
+where reftable.refattribute2=table.primarykey and
+reftable.refattribute="refvalue"}
+}
+Class DBProxyRT -superclass ::DBProxy -parameter {
+    sqlconnect table attrlist primarykey 
+    refvalue refattribute reftable refattribute2
+}
+@ ::DBProxyRT idemeta component xdobry::DBProxy
+@ DBProxyRT instproc buildwhere {} {
+description {Baut die richtige WHERE Klausel aus tupelid (interne Benutzung)}
+}
+DBProxyRT instproc buildwhere {} {
+    my instvar tupelid
+    set where {}
+    foreach attr [keylkeys tupelid] {
+        if {$where!=""} { append where " AND " }
+        if {[set val  [keylget tupelid $attr]]!="NULL"} {
+            append where "$attr=[my maskstring $val]"
+        } else {
+            append where "$attr IS NULL"
+        }
+    }
+    return $where
+}
+DBProxyRT instproc delete {} {
+    error "Forbidden Operation on this kind of proxy (objectlink)"
+}
+@ DBProxyRT instproc gettupel {} {
+description {Nimmt ein Tupel als tclx keyedlist
+lastfetch ist ein ID des letzten genommenen Tuppels
+es wird immer die Identifikation des letzten Tuppel gespeichert
+als keyedlist tupelid
+um in nacher modifizieren oder löschen zu können}
+}
+DBProxyRT instproc gettupel id {
+    my instvar query lastfetch attrlist qdata tupelid primarykey
+    if {$id==[expr $lastfetch+1]} {
+        # Einfach der näschtr
+        set row [$query fetch]
+        incr lastfetch
+    } else {
+        #Pointer setzten
+        $query seek $id
+        set lastfetch $id
+        set row [$query fetch]
+    }
+    #puts "GET $row"
+    set tupel {}
+    set index 0
+    foreach column $attrlist {
+        keylset tupel $column [lindex $row $index]
+        incr index
+    }
+    foreach keyattr $primarykey {
+        keylset tupelid $keyattr [lindex $row [lsearch $qdata $keyattr]]
+    }
+    return $tupel
+}
+DBProxyRT instproc init args {
+    my instvar attrlist primarykey  qdata refattribute qfilter
+    set notdata [minusMenge $primarykey $attrlist]
+    if {[lempty $notdata]} {
+        set qdata $attrlist
+    } else {
+        set qdata [concat $attrlist $notdata]
+    }
+    set qfilter {}
+}
+@ DBProxyRT instproc new {} {
+description {Gibt zurück den primärschlüssel des neuen Tupel fall aus einen Attribut
+sonst NOPRIM}
+}
+DBProxyRT instproc new values {
+   error "Forbidden Operation on this kind of proxy (objectlink)"
+}
+DBProxyRT instproc refTableExpresion {} {
+    my instvar reftable
+    if {[string first " " $reftable]>=0} {
+        return "\[$reftable\]"
+    } else {
+        return $reftable
+    }
+    
+}
+@ DBProxyRT instproc reload {} {
+description {gibt die Anzahl der Tupel zurück oder -1 wenn Fehler}
+}
+DBProxyRT instproc reload {} {
+    my instvar sqlconnect table attrlist qdata primarykey qfilter  query lastfetch orderby refattribute refattribute2 refvalue reftable
+    if {[info exists query]} {
+        $query destroy
+    }
+    set mcolumns [list]
+    foreach c $qdata {
+        lappend mcolumns [$sqlconnect maskColumnName $c]
+    }
+    set sqlstatment "SELECT [my tableExpresion].[join $mcolumns ,[my tableExpresion].] FROM [my tableExpresion],[my refTableExpresion]"
+    set where ""
+    if {$refattribute!=""} {
+        append where " WHERE [my refTableExpresion].$refattribute=$refvalue AND [my refTableExpresion].$refattribute2=[my tableExpresion].$primarykey"
+    }
+    if {$qfilter!=""} {
+        if {$where==""} {
+            append where " WHERE $qfilter"
+        } else {
+            append where " AND ( $qfilter )"
+        }
+    }
+    append sqlstatment $where
+    if {[info exists orderby] && $orderby!=""} {
+        append sqlstatment " ORDER BY $orderby"
+    }
+    #puts "QUERY $sqlstatment"
+    set query [$sqlconnect query $sqlstatment]
+    if {$query==""} { 
+        return 0
+    }
+    if {[$sqlconnect hasfunction rows]} {
+        my set rows [$query rows]
+    }
+    set lastfetch -1
+    return 1
+}
+

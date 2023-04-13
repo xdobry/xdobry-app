@@ -1,0 +1,141 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE dbforms SYSTEM "xmlforms.dtd">
+<dbforms name="kurs">
+    <?dbconnect {interface mysql} {hostname localhost} {user root} {dbank kurs}?>
+    <?dbschema /home/artur/programs/xotclIDE/sample/kurs.xmldbschema?>
+    <form name="Angebot" table="Angebot" primarykey="AngebotId">
+        <frame manager="pack">
+            <pack>
+                <numeric label="AngebotId" data="AngebotId" dbtype="int" state="disabled"/>
+                <text label="Datum" textwidth="10" data="Datum" dbtype="datetime"/>
+                <reference data="OrtId" dbtype="int" form="Ort" label="Ort" columns="2" columnslabel="OrtId Name">
+                    <sqlquery>SELECT OrtId,Name FROM Ort</sqlquery>
+                </reference>
+                <reference data="KursId" dbtype="int" form="Kurs" label="Kurs" columns="2" columnslabel="KursId Name">
+                    <sqlquery>SELECT KursId,Name FROM Kurs</sqlquery>
+                </reference>
+                <formlink label="nimmt_teil" data="AngebotId" refattribute="AngebotId" form="nimmt_teil" reftable="nimmt_teil">
+                    <objectlink form="Teilnehmer" refattribute="TeilnehmerId" label="Teilnehmer"/>
+                </formlink>
+                <formlink label="liest_vor" data="AngebotId" refattribute="AngebotId" form="liest_vor" reftable="liest_vor">
+                    <objectlink form="Referent" refattribute="ReferentId" label="Referent"/>
+                </formlink>
+            </pack>
+        </frame>
+    </form>
+    <form name="Kurs" table="Kurs" primarykey="KursId">
+        <frame manager="pack">
+            <pack>
+                <numeric label="KursId" data="KursId" dbtype="int" state="disabled"/>
+                <text label="Name" textwidth="25" data="Name" dbtype="varchar"/>
+                <text subtype="area" label="Zielsetzung" data="Zielsetzung" dbtype="text"/>
+                <text subtype="area" label="Inhalt" data="Inhalt" dbtype="text"/>
+                <numeric label="Preis" data="Preis" dbtype="int"/>
+                <numeric label="Dauer" data="Dauer" dbtype="int"/>
+                <formlink label="KursAngebot" data="KursId" refattribute="KursId" form="Angebot"/>
+                <formlink label="Kurssetzt_voraus" data="KursId" refattribute="KursId" form="setzt_voraus"/>
+                <reference data="StrukturId" dbtype="int" form="Struktur" label="Struktur" columns="2" columnslabel="StrukturId Name">
+                    <sqlquery>SELECT StrukturId,Name FROM Struktur</sqlquery>
+                </reference>
+            </pack>
+        </frame>
+    </form>
+    <form name="Ort" table="Ort" primarykey="OrtId">
+        <frame manager="pack">
+            <pack>
+                <numeric label="OrtId" data="OrtId" dbtype="int" state="disabled"/>
+                <text label="Name" textwidth="30" data="Name" dbtype="varchar"/>
+                <text label="Land" textwidth="20" data="Land" dbtype="varchar"/>
+                <text subtype="area" label="Beschreibung" data="Beschreibung" dbtype="text"/>
+                <formlink label="OrtAngebot" data="OrtId" refattribute="OrtId" form="Angebot"/>
+            </pack>
+        </frame>
+    </form>
+    <form name="Referent" table="Referent" primarykey="ReferentId">
+        <frame manager="pack">
+            <pack>
+                <numeric label="ReferentId" data="ReferentId" dbtype="int" state="disabled"/>
+                <text label="Name" textwidth="50" data="Name" dbtype="char"/>
+                <text label="Titel" textwidth="30" data="Titel" dbtype="char"/>
+                <formlink label="liest_vor" data="ReferentId" refattribute="ReferentId" form="liest_vor" reftable="liest_vor">
+                    <objectlink form="Angebot" refattribute="AngebotId" label="Angebot"/>
+                </formlink>
+            </pack>
+        </frame>
+    </form>
+    <form name="Struktur" table="Struktur" primarykey="StrukturId">
+        <frame manager="pack">
+            <pack>
+                <numeric label="StrukturId" data="StrukturId" dbtype="int" state="disabled"/>
+                <text label="Name" textwidth="50" data="Name" dbtype="char"/>
+                <numeric label="OberstrukturId" data="OberstrukturId" dbtype="int"/>
+                <formlink label="StrukturKurs" data="StrukturId" refattribute="StrukturId" form="Kurs"/>
+            </pack>
+        </frame>
+    </form>
+    <form name="Teilnehmer" table="Teilnehmer" primarykey="TeilnehmerId">
+        <frame manager="pack">
+            <pack>
+                <numeric label="TeilnehmerId" data="TeilnehmerId" dbtype="int" state="disabled"/>
+                <list label="Anrede" subtype="radiobuttons" data="Anrede" dbtype="enum" dbdefault="Herr">
+                    <valuelist>
+                        <item>Herr</item>
+                        <item>Frau</item>
+                    </valuelist>
+                </list>
+                <text label="Name" textwidth="30" data="Name" dbtype="varchar"/>
+                <text label="Vorname" textwidth="30" data="Vorname" dbtype="varchar"/>
+                <text label="Firma" textwidth="50" data="Firma" dbtype="varchar"/>
+                <text label="Funktion" textwidth="40" data="Funktion" dbtype="varchar"/>
+                <text label="Abteilung" textwidth="40" data="Abteilung" dbtype="varchar"/>
+                <text label="Strasse_Nr" textwidth="50" data="Strasse_Nr" dbtype="varchar"/>
+                <text label="PLZ" textwidth="10" data="PLZ" dbtype="varchar"/>
+                <text label="Ort" textwidth="50" data="Ort" dbtype="varchar"/>
+                <text label="Telefon" textwidth="30" data="Telefon" dbtype="varchar"/>
+                <text label="Fax" textwidth="30" data="Fax" dbtype="varchar"/>
+                <text label="Email" textwidth="30" data="Email" dbtype="varchar"/>
+                <text subtype="area" label="Bemerkung" data="Bemerkung" dbtype="text"/>
+                <formlink label="nimmt_teil" data="TeilnehmerId" refattribute="TeilnehmerId" form="nimmt_teil" reftable="nimmt_teil">
+                    <objectlink form="Angebot" refattribute="AngebotId" label="Angebot"/>
+                </formlink>
+            </pack>
+        </frame>
+    </form>
+    <form name="liest_vor" table="liest_vor" primarykey="AngebotId ReferentId">
+        <frame manager="pack">
+            <pack>
+                <reference data="ReferentId" dbtype="int" form="Referent" label="Referent" columns="2" columnslabel="ReferentId Name">
+                    <sqlquery>SELECT ReferentId,Name FROM Referent</sqlquery>
+                </reference>
+                <reference data="AngebotId" dbtype="int" form="Angebot" label="Angebot" columns="1" columnslabel="AngebotId">
+                    <sqlquery>SELECT AngebotId FROM Angebot</sqlquery>
+                </reference>
+            </pack>
+        </frame>
+    </form>
+    <form name="nimmt_teil" table="nimmt_teil" primarykey="TeilnehmerId AngebotId">
+        <frame manager="pack">
+            <pack>
+                <text label="Datum" textwidth="20" data="Datum" dbtype="timestamp" state="disabled"/>
+                <reference data="AngebotId" dbtype="int" form="Angebot" label="Angebot" columns="1" columnslabel="AngebotId">
+                    <sqlquery>SELECT AngebotId FROM Angebot</sqlquery>
+                </reference>
+                <reference data="TeilnehmerId" dbtype="int" form="Teilnehmer" label="Teilnehmer" columns="3" columnslabel="TeilnehmerId Name Vorname">
+                    <sqlquery>SELECT TeilnehmerId,Name,Vorname FROM Teilnehmer</sqlquery>
+                </reference>
+            </pack>
+        </frame>
+    </form>
+    <form name="setzt_voraus" table="setzt_voraus" primarykey="KursId KursVoraussetzungId">
+        <frame manager="pack">
+            <pack>
+                <numeric label="KursVoraussetzungId" data="KursVoraussetzungId" dbtype="int" dbdefault="0"/>
+                <reference data="KursId" dbtype="int" form="Kurs" label="Kurs" columns="2" columnslabel="KursId Name">
+                    <sqlquery>SELECT KursId,Name FROM Kurs</sqlquery>
+                </reference>
+            </pack>
+        </frame>
+    </form>
+</dbforms>
+
+

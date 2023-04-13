@@ -1,0 +1,166 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE dbforms SYSTEM "xmlforms.dtd">
+<dbforms name="business">
+    <?dbschema /home/artur/programs/xotclIDE/sample/business.xmldbschema?>
+    <form name="Can_produce" table="Can_produce" primarykey="DEPTNO PRODID">
+        <frame manager="pack">
+            <pack>
+                <numeric label="unit_cost" data="unit_cost" dbtype="int"/>
+                <reference data="PRODID" dbtype="int" form="Price" label="Price" columns="1" columnslabel="PRODID">
+                    <sqlquery>SELECT PRODID FROM Price</sqlquery>
+                </reference>
+                <reference data="DEPTNO" dbtype="int" form="Departament" label="Departament" columns="2" columnslabel="DEPTNO dept_name">
+                    <sqlquery>SELECT DEPTNO,dept_name FROM Departament</sqlquery>
+                </reference>
+            </pack>
+        </frame>
+    </form>
+    <form name="Carrier" table="Carrier" primarykey="CARRIERID">
+        <frame manager="pack">
+            <pack>
+                <numeric label="CARRIERID" data="CARRIERID" dbtype="int" state="disabled"/>
+                <text label="name" textwidth="20" data="name" dbtype="varchar"/>
+                <text label="address" textwidth="20" data="address" dbtype="varchar"/>
+                <formlink label="CarrierShipment" data="CARRIERID" refattribute="CARRIERID" form="Shipment"/>
+            </pack>
+        </frame>
+    </form>
+    <form name="CusOrder" table="CusOrder" primarykey="ORDID">
+        <frame manager="pack">
+            <pack>
+                <numeric label="ORDID" data="ORDID" dbtype="int" state="disabled"/>
+                <text label="order_date" textwidth="10" data="order_date" dbtype="datetime"/>
+                <reference data="PRODID" dbtype="int" form="Price" label="Price" columns="1" columnslabel="PRODID">
+                    <sqlquery>SELECT PRODID FROM Price</sqlquery>
+                </reference>
+                <formlink label="CusOrderShipment" data="ORDID" refattribute="ORDID" form="Shipment"/>
+                <reference data="CUSTID" dbtype="int" form="Customer" label="Customer" columns="2" columnslabel="CUSTID name">
+                    <sqlquery>SELECT CUSTID,name FROM Customer</sqlquery>
+                </reference>
+            </pack>
+        </frame>
+    </form>
+    <form name="Customer" table="Customer" primarykey="CUSTID">
+        <frame manager="pack">
+            <pack>
+                <numeric label="CUSTID" data="CUSTID" dbtype="int" state="disabled"/>
+                <text label="name" textwidth="20" data="name" dbtype="varchar"/>
+                <numeric label="credit" data="credit" dbtype="int"/>
+                <formlink label="CustomerCusOrder" data="CUSTID" refattribute="CUSTID" form="CusOrder"/>
+            </pack>
+        </frame>
+    </form>
+    <form name="Departament" table="Departament" primarykey="DEPTNO">
+        <frame manager="pack">
+            <pack>
+                <numeric label="DEPTNO" data="DEPTNO" dbtype="int" state="disabled"/>
+                <text label="dept_name" textwidth="20" data="dept_name" dbtype="varchar"/>
+                <text label="location" textwidth="20" data="location" dbtype="varchar"/>
+                <formlink label="DepartamentProject" data="DEPTNO" refattribute="DEPTNO" form="Project"/>
+                <formlink label="Work_for" data="DEPTNO" refattribute="DEPTNO" form="Work_for" reftable="Work_for">
+                    <objectlink form="Employee" refattribute="SSN" label="Employee"/>
+                </formlink>
+                <formlink label="DepartamentCan_produce" data="DEPTNO" refattribute="DEPTNO" form="Can_produce"/>
+                <formlink label="DepartamentManager" data="DEPTNO" refattribute="DEPTNO" form="Manager"/>
+            </pack>
+        </frame>
+    </form>
+    <form name="Employee" table="Employee" primarykey="SSN">
+        <frame manager="pack">
+            <pack>
+                <numeric label="SSN" data="SSN" dbtype="int" dbdefault="0"/>
+                <text label="name" textwidth="20" data="name" dbtype="varchar"/>
+                <numeric label="salary" data="salary" dbtype="int"/>
+                <text label="hired_date" textwidth="10" data="hired_date" dbtype="datetime"/>
+                <formlink label="Work_for" data="SSN" refattribute="SSN" form="Work_for" reftable="Work_for">
+                    <objectlink form="Departament" refattribute="DEPTNO" label="Departament"/>
+                </formlink>
+                <inheritform data="SSN">
+                    <child label="Person" form="Person" inheritkey="SSN"/>
+                    <child label="Manager" form="Manager" inheritkey="SSN"/>
+                </inheritform>
+            </pack>
+        </frame>
+    </form>
+    <form name="Person" table="Person" primarykey="SSN">
+        <frame manager="pack">
+            <pack>
+                <numeric label="SSN" data="SSN" dbtype="int" state="disabled"/>
+                <text label="name" textwidth="20" data="name" dbtype="varchar"/>
+                <text label="address" textwidth="25" data="address" dbtype="varchar"/>
+            </pack>
+        </frame>
+    </form>
+    <form name="Manager" table="Manager" primarykey="SSN">
+        <frame manager="pack">
+            <pack>
+                <numeric label="SSN" data="SSN" dbtype="int" dbdefault="0"/>
+                <numeric label="rank" data="rank" dbtype="int"/>
+                <text label="promotion_date" textwidth="10" data="promotion_date" dbtype="datetime"/>
+                <reference data="DEPTNO" dbtype="int" form="Departament" label="Departament" columns="2" columnslabel="DEPTNO dept_name">
+                    <sqlquery>SELECT DEPTNO,dept_name FROM Departament</sqlquery>
+                </reference>
+            </pack>
+        </frame>
+    </form>
+    <form name="Price" table="Price" primarykey="PRODID">
+        <frame manager="pack">
+            <pack>
+                <numeric label="PRODID" data="PRODID" dbtype="int" dbdefault="0"/>
+                <numeric label="minprice" data="minprice" dbtype="int"/>
+                <numeric label="maxprice" data="maxprice" dbtype="int"/>
+                <formlink label="PriceCusOrder" data="PRODID" refattribute="PRODID" form="CusOrder"/>
+                <formlink label="PriceCan_produce" data="PRODID" refattribute="PRODID" form="Can_produce"/>
+            </pack>
+        </frame>
+    </form>
+    <form name="Product" table="Product" primarykey="PRODID">
+        <frame manager="pack">
+            <pack>
+                <numeric label="PRODID" data="PRODID" dbtype="int" state="disabled"/>
+                <text label="description" textwidth="20" data="description" dbtype="varchar"/>
+            </pack>
+        </frame>
+    </form>
+    <form name="Project" table="Project" primarykey="PROJNAME DEPTNO">
+        <frame manager="pack">
+            <pack>
+                <text label="PROJNAME" textwidth="20" data="PROJNAME" dbtype="varchar"/>
+                <numeric label="budget" data="budget" dbtype="int"/>
+                <reference data="DEPTNO" dbtype="int" form="Departament" label="Departament" columns="2" columnslabel="DEPTNO dept_name">
+                    <sqlquery>SELECT DEPTNO,dept_name FROM Departament</sqlquery>
+                </reference>
+            </pack>
+        </frame>
+    </form>
+    <form name="Shipment" table="Shipment" primarykey="PACKID ORDID">
+        <frame manager="pack">
+            <pack>
+                <numeric label="PACKID" data="PACKID" dbtype="int" state="disabled"/>
+                <text label="ship_date" textwidth="10" data="ship_date" dbtype="datetime"/>
+                <numeric label="unit_cost" data="unit_cost" dbtype="int"/>
+                <reference data="CARRIERID" dbtype="int" form="Carrier" label="Carrier" columns="2" columnslabel="CARRIERID name">
+                    <sqlquery>SELECT CARRIERID,name FROM Carrier</sqlquery>
+                </reference>
+                <reference data="ORDID" dbtype="int" form="CusOrder" label="CusOrder" columns="1" columnslabel="ORDID">
+                    <sqlquery>SELECT ORDID FROM CusOrder</sqlquery>
+                </reference>
+            </pack>
+        </frame>
+    </form>
+    <form name="Work_for" table="Work_for" primarykey="SSN DEPTNO">
+        <frame manager="pack">
+            <pack>
+                <text label="start_data" textwidth="10" data="start_data" dbtype="datetime"/>
+                <reference data="DEPTNO" dbtype="int" form="Departament" label="Departament" columns="2" columnslabel="DEPTNO dept_name">
+                    <sqlquery>SELECT DEPTNO,dept_name FROM Departament</sqlquery>
+                </reference>
+                <reference data="SSN" dbtype="int" form="Employee" label="Employee" columns="1" columnslabel="SSN">
+                    <sqlquery>SELECT SSN FROM Employee</sqlquery>
+                </reference>
+            </pack>
+        </frame>
+    </form>
+</dbforms>
+
+

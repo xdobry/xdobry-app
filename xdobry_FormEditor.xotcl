@@ -1,0 +1,711 @@
+# automatically generated from XOTclIDE
+# script require component IDEBaseGUI
+package provide xdobry::FormEditor 0.33
+package require IDEBaseGUI
+Class FormEditorWin -superclass {::IDE::Browser ::IDE::GUICommands} -parameter {{atHead 1}}
+@ ::FormEditorWin idemeta categories {init-release user-action}
+@ ::FormEditorWin idemeta categoriesMethods {{getMenuStruct getToolMenu createSystemMenu stopSystem} {saveForms seeXMLForms seeXMLSchema saveFormsAs autoFormGen readForms}}
+@ ::FormEditorWin idemeta component xdobry::FormEditor
+FormEditorWin instproc addForm form_node {
+    my instvar win form_nodelist
+    set flist [$win.list subwidget tlist]
+    switch [$form_node nodeName] {
+        form {
+            set iname openfold
+        }
+        tableoverview {
+            # !!! TODO
+            set iname entry
+        }
+    }
+    $flist insert end -itemtype imagetext  -text [$form_node getAttribute name]  -image [tix getimage $iname]
+    lappend form_nodelist $form_node
+}
+FormEditorWin instproc applyChanges form_node {
+    my instvar win form_nodelist
+    set flist [$win.list subwidget tlist]
+    set id [lsearch $form_nodelist $form_node]
+    if {$id<0} return
+    $flist entryconfigure $id -text [$form_node getAttribute name]
+}
+FormEditorWin instproc autoFormGen {} {
+    my instvar data_node dom_doc sdom_doc sdata_node db_name schema_file
+    if {![info exists sdata_node]} {
+        IDE::Dialog error [mc "No Repostiory is loaded!"]
+        return
+    }
+    # tDom Bug, workaround
+    $sdom_doc documentElement
+    if {![info exists dom_doc]} {
+        #puts "dom creator"
+        #Es existiertieren keine Formulare
+        set dom_doc [dom createDocument dbforms]
+        set data_node [$dom_doc documentElement]
+        $data_node setAttribute name $db_name
+        #Processing Command aus schema zu form transportieren
+        #z.B <? dbconnect .....?>
+        foreach node [$sdata_node selectNodes child::processing-instruction()] {
+            $data_node appendChild [$dom_doc createProcessingInstruction  [$node target] [$node data]]
+        }
+        # dbschema Datei Lokation als ProcessingInstruction anbinden
+        $data_node appendChild [$dom_doc createProcessingInstruction dbschema $schema_file]
+    }
+
+    FormGenerator autogenAll $sdata_node $data_node
+    my showForms
+}
+FormEditorWin instproc clearForms {} {
+    my instvar win dom_doc win
+    if {[info exists dom_doc] && $dom_doc!=""} {
+        $dom_doc delete
+        set flist [$win.list subwidget tlist]
+        $flist delete 0 end
+        $win.lformsf configure -text ""
+        unset dom_doc
+    }
+}
+FormEditorWin instproc closeWindow {} {
+    if {[IDE::Dialog yesNo [mc "Do you want to terminate FormServer?"]]} {
+       my stopSystem
+       my destroy
+    } 
+}
+FormEditorWin instproc createSystemMenu {} {
+    my instvar win
+    if {[winfo toplevel $win]=="."} {
+        set twin {}
+    } else {
+        set twin $win
+    }
+    set ms [my getToolMenu]
+    $ms createTkMenu $twin.mb.tool $twin
+    $twin.mb add cascade -label [$ms set name] -menu $twin.mb.tool -underline 0
+    
+    menu $twin.mb.help -tearoff 0
+    $twin.mb add cascade -label [mc "Help"] -menu $twin.mb.help  -underline 0
+    XDBase installHelpMenu $twin.mb.help FormEditor
+    $twin.mb.help add separator
+    $twin.mb.help add command -label "view XML Schema"  -command [list [self] seeXMLSchema]
+    $twin.mb.help add command -label "view XML Forms"  -command [list [self] seeXMLForms]
+    
+    [winfo toplevel $win] configure -menu $twin.mb
+}
+FormEditorWin instproc deleteForm {} {
+    my instvar win form_nodelist
+    set flist [$win.list subwidget tlist]
+    set id [lindex [$flist info selection] 0]
+    if {$id!=""} {
+        $flist delete $id
+        set form_node [lindex $form_nodelist $id]
+        [$form_node parentNode] removeChild $form_node
+        set form_nodelist [lreplace $form_nodelist $id $id]
+    }
+}
+FormEditorWin instproc editForm {} {
+    my instvar win form_nodelist
+    set flist [$win.list subwidget tlist]
+    set id [lindex [$flist info selection] 0]
+    #puts "ID $id"
+    if {$id!=""} {
+        my executeForm $id
+    }
+}
+FormEditorWin instproc executeForm num {
+    my instvar win data_node sdata_node sdom_doc form_nodelist schema_question
+    set flist [$win.list subwidget tlist]
+    set tablename  [[lindex $form_nodelist $num] getAttribute table]
+    set form_node  [lindex $form_nodelist $num]
+    set schema_node {}
+    if {![info exists sdata_node]} {
+        if {![info exists schema_question]} {
+            if {[IDE::Dialog yesNo [mc "No Repository is loaded.  Do you want to defy the form to process?"]]} {
+                return
+            }
+            # die Frage nicht nochmal stellen? Es weißt was er tut.
+            set schema_question 1
+        }
+    } else {
+        if {$sdata_node!=""} {
+            set schema_node [$sdata_node selectNodes descendant::table\[@name=\"$tablename\"\]]
+        } {
+            set schema_node {}
+        }
+        if {$schema_node==""} {
+            if {[IDE::Dialog yesNo [mc "No suitable table found.  Probably false DB Repository was loaded or it changed.  Nevertheless continue?"]]} {
+                return
+            }
+        }
+    }
+    # Überprüfe ob bereit editiert
+    switch [$form_node nodeName] {
+        form {
+            foreach editor [DBGuiEditor info instances] {
+                if {$form_node==[$editor set form_node]} {
+                    #puts "Bereits Editiert"
+                    return
+                }
+            }
+            DBGuiEditor new -form_node $form_node  -schema_node $schema_node
+        }
+        tableoverview {
+            foreach editor [TableroverviewEditor info instances] {
+                if {$form_node==[$editor set form_node]} {
+                    #puts "Bereits Editiert"
+                    return
+                }
+            }
+            TableroverviewEditor new [Object autoname .tvieweditor] -form_node $form_node -schema_node $schema_node
+        }
+    }
+}
+FormEditorWin instproc fillMenuStruct aMenuStruct {
+    $aMenuStruct enablementHandler [self]
+    
+    $aMenuStruct addCommand [mc "Load Repository as XML-File"] [list [self] readDbSchema]
+    $aMenuStruct addCommand [mc "Load Forms"] [list [self] readForms] 
+    $aMenuStruct addCommand2 [mc "Forms Safe"] [list [self] saveForms] hasForms
+    $aMenuStruct addCommand2 [mc "Forms Safe as"] [list [self] saveFormsAs] hasForms
+    $aMenuStruct addSeparator
+    $aMenuStruct addCommand [mc "Exit"] [list [self] closeWindow]
+
+}
+FormEditorWin instproc findSchema {} {
+    my instvar win sdata_node sdom_doc data_node schema_file db_name file_name
+    if {![info exists sdata_node]} {
+        set schema_file {}
+        # Suche die ProcessingInstuction dbschema
+        foreach node [$data_node selectNodes child::processing-instruction()] {
+            if {[$node target]=="dbschema"} {
+                set schema_file [$node data]
+                break
+            }
+        }
+        if {$schema_file!=""} {
+            if {![file exist $schema_file]} {
+                # Probiere da wo auch form Datei war
+                set schema_file [file join [file dirname $file_name] [file tail $schema_file]]
+            }
+        } else {
+            # Leite den Namen von dbforms Attribut name
+            set schema_file [file join [file dirname $file_name] $db_name.xmldbschema]
+        }
+        #puts "file $schema_file"
+        if {[file exist $schema_file] && [file isfile $schema_file]} {
+            if {[IDE::Dialog yesNo [format [mc "The file \"%s\" was found appropriate DB Repository.  should it to be loaded?"] $schema_file]]} {
+                my readDbSchema $schema_file 0
+            }
+            return
+        }
+    }
+}
+FormEditorWin instproc getMenuStruct {} {
+    IDE::MenuStruct create [self]::ms {Form Editor} 0
+}
+FormEditorWin instproc getTitle {} {
+    return "Form Editor"
+}
+FormEditorWin instproc getToolMenu {} {
+    set ms [IDE::MenuStruct new -childof [self] [mc "Tools"] 0]
+    $ms enablementHandler [self]
+    $ms enableList hasSchema
+    $ms addCommand [mc "Form assistant"] [list [self] autoFormGen]
+    return $ms 
+}
+FormEditorWin instproc hasForms {} {
+   expr {[my exists data_node] && [my set data_node]!=""}
+}
+FormEditorWin instproc hasSchema {} {
+    expr {[my exists sdata_node] && [my set sdata_node]!=""}
+}
+FormEditorWin instproc newForm {} {
+    my instvar sdata_node data_node dom_doc db_name sdom_doc schema_question
+    # Gibt Warnungen, wenn wahrschienliche schlecht Benutzung des Programs
+    if {![info exists dom_doc]} {
+        if {![info exists sdata_node]} {
+            if {![IDE::Dialog yesNo [mc "No forms so far!  No Repository!  The best way to generate new forms, is to loaded Repostory and call the form assistant (menu >Tools>Form Assistant).  Do you want to continue and create forms manually?"]]} { return }
+            set schema_question 1
+        } else {
+            if {![IDE::Dialog yesNo [mc "No forms so far!  They can create all forms suitably at one step (menu>Tools>Formular assistant).  You would like to continue to create the forms manually"]]} { return }
+        }
+    }
+    set prop  {
+        {{type OLabelEntry} {name name} {label name} {textwidth 20}}
+        {{type OLabelEntry} {name primarykey} {label primarykey} {textwidth 20}}
+    }
+    # Ist DB_Schema Vorhanden
+    if {![info exists sdata_node]} {
+        set tprop {{type OLabelEntry} {name table} {label table} {textwidth 20}}    } else {
+            set tprop {{type OComboBoxN} {name table} {label table} {notifyproc {FormEditor notify_table}} }
+            # tDom Bug, workaround
+            $sdom_doc documentElement
+            keylset tprop valuelist [tdom_extractAttributes [$sdata_node selectNodes //descendant::table/attribute::name]]
+            lappend prop {{type OCheckButton} {name useass} {label {use Assistent}} {default 0}}
+    }
+    OInputDialog [self]::newformdialog [linsert $prop 1 $tprop] {}
+    if {[set ret [[self]::newformdialog execute]]!=""} {
+        set rkeys [keylkeys ret]
+        if {![lcontain $rkeys name] || ![lcontain $rkeys table] || !([lcontain $rkeys primarykey] || [lcontain $rkeys useass])} {
+            IDE::Dialog error [mc "Not all fields were specified"]
+            return
+        }
+        if {![info exists dom_doc]} {
+            set dom_doc [dom createDocument dbforms]
+            set data_node [$dom_doc documentElement]
+            set db_name manuforms
+            $data_node setAttribute name $db_name
+        }
+        if {[$data_node selectNodes child::form\[@name=\"[keylget ret name]\"\]]!=""} {
+            IDE::Dialog error [mc "The form under the same names already exists"]
+            return
+        }
+        if {[lcontain $rkeys useass] && [keylget ret useass]} {
+            # Erzeuge durch Assistenten
+            set form_node [$dom_doc createElement form]
+            $form_node setAttribute name [keylget ret name]
+            $data_node appendChild $form_node
+            set table_node [$sdata_node selectNodes descendant::table\[@name=\"[keylget ret table]\"\]]
+            #puts "TNODE $table_node [keylget ret table]"
+            FormGenerator autogenForm $form_node $table_node 
+        } else {
+            set form_node [$dom_doc createElement form]
+            $form_node setAttribute name [keylget ret name]
+            $form_node setAttribute table [keylget ret table]
+            $form_node setAttribute primarykey [keylget ret primarykey]
+            $data_node appendChild $form_node
+            set frame_node [$dom_doc createElement frame]
+            $frame_node setAttribute manager pack
+            $form_node appendChild $frame_node
+        }
+        my addForm $form_node
+    }
+    [self]::newformdialog destroy
+}
+FormEditorWin instproc newTableoverview {} {
+    my instvar sdata_node data_node dom_doc db_name sdom_doc schema_question
+    # Gibt Warnungen, wenn wahrschienliche schlecht Benutzung des Programs
+    if {![info exists dom_doc]} {
+        if {![info exists sdata_node]} {
+            if {![IDE::Dialog yesNo [mc "No forms so far!  No Repository!  The best way to generate new forms, is to loaded Repostory and call the form assistant (menu >Tools>Form Assistant).  Do you want to continue and create forms manually?"]]} { return }
+            set schema_question 1
+        } else {
+            if {![IDE::Dialog yesNo [mc "No forms so far!  They can create all forms suitably at one step (menu>Tools>Formular assistant).  You would like to continue to create the forms manually"]]} { return }
+        }
+    }
+    set prop  {
+        {{type OLabelEntry} {name name} {label name} {textwidth 20}}
+        {{type OLabelEntry} {name primarykey} {label primarykey} {textwidth 20}}
+    }
+    # Ist DB_Schema Vorhanden
+    if {![info exists sdata_node]} {
+        set tprop {{type OLabelEntry} {name table} {label table} {textwidth 20}}
+    } else {
+        set tprop {{type OComboBoxN} {name table} {label table} {notifyproc {FormEditor notify_table}} }
+        # tDom Bug, workaround
+        $sdom_doc documentElement
+        keylset tprop valuelist [tdom_extractAttributes [$sdata_node selectNodes //descendant::table/attribute::name]]
+    }
+    OInputDialog [self]::newformdialog [linsert $prop 1 $tprop] {}
+    if {[set ret [[self]::newformdialog execute]]!=""} {
+        set rkeys [keylkeys ret]
+        if {![lcontain $rkeys name] || ![lcontain $rkeys table] || ![lcontain $rkeys primarykey]} {
+            IDE::Dialog error [mc "Not all fields were specified"]
+            return
+        }
+        if {![info exists dom_doc]} {
+            set dom_doc [dom createDocument dbforms]
+            set data_node [$dom_doc documentElement]
+            set db_name manuforms
+            $data_node setAttribute name $db_name
+        }
+        if {[$data_node selectNodes child::tableoverview\[@name=\"[keylget ret name]\"\]]!=""} {
+            IDE::Dialog error [mc "The form under the same names already exists"]
+            return
+        }
+        set form_node [$dom_doc createElement tableoverview]
+        $form_node setAttribute name [keylget ret name]
+        $form_node setAttribute table [keylget ret table]
+        $form_node setAttribute primarykey [keylget ret primarykey]
+        $data_node appendChild $form_node
+        my addForm $form_node
+    }
+    [self]::newformdialog destroy
+}
+FormEditorWin instproc notify_table table {
+    my instvar sdata_node
+    set table_node [$sdata_node selectNodes descendant::table\[@name=\"$table\"\]]
+    set primattr [tdom_getprimattr $table_node]
+    # Wenn prim Schlüssel nicht vorhanden dann alle Attribtute
+    if {$primattr==""} {
+        set primattr [$table_node selectNodes {child::node()[not(self::table)]/descendant-or-self::attr/attribute::name}]
+        set primattr [tdom_extractAttributes $primattr]
+    }
+    
+    [self]::newformdialog::inputframe::primarykey setvalue $primattr
+}
+FormEditorWin instproc readDbSchema {{file {}} {clearForms 1}} {
+    my instvar sdata_node sdom_doc db_name win schema_file 
+    set types {
+        {"XML DB Schema"        {.xmldbschema}}
+        {"All files"                *}
+    }
+    if {$file==""} {
+        set file [IDE::Dialog getOpenFile $types]
+        if {$file == ""} { return }
+    }
+    if {[info exists sdom_doc]} {
+        set alt_dom_doc $sdom_doc
+    } else {
+        set alt_dom_doc {}
+    }
+    set flist [$win.list subwidget tlist]
+    set fileh [open $file]
+    fconfigure $fileh -encoding utf-8
+    set xmlfile [read $fileh]
+    close $fileh
+    set sdom_doc [dom parse $xmlfile]
+    set sdata_node [$sdom_doc documentElement]
+    if {[$sdata_node nodeName]!="database"} {
+        $sdom_doc delete
+        set sdom_doc ""
+        IDE::Dialog error [format [mc "False XML file. Expect one \".dbform\" XML file."] xmldbschema]
+        return
+    }
+    $win.lschemaf configure -text [file tail $file]
+    set schema_file $file
+    set db_name [$sdata_node getAttribute name]
+    if {$alt_dom_doc!=""} {
+        $alt_dom_doc delete
+    }
+    if {$clearForms} {
+        my clearForms
+    }
+}
+FormEditorWin instproc readForms {{file {}} {findschema 1}} {
+    my instvar win data_node dom_doc db_name file_name
+    set types {
+        {"XML Forms"                {.xmlforms}}
+        {"All files"                *}
+    }
+    if {$file==""} {
+        set file [IDE::Dialog getOpenFile $types]
+        if {$file == ""} { return }
+    }
+    set fileh [open $file]
+    fconfigure $fileh -encoding utf-8
+    if {[info exists dom_doc]} {
+        set alt_dom_doc $dom_doc
+    } else {
+        set alt_dom_doc {}
+    }
+    set dom_doc [dom parse [read $fileh]]
+    close $fileh
+    set data_node [$dom_doc documentElement]
+    if {[$data_node nodeName]!="dbforms"} {
+        $dom_doc delete
+        set dom_doc ""
+        IDE::Dialog error [format [mc "False XML file. Expect one \".dbform\" XML file."] xmlforms]
+        return
+    }
+    set db_name [$data_node getAttribute name]
+    set file_name $file
+    my showForms
+    $win.lformsf configure -text [file tail $file]
+    if {$findschema} {
+        my findSchema
+    }
+    if {$alt_dom_doc!=""} {
+        $alt_dom_doc delete
+    }
+}
+FormEditorWin instproc saveForms {} {
+    my instvar file_name
+    if {![info exists file_name]} {
+        my saveFormsAs
+    } else {
+        my saveFormsAs $file_name
+    }
+}
+FormEditorWin instproc saveFormsAs {{f_name {}}} {
+   my instvar data_node file_name win db_name
+    if {![info exists data_node] || $data_node==""} return
+    set types {
+        {"XML files"         {.xmlforms}  }
+        {"All files"            *}
+    }
+    if {$f_name!=""} {
+        set file_name $f_name
+    } else {
+        if {![info exists file_name]} {
+            set file_name $db_name.xmlforms
+        }
+        set f_name [IDE::Dialog getSaveFile $file_name $types .xmlforms]
+        if {$f_name==""} return
+    }
+    set file_name $f_name
+    set fh [open $file_name w]
+    fconfigure $fh -encoding utf-8
+    puts $fh "<?xml version='1.0' encoding='utf-8'?>\n<!DOCTYPE dbforms SYSTEM \"xmlforms.dtd\">\n[$data_node asXML]\n"
+    close $fh
+    $win.lformsf configure -text [file tail $file_name]
+}
+FormEditorWin instproc seeXMLForms {} {
+    my instvar data_node
+    set win .xmlview
+    if {![info exists data_node]} {
+        return
+    }
+    if {![winfo exist $win]} {
+          toplevel $win
+          text $win.text -yscroll [list $win.scroll set] -width 80 -height 24
+          scrollbar $win.scroll -command [list $win.text yview] -takefocus 0
+          
+          pack $win.scroll -side right -fill y
+          pack $win.text -expand yes -fill both
+    }
+   $win.text delete 1.0 end
+   $win.text insert 1.0 [$data_node asXML]
+}
+FormEditorWin instproc seeXMLSchema {} {
+    my instvar sdata_node
+    set win .xmlview
+    if {![info exists sdata_node]} {
+        return
+    }
+    if {![winfo exist $win]} {
+          toplevel $win
+          text $win.text -yscroll [list $win.scroll set] -width 80 -height 24
+          scrollbar $win.scroll -command [list $win.text yview] -takefocus 0
+          
+          pack $win.scroll -side right -fill y
+          pack $win.text -expand yes -fill both
+    }
+    $win.text delete 1.0 end
+    $win.text insert 1.0 [$sdata_node asXML]
+}
+FormEditorWin instproc showForms {} {
+    my instvar data_node win form_nodelist
+    set flist [$win.list subwidget tlist]
+    $flist delete 0 end
+    set form_nodelist {}
+    foreach node [$data_node childNodes] {
+        if {[$node nodeType]=="ELEMENT_NODE" && [$node nodeName]=="form"} then {
+            my addForm $node
+        }
+        if {[$node nodeType]=="ELEMENT_NODE" && [$node nodeName]=="tableoverview"} then {
+            my addForm $node
+        } 
+    }
+    
+}
+FormEditorWin instproc specificInit {} {
+    my instvar win
+    if {$win==""} {
+       set rootwin .
+    } else {
+       set rootwin $win
+    }
+    
+    label $win.lschema -text Schema
+    label $win.lforms  -text Forms
+    label $win.lschemaf -border 1 -relief solid -bg white -anchor w
+    label $win.lformsf  -border 1 -relief solid -bg white -anchor w
+    button $win.loadschema -image [tix getimage openfile]  -command {FormEditor readDbSchema}
+    button $win.loadform  -image [tix getimage openfile]  -command {FormEditor  readForms}
+    grid $win.lschema -column 0 -row 1
+    grid $win.lforms -column 0 -row 0
+    grid $win.lschemaf -column 1 -row 1 -sticky ew
+    grid $win.lformsf -column 1 -row 0 -sticky ew
+    grid $win.loadschema -column 2 -row 1 -sticky w
+    grid $win.loadform -column 2 -row 0 -sticky w
+    tixScrolledTList $win.list  -options {
+        tlist.orient horizontal
+        tlist.selectMode single
+        tlist.command {FormEditor executeForm}
+        tlist.width 60
+        tlist.height 10
+    }
+    grid $win.list -sticky nsew -column 0 -row 2 -columnspan 2
+
+    frame $win.box  -relief raised -bd 2
+    button $win.box.newform -text [mc "New form"]  -command {FormEditor newForm}
+    button $win.box.editform -text [mc "Design form"]  -command {FormEditor editForm}
+    button $win.box.deleteform -text [mc "Delete form"]  -command {FormEditor deleteForm}
+    pack $win.box.newform $win.box.editform $win.box.deleteform  -side top -anchor n -fill x -padx 4 -pady 2
+    grid $win.box -column 2 -row 2 -sticky nsew
+
+    grid columnconfigure $rootwin 1 -weight 1
+    grid rowconfigure $rootwin 2 -weight 1
+    
+    next
+}
+FormEditorWin instproc stopSystem {} {
+    my instvar sdom_doc
+    if {[info exists sdom_doc] && $sdom_doc!=""} {
+        $sdom_doc delete
+    }
+    my clearForms
+    XDBase stopSystem
+}
+FormEditorWin proc startSystem {} {
+   XDBase initSystem
+   EditableFormFactory create mffactory
+   if {![Object isobject IDE::Component]} {
+     frame .formEditor
+     pack .formEditor -fill both -expand yes
+   }
+   set inst [my create FormEditor .formEditor]
+}
+Class TableroverviewEditor -superclass ::IDE::Browser -parameter {form_node schema_node}
+@ ::TableroverviewEditor idemeta component xdobry::FormEditor
+TableroverviewEditor instproc addColumn {} {
+    my instvar tablewin form_node
+    set srow [my getSelectedRow]
+    $tablewin activate ""
+    if {$srow eq ""} {
+        set srow [$tablewin cget -rows]
+    }
+    $tablewin insert rows $srow 1
+}
+TableroverviewEditor instproc createSystemMenu {} {
+    # no system menu
+}
+TableroverviewEditor instproc deleteColumn {} {
+    my instvar tablewin form_node
+    set srow [my getSelectedRow]
+    $tablewin selection clear all
+    $tablewin activate ""
+    if {$srow eq ""} {
+        return
+    }
+    $tablewin delete rows $srow 1
+    
+}
+TableroverviewEditor instproc downColumn {} {
+    my instvar tablewin form_node
+    set rows [$tablewin cget -rows]
+    set srow [my getSelectedRow]
+    $tablewin activate ""
+    if {$srow eq "" || $srow>=$rows} {
+        return
+    }
+    set row [$tablewin get $srow,0 $srow,2]
+    $tablewin delete rows $srow
+    $tablewin insert rows $srow 1
+    $tablewin set row [expr {$srow+1}],0 $row
+}
+TableroverviewEditor instproc fillColumns {} {
+    my instvar tablewin form_node
+    set columns [$form_node select {columns/column}]
+    if {[llength $columns]==0} return
+    $tablewin configure -rows [expr {1+[llength $columns]}]
+    set y 1
+    foreach column_node $columns {
+        $tablewin set row $y,0 [list [$column_node getAttribute name] [$column_node getAttribute dbexpresion] [$column_node getAttribute width ""]]
+        incr y
+    }
+}
+TableroverviewEditor instproc getSelectedRow {} {
+    my instvar tablewin 
+    set index [lindex [$tablewin curselection] 0]
+    set index [lindex [split $index ,] 0]
+}
+TableroverviewEditor instproc getTitle {} {
+    return "Tableoverview Editor"
+}
+TableroverviewEditor instproc specificInit {} {
+    my instvar win tablewin
+    
+    # TODO Table,Column und Add
+    
+    set aframe [frame $win.aframe]
+    label $aframe.nameLab -text [mc "Name"]
+    entry $aframe.name
+    label $aframe.pkLab -text [mc "Primary Key"]
+    entry $aframe.primaryKey
+    label $aframe.rowsLab -text [mc "Visible Rows"]
+    spinbox $aframe.rows -increment 1
+    label $aframe.detailsFormLab -text [mc "Detail Form"]
+    spinbox $aframe.detailsForm
+    checkbutton $aframe.deleteItem -text [mc "Delete Item"]
+    checkbutton $aframe.createItem -text [mc "Create Item"]
+    grid $aframe.nameLab -column 0 -row 0 -sticky w
+    grid $aframe.name -column 1 -row 0 -sticky w
+    grid $aframe.pkLab -column 0 -row 1 -sticky w
+    grid $aframe.primaryKey -column 1 -row 1 -sticky w
+    grid $aframe.rowsLab -column 0 -row 2 -sticky w
+    grid $aframe.rows -column 1 -row 2 -sticky w
+    grid $aframe.detailsFormLab -column 0 -row 3 -sticky w
+    grid $aframe.detailsForm -column 1 -row 3 -sticky w
+    grid $aframe.deleteItem -column 1 -row 4 -sticky w
+    grid $aframe.createItem -column 1 -row 5 -sticky w
+    pack $aframe -anchor w
+    
+    label $win.columnsLab -text [mc "Columns"]
+    pack $win.columnsLab -anchor w
+    
+    frame $win.tableframe
+    scrollbar $win.tableframe.ytablescroll -command [list $win.tableframe.table yview]
+    table $win.tableframe.table -yscrollcommand [list $win.tableframe.ytablescroll set] -cache yes -height 12 -anchor w -cols 3 -titlerows 1 -rows 1
+    set tablewin $win.tableframe.table
+    $tablewin set row 0,0 [list [mc "name"] [mc "db expresion"] [mc "width"]]
+    
+    
+    grid $win.tableframe.table -column 0 -row 0 -sticky news
+    grid $win.tableframe.ytablescroll -column 1 -row  0 -sticky nws
+    grid rowconfigure $win.tableframe 0 -weight 1
+    grid columnconfigure $win.tableframe 0 -weight 1
+    pack $win.tableframe -fill both -expand yes
+    
+    set bframe [frame $win.tbuttons]
+    button $bframe.add -text [mc "Add"] -command [list [self] addColumn]
+    button $bframe.delete -text [mc "Delete"] -command [list [self] deleteColumn]
+    button $bframe.up -text [mc "Up"] -command [list [self] upColumn]
+    button $bframe.down -text [mc "Down"] -command [list [self] downColumn]
+    pack $bframe.add $bframe.delete $bframe.up $bframe.down -side left
+    pack $bframe -anchor w
+    
+    my updateView
+}
+TableroverviewEditor instproc upColumn {} {
+    my instvar tablewin form_node
+    set srow [my getSelectedRow]
+    $tablewin activate ""
+    if {$srow eq "" || $srow<=1} {
+        return
+    }
+    set row [$tablewin get $srow,0 $srow,2]
+    $tablewin delete rows $srow 1
+    $tablewin insert rows [expr {$srow-1}] -1
+    $tablewin set row [expr {$srow-1}],0 $row
+}
+TableroverviewEditor instproc updateView {} {
+    my instvar win form_node
+    my fillColumns
+
+    $win.aframe.name delete 0 end
+    $win.aframe.name insert 0 [$form_node getAttribute name ""]
+
+    $win.aframe.primaryKey delete 0 end
+    $win.aframe.primaryKey insert 0 [$form_node getAttribute primarykey ""]
+    
+    $win.aframe.rows delete 0 end
+    $win.aframe.rows insert 0 [$form_node getAttribute rows 10]
+    
+    if {[$form_node getAttribute deleteItem 1]} {
+        $win.aframe.deleteItem select
+    } else {
+        $win.aframe.deleteItem deselect
+    }
+    if {[$form_node getAttribute createItem 1]} {
+        $win.aframe.createItem select
+    } else {
+        $win.aframe.createItem deselect
+    }
+    
+    $win.aframe.detailsForm configure -values [tdom_extractAttributes [$form_node selectNodes //descendant::form/attribute::name]]
+    $win.aframe.detailsForm delete 0 end
+    $win.aframe.detailsForm insert 0 [$form_node getAttribute detailsform ""]
+    
+    my setTitleAddition [$form_node getAttribute detailsform ""]
+}
+

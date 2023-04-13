@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>XML</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Dokumentation des Programms Xdobry"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Entwickler Informationen"
+HREF="c925.html"><LINK
+REL="PREVIOUS"
+TITLE="Entwickler Informationen"
+HREF="c925.html"><LINK
+REL="NEXT"
+TITLE="Weiterentwicklung"
+HREF="x957.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Dokumentation des Programms Xdobry</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c925.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Entwickler Informationen</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x957.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN949"
+></A
+>XML</H1
+><P
+>Im System dienen XML Dokumente als Schnittstellen zwischen Schema-Editor und Formular-Editor (XML Klasse dbschema) und weiter zwischen Formular-Editor und Formular-Sever (XML Klasse xmlforms).
+Dadurch wird die hohe Unabhängigkeit der Komponenten und ihre Austauschbarkeit garantiert.
+Jede Komponente kann durch eine andere ersetzt werden, die das entsprechende XML-Dokument manipulieren (interpretieren) kann.
+Es heißt, sie musst der Schnittstelle, das als eine XML-Kasse (DTD-Dokument) beschrieben ist, genügen.
+Für den Benutzer des System ist die interne Verwendung des XML-Formats unsichtbar.
+Er kann nach Bedarf die XML-Dokumente auch manuell erstellen oder mit Hilfe von anderen allgemeinen XML-Werkzeugen verarbeiten.</P
+><P
+>Die Beschreibungen der einzelnen XML-Klassen als DTD Dokumente werden in Dateien <TT
+CLASS="FILENAME"
+>dtd/dbschema.dtd</TT
+> und <TT
+CLASS="FILENAME"
+>dtd/dbforms.dtd</TT
+> beschreiben.
+Ein kleiner Skript <TT
+CLASS="FILENAME"
+>validate.sh</TT
+> vereinfacht die Benutzung von nsgml Parser, der bereits standardmäßig zu jeder LINUX Distribution gehört.</P
+><P
+>Das System wurde so Entworfen, dass diese XML-Dokumente von anderen Applikationen benutzt sein können.</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c925.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Zum Anfang</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x957.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Entwickler Informationen</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c925.html"
+ACCESSKEY="U"
+>Nach oben</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Weiterentwicklung</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

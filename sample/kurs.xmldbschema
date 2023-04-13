@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE database SYSTEM "dbschema.dtd">
+<database name="kurs">
+    <?dbconnect {interface mysql} {hostname localhost} {user root} {dbank kurs}?>
+    <table name="Angebot">
+        <attr name="AngebotId" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="Datum" type="datetime" null="1"/>
+        <attr name="OrtId" type="int" default="0"/>
+        <attr name="KursId" type="int" default="0"/>
+        <assoziationcollection name="OrtAngebot" type="reference">
+            <participant reference="OrtId" table="Ort"/>
+        </assoziationcollection>
+        <assoziationcollection name="KursAngebot" type="reference">
+            <participant reference="KursId" table="Kurs"/>
+        </assoziationcollection>
+        <assoziationtarget name="nimmt_teil" table="nimmt_teil"/>
+        <assoziationtarget name="liest_vor" table="liest_vor"/>
+    </table>
+    <table name="Kurs">
+        <label>
+            <valuelist>
+                <item>Name</item>
+            </valuelist>
+        </label>
+        <attr name="KursId" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="Name" length="25" type="varchar" null="1"/>
+        <attr name="Zielsetzung" type="text" null="1"/>
+        <attr name="Inhalt" type="text" null="1"/>
+        <attr name="Preis" type="int" null="1"/>
+        <attr name="Dauer" type="int" null="1"/>
+        <attr name="StrukturId" type="int" default="0"/>
+        <assoziationtarget name="KursAngebot" table="Angebot"/>
+        <assoziationtarget name="Kurssetzt_voraus" table="setzt_voraus"/>
+        <assoziationcollection name="StrukturKurs" type="reference">
+            <participant reference="StrukturId" table="Struktur"/>
+        </assoziationcollection>
+    </table>
+    <table name="Ort">
+        <label>
+            <valuelist>
+                <item>Name</item>
+            </valuelist>
+        </label>
+        <attr name="OrtId" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="Name" length="30" type="varchar" null="1"/>
+        <attr name="Land" length="20" type="varchar" null="1"/>
+        <attr name="Beschreibung" type="text" null="1"/>
+        <assoziationtarget name="OrtAngebot" table="Angebot"/>
+    </table>
+    <table name="Referent">
+        <label>
+            <valuelist>
+                <item>Name</item>
+            </valuelist>
+        </label>
+        <attr name="ReferentId" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="Name" length="50" type="char" null="1"/>
+        <attr name="Titel" length="30" type="char" null="1"/>
+        <assoziationtarget name="liest_vor" table="liest_vor"/>
+    </table>
+    <table name="Struktur">
+        <label>
+            <valuelist>
+                <item>Name</item>
+            </valuelist>
+        </label>
+        <attr name="StrukturId" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="Name" length="50" type="char" null="1"/>
+        <attr name="OberstrukturId" type="int" null="1"/>
+        <assoziationtarget name="StrukturKurs" table="Kurs"/>
+    </table>
+    <table name="Teilnehmer">
+        <label>
+            <valuelist>
+                <item>Name</item>
+                <item>Vorname</item>
+            </valuelist>
+        </label>
+        <attr name="TeilnehmerId" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="Anrede" type="enum" null="1" default="Herr">
+            <valuelist>
+                <item>Herr</item>
+                <item>Frau</item>
+            </valuelist>
+        </attr>
+        <attr name="Name" length="30" type="varchar" null="1"/>
+        <attr name="Vorname" length="30" type="varchar" null="1"/>
+        <attr name="Firma" length="50" type="varchar" null="1"/>
+        <attr name="Funktion" length="40" type="varchar" null="1"/>
+        <attr name="Abteilung" length="40" type="varchar" null="1"/>
+        <attr name="Strasse_Nr" length="50" type="varchar" null="1"/>
+        <attr name="PLZ" length="10" type="varchar" null="1"/>
+        <attr name="Ort" length="50" type="varchar" null="1"/>
+        <attr name="Telefon" length="30" type="varchar" null="1"/>
+        <attr name="Fax" length="30" type="varchar" null="1"/>
+        <attr name="Email" length="30" type="varchar" null="1"/>
+        <attr name="Bemerkung" type="text" null="1"/>
+        <assoziationtarget name="nimmt_teil" table="nimmt_teil"/>
+    </table>
+    <table name="liest_vor" type="relationship">
+        <attr name="AngebotId" type="int" primary_key="1" default="0"/>
+        <attr name="ReferentId" type="int" primary_key="1" default="0"/>
+        <assoziationcollection name="liest_vor" type="reftable">
+            <participant reference="ReferentId" table="Referent"/>
+            <participant reference="AngebotId" table="Angebot"/>
+        </assoziationcollection>
+    </table>
+    <table name="nimmt_teil" type="relationship">
+        <attr name="TeilnehmerId" type="int" primary_key="1" default="0"/>
+        <attr name="AngebotId" type="int" primary_key="1" default="0"/>
+        <attr name="Datum" type="timestamp" null="1"/>
+        <assoziationcollection name="nimmt_teil" type="reftable">
+            <participant reference="AngebotId" table="Angebot"/>
+            <participant reference="TeilnehmerId" table="Teilnehmer"/>
+        </assoziationcollection>
+    </table>
+    <table name="setzt_voraus">
+        <attr name="KursId" type="int" primary_key="1" default="0"/>
+        <attr name="KursVoraussetzungId" type="int" primary_key="1" default="0"/>
+        <assoziationcollection name="Kurssetzt_voraus" type="reference">
+            <participant reference="KursId" table="Kurs"/>
+        </assoziationcollection>
+    </table>
+</database>
+

@@ -1,0 +1,42 @@
+<orderedlist>
+<listitem><para></para></listitem>
+<listitem><para></para></listitem>
+<listitem><para></para></listitem>
+</orderedlist>
+
+<itemizedlist>
+<listitem><para></para></listitem>
+<listitem><para></para></listitem>
+<listitem><para></para></listitem>
+</itemizedlist>
+
+<variablelist>
+<varlistentry><term></term>
+<listitem>
+<para>
+</para>
+</listitem>
+</varlistentry> 
+</variablelist>
+
+<simplelist>
+<member></member>
+<member></member>
+<member></member>
+</simplelist>
+
+<figure id="figure"><title></title>
+<graphic fileref="../"></graphic>
+</figure>
+  
+<sect1><title></title>
+<para>
+</para>
+</sect1>
+
+<ulink url="http://"></ulink>
+
+<emphasis></emphasis> 
+
+<xref linkend="book">
+

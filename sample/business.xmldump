@@ -1,0 +1,329 @@
+<databaseexport>
+    <database name="business">
+        <?dbconnect {interface mysql} {hostname localhost} {user root} {dbank business}?>
+        <table name="Can_produce">
+            <attr name="DEPTNO" type="int" primary_key="1" default="0"/>
+            <attr name="PRODID" type="int" primary_key="1" default="0"/>
+            <attr name="unit_cost" type="int" null="1"/>
+            <assoziationcollection name="PriceCan_produce" type="reference">
+                <participant reference="PRODID" table="Price"/>
+            </assoziationcollection>
+            <assoziationcollection name="DepartamentCan_produce" type="reference">
+                <participant reference="DEPTNO" table="Departament"/>
+            </assoziationcollection>
+        </table>
+        <table name="Carrier">
+            <label>
+                <valuelist>
+                    <item>name</item>
+                </valuelist>
+            </label>
+            <attr name="CARRIERID" type="int" primary_key="1" auto_increment="1"/>
+            <attr name="name" length="20" type="varchar" null="1"/>
+            <attr name="address" length="20" type="varchar" null="1"/>
+            <assoziationtarget name="CarrierShipment" table="Shipment"/>
+        </table>
+        <table name="CusOrder">
+            <attr name="ORDID" type="int" primary_key="1" auto_increment="1"/>
+            <attr name="order_date" type="datetime" null="1"/>
+            <attr name="PRODID" type="int" null="1"/>
+            <attr name="CUSTID" type="int" null="1"/>
+            <assoziationcollection name="PriceCusOrder" type="reference">
+                <participant reference="PRODID" table="Price"/>
+            </assoziationcollection>
+            <assoziationtarget name="CusOrderShipment" table="Shipment"/>
+            <assoziationcollection name="CustomerCusOrder" type="reference">
+                <participant reference="CUSTID" table="Customer"/>
+            </assoziationcollection>
+        </table>
+        <table name="Customer">
+            <label>
+                <valuelist>
+                    <item>name</item>
+                </valuelist>
+            </label>
+            <attr name="CUSTID" type="int" primary_key="1" auto_increment="1"/>
+            <attr name="name" length="20" type="varchar" null="1"/>
+            <attr name="credit" type="int" null="1"/>
+            <assoziationtarget name="CustomerCusOrder" table="CusOrder"/>
+        </table>
+        <table name="Departament">
+            <label>
+                <valuelist>
+                    <item>dept_name</item>
+                </valuelist>
+            </label>
+            <attr name="DEPTNO" type="int" primary_key="1" auto_increment="1"/>
+            <attr name="dept_name" length="20" type="varchar" null="1"/>
+            <attr name="location" length="20" type="varchar" null="1"/>
+            <assoziationtarget name="DepartamentProject" table="Project"/>
+            <assoziationtarget name="Work_for" table="Work_for"/>
+            <assoziationtarget name="DepartamentCan_produce" table="Can_produce"/>
+            <assoziationtarget name="DepartamentManager" table="Manager"/>
+        </table>
+        <table name="Employee">
+            <label/>
+            <attr name="SSN" type="int" primary_key="1" default="0"/>
+            <attr name="name" length="20" type="varchar" null="1"/>
+            <attr name="salary" type="int" null="1"/>
+            <attr name="hired_date" type="datetime" null="1"/>
+            <assoziationtarget name="Work_for" table="Work_for"/>
+            <table name="Person" type="child" inheritkey="SSN">
+                <attr name="SSN" type="int" primary_key="1" auto_increment="1"/>
+                <attr name="name" length="20" type="varchar" null="1"/>
+                <attr name="address" length="25" type="varchar" null="1"/>
+            </table>
+            <table name="Manager" type="child" inheritkey="SSN">
+                <attr name="SSN" type="int" primary_key="1" default="0"/>
+                <attr name="rank" type="int" null="1"/>
+                <attr name="promotion_date" type="datetime" null="1"/>
+                <attr name="DEPTNO" type="int" null="1"/>
+                <assoziationcollection name="DepartamentManager" type="reference">
+                    <participant reference="DEPTNO" table="Departament"/>
+                </assoziationcollection>
+            </table>
+        </table>
+        <table name="Price">
+            <attr name="PRODID" type="int" primary_key="1" default="0"/>
+            <attr name="minprice" type="int" null="1"/>
+            <attr name="maxprice" type="int" null="1"/>
+            <assoziationtarget name="PriceCusOrder" table="CusOrder"/>
+            <assoziationtarget name="PriceCan_produce" table="Can_produce"/>
+        </table>
+        <table name="Product">
+            <label>
+                <valuelist>
+                    <item>description</item>
+                </valuelist>
+            </label>
+            <attr name="PRODID" type="int" primary_key="1" auto_increment="1"/>
+            <attr name="description" length="20" type="varchar" null="1"/>
+        </table>
+        <table name="Project">
+            <attr name="PROJNAME" length="20" type="varchar" primary_key="1"/>
+            <attr name="DEPTNO" type="int" primary_key="1" default="0"/>
+            <attr name="budget" type="int" null="1"/>
+            <assoziationcollection name="DepartamentProject" type="reference">
+                <participant reference="DEPTNO" table="Departament"/>
+            </assoziationcollection>
+        </table>
+        <table name="Shipment">
+            <attr name="PACKID" type="int" primary_key="1" auto_increment="1"/>
+            <attr name="ORDID" type="int" primary_key="1" default="0"/>
+            <attr name="ship_date" type="datetime" null="1"/>
+            <attr name="CARRIERID" type="int" null="1"/>
+            <attr name="unit_cost" type="int" null="1"/>
+            <assoziationcollection name="CarrierShipment" type="reference">
+                <participant reference="CARRIERID" table="Carrier"/>
+            </assoziationcollection>
+            <assoziationcollection name="CusOrderShipment" type="reference">
+                <participant reference="ORDID" table="CusOrder"/>
+            </assoziationcollection>
+        </table>
+        <table name="Work_for" type="relationship">
+            <attr name="SSN" type="int" primary_key="1" default="0"/>
+            <attr name="DEPTNO" type="int" primary_key="1" default="0"/>
+            <attr name="start_data" type="datetime" null="1"/>
+            <assoziationcollection name="Work_for" type="reftable">
+                <participant reference="DEPTNO" table="Departament"/>
+                <participant reference="SSN" table="Employee"/>
+            </assoziationcollection>
+        </table>
+    </database>
+    <data>
+        <Can_produce>
+            <DEPTNO dbtype="int">2</DEPTNO>
+            <PRODID dbtype="int">1</PRODID>
+            <unit_cost dbtype="int" isnull="1"/>
+        </Can_produce>
+        <Can_produce>
+            <DEPTNO>2</DEPTNO>
+            <PRODID>2</PRODID>
+            <unit_cost isnull="1"/>
+        </Can_produce>
+        <Carrier>
+            <CARRIERID dbtype="int">1</CARRIERID>
+            <name dbtype="varchar">HU Schnell</name>
+            <address dbtype="varchar">Gowert</address>
+        </Carrier>
+        <Carrier>
+            <CARRIERID>2</CARRIERID>
+            <name>TOLLCOLLECT</name>
+            <address>Robuste 32</address>
+        </Carrier>
+        <CusOrder>
+            <ORDID dbtype="int">1</ORDID>
+            <order_date dbtype="datetime">2003-10-02</order_date>
+            <PRODID dbtype="int">2</PRODID>
+            <CUSTID dbtype="int">1</CUSTID>
+        </CusOrder>
+        <CusOrder>
+            <ORDID>2</ORDID>
+            <order_date>2001-01-09</order_date>
+            <PRODID>1</PRODID>
+            <CUSTID>1</CUSTID>
+        </CusOrder>
+        <Customer>
+            <CUSTID dbtype="int">1</CUSTID>
+            <name dbtype="varchar">Mini Vanter</name>
+            <credit dbtype="int">2034</credit>
+        </Customer>
+        <Customer>
+            <CUSTID>2</CUSTID>
+            <name>Anotny Mafony</name>
+            <credit>12000</credit>
+        </Customer>
+        <Customer>
+            <CUSTID>3</CUSTID>
+            <name>Kipper Wimmer</name>
+            <credit>20000</credit>
+        </Customer>
+        <Departament>
+            <DEPTNO dbtype="int">1</DEPTNO>
+            <dept_name dbtype="varchar">Ankauf</dept_name>
+            <location dbtype="varchar">B4</location>
+        </Departament>
+        <Departament>
+            <DEPTNO>2</DEPTNO>
+            <dept_name>Production</dept_name>
+            <location>E4-R5</location>
+        </Departament>
+        <Departament>
+            <DEPTNO>3</DEPTNO>
+            <dept_name>Verkauf</dept_name>
+            <location>3E</location>
+        </Departament>
+        <Employee>
+            <SSN dbtype="int">2</SSN>
+            <name dbtype="varchar">Hirazy Huckebain2</name>
+            <salary dbtype="int">234</salary>
+            <hired_date dbtype="datetime">1900-02-21</hired_date>
+        </Employee>
+        <Employee>
+            <SSN>3</SSN>
+            <name>Witold Jagiello</name>
+            <salary>3</salary>
+            <hired_date>1970-10-01</hired_date>
+        </Employee>
+        <Employee>
+            <SSN>4</SSN>
+            <name>Emil Evax</name>
+            <salary>23</salary>
+            <hired_date>1980-01-02</hired_date>
+        </Employee>
+        <Person>
+            <SSN dbtype="int">2</SSN>
+            <name dbtype="varchar">Der Anführer</name>
+            <address dbtype="varchar">da wo der Wind weht</address>
+        </Person>
+        <Person>
+            <SSN>4</SSN>
+            <name>rt</name>
+            <address>sewre</address>
+        </Person>
+        <Person>
+            <SSN>3</SSN>
+            <name>ert</name>
+            <address>ewe</address>
+        </Person>
+        <Manager>
+            <SSN dbtype="int">0</SSN>
+            <rank dbtype="int">2</rank>
+            <promotion_date dbtype="datetime">2000-01-20</promotion_date>
+            <DEPTNO dbtype="int" isnull="1"/>
+        </Manager>
+        <Manager>
+            <SSN>4</SSN>
+            <rank>3</rank>
+            <promotion_date>2000-01-04</promotion_date>
+            <DEPTNO>3</DEPTNO>
+        </Manager>
+        <Manager>
+            <SSN>3</SSN>
+            <rank>3</rank>
+            <promotion_date>2004-04-01</promotion_date>
+            <DEPTNO>1</DEPTNO>
+        </Manager>
+        <Price>
+            <PRODID dbtype="int">1</PRODID>
+            <minprice dbtype="int">200</minprice>
+            <maxprice dbtype="int">2000</maxprice>
+        </Price>
+        <Price>
+            <PRODID>2</PRODID>
+            <minprice>20</minprice>
+            <maxprice>130</maxprice>
+        </Price>
+        <Price>
+            <PRODID>3</PRODID>
+            <minprice>20</minprice>
+            <maxprice>21</maxprice>
+        </Price>
+        <Product>
+            <PRODID dbtype="int">1</PRODID>
+            <description dbtype="varchar">All Problems Solver</description>
+        </Product>
+        <Product>
+            <PRODID>2</PRODID>
+            <description>Wunder Stab</description>
+        </Product>
+        <Product>
+            <PRODID>3</PRODID>
+            <description>Lebende Steine</description>
+        </Product>
+        <Project>
+            <PROJNAME dbtype="varchar">eliminate MS Systems</PROJNAME>
+            <DEPTNO dbtype="int">1</DEPTNO>
+            <budget dbtype="int">1030</budget>
+        </Project>
+        <Project>
+            <PROJNAME>install Linux on all</PROJNAME>
+            <DEPTNO>1</DEPTNO>
+            <budget>10</budget>
+        </Project>
+        <Project>
+            <PROJNAME>fire MCE Dummies</PROJNAME>
+            <DEPTNO>1</DEPTNO>
+            <budget>500</budget>
+        </Project>
+        <Project>
+            <PROJNAME>configure roboter</PROJNAME>
+            <DEPTNO>2</DEPTNO>
+            <budget>200</budget>
+        </Project>
+        <Project>
+            <PROJNAME>Euro transaction</PROJNAME>
+            <DEPTNO>3</DEPTNO>
+            <budget>30</budget>
+        </Project>
+        <Shipment>
+            <PACKID dbtype="int">1</PACKID>
+            <ORDID dbtype="int">1</ORDID>
+            <ship_date dbtype="datetime">2003-10-10</ship_date>
+            <CARRIERID dbtype="int">1</CARRIERID>
+            <unit_cost dbtype="int">29</unit_cost>
+        </Shipment>
+        <Shipment>
+            <PACKID>2</PACKID>
+            <ORDID>2</ORDID>
+            <ship_date>2004-01-01</ship_date>
+            <CARRIERID>2</CARRIERID>
+            <unit_cost>12</unit_cost>
+        </Shipment>
+        <Work_for>
+            <SSN dbtype="int">2</SSN>
+            <DEPTNO dbtype="int">1</DEPTNO>
+            <start_data dbtype="datetime" isnull="1"/>
+        </Work_for>
+        <Work_for>
+            <SSN>2</SSN>
+            <DEPTNO>2</DEPTNO>
+            <start_data isnull="1"/>
+        </Work_for>
+        <Work_for>
+            <SSN>4</SSN>
+            <DEPTNO>1</DEPTNO>
+            <start_data isnull="1"/>
+        </Work_for>
+    </data>
+</databaseexport>

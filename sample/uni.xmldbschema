@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE database SYSTEM "dbschema.dtd">
+<database name="xdobryuni">
+    <?dbconnect {interface mysql} {hostname localhost} {user root} {dbank xdobryuni}?>
+    <table name="Angestellte">
+        <label>
+            <valuelist>
+                <item>Name</item>
+            </valuelist>
+        </label>
+        <attr name="PersNr" type="int" primary_key="1" default="0"/>
+        <attr name="Name" length="20" type="varchar" null="1"/>
+        <assoziationtarget name="AngestellteVorlesung" table="Vorlesung"/>
+        <assoziationtarget name="pruefen" table="pruefen"/>
+        <table name="Assistent" type="child" inheritkey="PersNr">
+            <attr name="PersNr" type="int" primary_key="1" default="0"/>
+            <attr name="Fachgebiet" length="20" type="varchar" null="1"/>
+            <attr name="Professor" type="int" null="1"/>
+        </table>
+        <table name="Professor" type="child" inheritkey="PersNr">
+            <attr name="PersNr" type="int" primary_key="1" default="0"/>
+            <attr name="Rang" length="20" type="varchar" null="1"/>
+            <attr name="Raum" type="int" null="1"/>
+        </table>
+    </table>
+    <table name="Student">
+        <label>
+            <valuelist>
+                <item>Name</item>
+            </valuelist>
+        </label>
+        <attr name="MatrNr" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="Name" length="20" type="varchar" null="1"/>
+        <attr name="Semester" type="int" null="1"/>
+        <assoziationtarget name="pruefen" table="pruefen"/>
+        <assoziationtarget name="hoeren" table="hoeren"/>
+    </table>
+    <table name="Vorlesung">
+        <label>
+            <valuelist>
+                <item>Titel</item>
+            </valuelist>
+        </label>
+        <attr name="VorlesungNr" type="int" primary_key="1" auto_increment="1"/>
+        <attr name="Titel" length="20" type="varchar" null="1"/>
+        <attr name="SWS" type="int" null="1"/>
+        <attr name="PersNr" type="int" null="1"/>
+        <assoziationcollection name="AngestellteVorlesung" type="reference">
+            <participant reference="PersNr" table="Angestellte"/>
+        </assoziationcollection>
+        <assoziationtarget name="hoeren" table="hoeren"/>
+        <assoziationtarget name="pruefen" table="pruefen"/>
+        <table name="Termin" reference="VorlesungNr">
+            <attr name="VorlesungNr" type="int" default="0"/>
+            <attr name="Wochentag" type="enum" null="1">
+                <valuelist>
+                    <item>Montag</item>
+                    <item>Dienstag</item>
+                    <item>Mittwoch</item>
+                    <item>Donnerstag</item>
+                    <item>Freitag</item>
+                </valuelist>
+            </attr>
+            <attr name="Zeit" length="5" type="varchar" null="1"/>
+        </table>
+        <assoziationtarget name="vorgänger" table="voraussetzten"/>
+        <assoziationtarget name="nachfolger" table="voraussetzten"/>
+    </table>
+    <table name="hoeren" type="relationship">
+        <attr name="MatrNr" type="int" primary_key="1" default="0"/>
+        <attr name="VorlesungNr" type="int" primary_key="1" default="0"/>
+        <assoziationcollection name="hoeren" type="reftable">
+            <participant reference="VorlesungNr" table="Vorlesung"/>
+            <participant reference="MatrNr" table="Student"/>
+        </assoziationcollection>
+    </table>
+    <table name="pruefen" type="relationship">
+        <attr name="MatrNr" type="int" primary_key="1" default="0"/>
+        <attr name="VorlesungNr" type="int" primary_key="1" default="0"/>
+        <attr name="PersNr" type="int" primary_key="1" default="0"/>
+        <attr name="Pruefnote" type="enum" null="1">
+            <valuelist>
+                <item>sehr gut</item>
+                <item>gut</item>
+                <item>befriedigend</item>
+                <item>ausreichend</item>
+                <item>mangelhaft</item>
+            </valuelist>
+        </attr>
+        <assoziationcollection name="pruefen" type="reftable">
+            <participant reference="MatrNr" table="Student"/>
+            <participant reference="PersNr" table="Angestellte"/>
+            <participant reference="VorlesungNr" table="Vorlesung"/>
+        </assoziationcollection>
+    </table>
+    <table name="voraussetzten">
+        <attr name="VorgaengerNr" type="int" primary_key="1" default="0"/>
+        <attr name="NachfolgerNr" type="int" primary_key="1" default="0"/>
+        <assoziationcollection name="vorgänger" type="reference" rolename="Vorgänger">
+            <participant reference="VorgaengerNr" table="Vorlesung" rolename=""/>
+        </assoziationcollection>
+        <assoziationcollection name="nachfolger" type="reference" rolename="nachfolger">
+            <participant reference="NachfolgerNr" table="Vorlesung" rolename=""/>
+        </assoziationcollection>
+    </table>
+</database>
+

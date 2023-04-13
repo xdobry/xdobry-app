@@ -1,0 +1,221 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>Eigenschaften des Programms</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Dokumentation des Programms Xdobry"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Xdobry Spezifikation"
+HREF="c11.html"><LINK
+REL="PREVIOUS"
+TITLE="Besondere Merkmale"
+HREF="x17.html"><LINK
+REL="NEXT"
+TITLE="Zielgruppe"
+HREF="x58.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Dokumentation des Programms Xdobry</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x17.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Xdobry Spezifikation</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x58.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN32"
+></A
+>Eigenschaften des Programms</H1
+><P
+>Das Programm wurde entworfen als ein offenes System für die Erstellung von formularbasierten DB-Applikationen.
+Im Gegensatz zu vorhandenen Systemen wurde die Erstellung der Formularen als mehrstufiger Prozess aufgefasst.
+Der Hauptgrund für die mindere Qualität der automatisch erstellten Formulare, bei herkömmlichen System, ist die Benutzung des relationalen Schema als Informationsquelle für Formulargenerator.
+Solche Formulare müssen dann aufwendig manuell angepasst werden.
+Relationales Schema (Tabellenstruktur) beinhaltet nur wenige Informationen über die Semantik der Daten.
+Es sind einfach zu wenige Informationen um gute Formulare zu erstellen.
+Bei Xdobry verlauft die Erstellung der Formulare in drei Stufen
+<P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>Genaue Spezifizierung der DB-Schema auf der Stufe des konzeptionellen Modell, Benutzung von Reverse Engineering Techniken. Benutzer DB-Administrator</P
+></LI
+><LI
+><P
+>Automatische Erstellung der Formulare. Anpassung des Aussehen im GUI-Editor. Benutzer DB-App. Entwickler </P
+></LI
+><LI
+><P
+>Benutzung der DB-Formulare für die Bearbeitung der Daten. Endbenutzer</P
+></LI
+></OL
+>
+Auf diese weise kann man leicht und schnell qualitativ sehr gute Formulare erstellen.
+Formulare unterstützen direkt höhere Konzepte der Datenbankmodellierung ohne der speziellen Programmierung.
+<P
+></P
+><UL
+><LI
+><P
+>Die Assoziationen (Relationship oder Beziehungen) zwischen den Objekten werden für die Navigationshilfen benutzt.
+Auf diese Weise kann man durch Formulare etwa wie im Hypertextdokumenten navigieren (Hyperformulare).
+Die Assoziationen können so leicht erforscht werden, ohne der Kenntnis der Datenbankschema</P
+></LI
+><LI
+><P
+>Aggregation und Spezialisierung werden direkt als eingebettete (geschachtelte Formulare realisiert.
+Die Formulare können dadurch als Objekte und nicht Tabellen angesehen werden.</P
+></LI
+><LI
+><P
+>Die Konzepte der Datenbank-Modellierung wie Fremdschlüssel müssen bei dem Endbenutzer nicht vorhanden sein.
+Das System übernimmt die benutzerfreundliche Anzeige und Handhabung von Fremdschlüssel.</P
+></LI
+></UL
+>
+
+Für jedes Schritt ist ein getrenntes Programm zuständig, das für andere Zielgruppe entwickelt wurde:
+<P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>SchemaEditor</P
+></LI
+><LI
+><P
+>FormEditor, Formgenerator und GUI-Drag and Drop Editor</P
+></LI
+><LI
+><P
+>FormServer</P
+></LI
+></OL
+></P
+><P
+>Xdobry wurde als ein Teil einer <A
+HREF="http://www.xdobry.de/artur/diplomarbeit.html"
+TARGET="_top"
+>Diplomarbeit</A
+> entwickelt.
+Es ist ein Programm, das theoretisch in der Diplomarbeit entworfen wurde, aber nachträglich modifiziert und erweitert wurde.</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x17.html"
+ACCESSKEY="P"
+>Zurück</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Zum Anfang</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x58.html"
+ACCESSKEY="N"
+>Nach vorne</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Besondere Merkmale</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c11.html"
+ACCESSKEY="U"
+>Nach oben</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Zielgruppe</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

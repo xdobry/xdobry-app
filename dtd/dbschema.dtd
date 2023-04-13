@@ -1,0 +1,69 @@
+<!ELEMENT database (table+)>
+<!ATTLIST database
+ name CDATA #REQUIRED
+>
+<!ELEMENT table (attr+|assoziationtarget*|assoziationcollection*|table*|attrgroup*|label?|description?)+>
+<!ATTLIST table
+ inheritkey CDATA #IMPLIED
+ maxOccurs CDATA #IMPLIED
+ type (child | part-of | relationship) #IMPLIED
+ name ID #REQUIRED
+ inherittype (unknown | subset | notsubset | parentabstract) "unknown"
+ reference CDATA #IMPLIED
+ minOccurs CDATA #IMPLIED
+>
+<!ELEMENT attr (valuelist?|metadata?|checks?)*>
+<!ATTLIST attr
+ default CDATA #IMPLIED
+ null (0 | 1) "0"
+ type (int | varchar | enum | smallint | date | text | datetime | char | float | timestamp | longblob | tinyint | mediumint | bigint | double | time | decimal | tinyblob | tinytext | mediumblob | mediumtext | set) #REQUIRED
+ name CDATA #REQUIRED
+ auto_increment (0 | 1) "1"
+ length CDATA #IMPLIED
+ primary_key (0 | 1) "1"
+ constrain CDATA #IMPLIED
+ noteditable (1 | 0) "0"
+ notvisible (0 | 1) "0"
+>
+<!ELEMENT assoziationcollection (participant+)>
+<!ATTLIST assoziationcollection
+ type (reftable | reference) #REQUIRED
+ name CDATA #REQUIRED
+ minOccurs CDATA #IMPLIED
+>
+<!ELEMENT participant EMPTY>
+<!ATTLIST participant
+ reference CDATA #REQUIRED
+ rolename CDATA #IMPLIED
+ table IDREF #IMPLIED
+>
+<!ELEMENT assoziationtarget EMPTY>
+<!ATTLIST assoziationtarget
+ table IDREF #IMPLIED
+ maxOccurs CDATA #IMPLIED
+ name CDATA #REQUIRED
+ rolename CDATA #IMPLIED
+ ondelete (nothing | delete | setnull) #IMPLIED
+ minOccurs CDATA #IMPLIED
+ onupdate (nothing | rename | setnull) #IMPLIED
+>
+<!ELEMENT valuelist (item+)>
+<!ELEMENT attrgroup (attr+)>
+<!ATTLIST attrgroup
+ name CDATA #IMPLIED
+>
+<!ELEMENT item (#PCDATA)>
+<!ELEMENT label (valuelist+)>
+<!ATTLIST label
+ id-relationship (0 | 1) #IMPLIED
+>
+<!ELEMENT metadata (importance?|mimetype?|description?)+>
+<!ELEMENT mimetype (#PCDATA)>
+<!ELEMENT description (#PCDATA)>
+<!ELEMENT importance (#PCDATA)>
+<!ELEMENT checks (check+)>
+<!ELEMENT check (#PCDATA)>
+<!ATTLIST check
+ validator (Regexpr | Expr | Length) #REQUIRED
+>
+

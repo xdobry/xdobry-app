@@ -1,0 +1,181 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML
+><HEAD
+><TITLE
+>XML</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="Documentation of the Xdobry application"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Developer information"
+HREF="c906.html"><LINK
+REL="PREVIOUS"
+TITLE="Developer information"
+HREF="c906.html"><LINK
+REL="NEXT"
+TITLE="TODO List"
+HREF="x942.html"></HEAD
+><BODY
+CLASS="SECT1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Documentation of the Xdobry application</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c906.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Developer information</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x942.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AEN930"
+></A
+>XML</H1
+><P
+>In the system XML-documents are interfaces between <B
+CLASS="COMMAND"
+>SchemaEditor</B
+> and <B
+CLASS="COMMAND"
+>FormEditor</B
+> (class XML dbschema) and farther between <B
+CLASS="COMMAND"
+>FormEditor</B
+> and <B
+CLASS="COMMAND"
+>FormServer</B
+> (class XML xmlforms).
+The high independence of the components and their interchangeability is thereby guaranteed.
+Every component can be replaced with another which can manipulate the corresponding XML-document (can interpret).
+It means, they must be enough for the interface which is described as a XML-DTD (DTD-document).
+For the user of the system the internal use of the XML-format is invisible.
+He can create according to demand the XML-documents also manually or process with the help of other general XML-tools.</P
+><P
+>The descriptions of the separate XML-classes as documents DTD become in files
+<TT
+CLASS="FILENAME"
+>dtd/dbschema.dtd</TT
+>
+And <TT
+CLASS="FILENAME"
+>dtd/dbforms.dtd</TT
+>.
+A small script <TT
+CLASS="FILENAME"
+>validate.sh</TT
+>
+If simplifies the use from nsgml Parser which belongs already normally to every LINUX distribution.</P
+><P
+>The system was developed so that these XML-documents can be used by other applications.</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c906.html"
+ACCESSKEY="P"
+>&#60;&#60;&#60; Previous</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x942.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Developer information</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c906.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>TODO List</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,450 @@
+# automatically generated from XOTclIDE
+package provide xdobry::FormGenerator 0.31
+Object FormGenerator
+@ ::FormGenerator idemeta component xdobry::FormGenerator
+FormGenerator proc autogenAll {s_node f_node} {
+    my instvar schema_node froot_node
+    set schema_node $s_node
+    set froot_node $f_node
+    set dom_doc [$froot_node ownerDocument]
+    foreach table_node [$schema_node selectNodes descendant::table] {
+        set tname [$table_node getAttribute name]
+        set form_node [$dom_doc createElement form]
+        $form_node setAttribute name $tname
+        $froot_node appendChild $form_node
+        my autogenForm $form_node $table_node
+    }
+}
+@ FormGenerator proc autogenForm {} {
+description {Generiet ein Frame (Window) in einer Form
+bei attrgroup wird rekursiv aufgerufen}
+}
+FormGenerator proc autogenForm {form_node table_node {label {}}} {
+    #puts "FORM NODE $form_node $table_node"
+    #Tabellen name in Formular merken
+    set primary_key {}
+    set domdoc [$form_node ownerDocument]
+    set frame_node [$domdoc createElement frame]
+    $frame_node setAttribute manager pack
+    if {$label!=""} {
+        $frame_node setAttribute label $label
+    }
+    $form_node appendChild $frame_node
+    set pack_node [$domdoc createElement pack]
+    $frame_node appendChild $pack_node
+    # Suche zuerst die Referencen die Attribute werden dann ignoriert
+    set refattr [$table_node selectNodes {child::node()[not(self::table)]/descendant-or-self::participant/attribute::reference}]
+    set refattr [tdom_extractAttributes $refattr]
+    # Finde den Primärschlüssel
+    set primattr [tdom_getprimattr $table_node]
+    # Wenn prim Schlüssel nicht vorhanden dann alle Attribtute
+    if {$primattr==""} {
+        set primattr [$table_node selectNodes {child::node()[not(self::table)]/descendant-or-self::attr/attribute::name}]
+        set primattr [tdom_extractAttributes $primattr]
+    }
+    foreach child_node [$table_node childNodes] {
+        if {[$child_node nodeType]=="ELEMENT_NODE" && 
+            [$child_node nodeName]=="attr"} {
+            # Ignoriere wenn eine Referenz (Kodiert durch assoziationcollection
+            if {[lcontain $refattr [$child_node getAttribute name]]} continue
+            set form_elem [my gen_[$child_node getAttribute type] $child_node $domdoc]
+            $pack_node appendChild $form_elem
+        }
+        if {[$child_node nodeType]=="ELEMENT_NODE" && 
+            [$child_node nodeName]=="attrgroup"} {
+            # Rekursiver Aufruf
+            my autogenForm $pack_node $child_node [$child_node getAttribute name]
+        }
+        if {[$child_node nodeType]=="ELEMENT_NODE" && 
+            [$child_node nodeName]=="assoziationcollection"} {
+            my makeReference $pack_node $child_node $table_node
+        }
+        if {[$child_node nodeType]=="ELEMENT_NODE" && 
+            [$child_node nodeName]=="assoziationtarget"} {
+            my makeFormLink $pack_node $child_node $primattr [$table_node getAttribute name]
+        }
+        if {[$child_node nodeType]=="ELEMENT_NODE" && 
+            [$child_node nodeName]=="table"} {
+            if {[$child_node hasAttribute type] && 
+                [$child_node getAttribute type]=="child"} {
+                my makeChildForm $pack_node $child_node $primattr
+            } else {
+                my makeNestedForm $pack_node $child_node $primattr
+            }
+        }
+    }
+    # Bei rekursiven Aufruf von (attrgroup) keine von diesem Variablen
+    if {[$form_node nodeName]=="form"} {
+        $form_node setAttribute table [$table_node getAttribute name]
+        $form_node setAttribute primarykey $primattr
+    }
+}
+FormGenerator proc gen_bigint {attr form_doc} {
+    my gen_int $attr $form_doc
+}
+FormGenerator proc gen_boolean {attr form_doc} {
+    set node [$form_doc createElement boolean]
+    $node setAttribute label [$attr getAttribute name]
+    if {[$attr hasAttribute length]} {
+        $node setAttribute textwidth [$attr getAttribute length]
+    }
+    my setStandards $attr $node
+    return $node
+}
+@ FormGenerator proc gen_char {} {
+description {Bei mysql gibt es eigentlich nur varchar}
+}
+FormGenerator proc gen_char {attr form_doc} {
+    my gen_varchar $attr $form_doc
+}
+@ FormGenerator proc gen_date {} {
+description {Bis jetzt keine Widget für Zeit vorhanden}
+}
+FormGenerator proc gen_date {attr form_doc} {
+    set node [$form_doc createElement text]
+    $node setAttribute label [$attr getAttribute name]
+    $node setAttribute textwidth 10
+    my setStandards $attr $node
+    return $node
+}
+FormGenerator proc gen_datetime {attr form_doc} {
+    set node [$form_doc createElement text]
+    $node setAttribute label [$attr getAttribute name]
+    $node setAttribute textwidth 10
+    my setStandards $attr $node
+    return $node
+}
+FormGenerator proc gen_decimal {attr form_doc} {
+    my gen_float $attr $form_doc
+}
+FormGenerator proc gen_double {attr form_doc} {
+    my gen_float $attr $form_doc
+}
+FormGenerator proc gen_enum {attr form_doc} {
+    set node [$form_doc createElement list]
+    $node setAttribute label [$attr getAttribute name]
+    set valuelist [tdom_getvaluelist $attr]
+    set vlcount [llength $valuelist]
+    if {$vlcount<5} then {
+        $node setAttribute subtype radiobuttons
+    }
+    tdom_setvaluelist $node $valuelist
+    my setStandards $attr $node
+    return $node
+}
+FormGenerator proc gen_float {attr form_doc} {
+    set node [$form_doc createElement numeric]
+    $node setAttribute label [$attr getAttribute name]
+    if {[$attr hasAttribute length]} {
+        $node setAttribute textwidth [$attr getAttribute length]
+    }
+    my setStandards $attr $node
+    return $node
+}
+FormGenerator proc gen_int {attr form_doc} {
+    set node [$form_doc createElement numeric]
+    $node setAttribute label [$attr getAttribute name]
+    if {[$attr hasAttribute length]} {
+        $node setAttribute textwidth [$attr getAttribute length]
+    }
+    my setStandards $attr $node
+    return $node
+}
+FormGenerator proc gen_integer {attr form_doc} {
+    # type integer is type int
+    my gen_int $attr $form_doc
+}
+@ FormGenerator proc gen_longblob {} {
+description {(Geplant)
+Logblog soll eintlich als eine abstrakte Datei behandelt werden
+und nach verlangen ermittelt werden
+und an externe App. übergeben werden mit MIME-Type unterscheidung
+sond speichern laden Schnittstelle zu Dateisystem}
+}
+FormGenerator proc gen_longblob {attr form_doc} {
+    set node [$form_doc createElement text]
+    $node setAttribute subtype area
+    $node setAttribute label [$attr getAttribute name]
+    my setStandards $attr $node
+    return $node
+}
+FormGenerator proc gen_mediumblob {attr form_doc} {
+    my gen_text $attr $form_doc
+}
+FormGenerator proc gen_mediumint {attr form_doc} {
+    my gen_int $attr $form_doc
+}
+FormGenerator proc gen_mediumtext {attr form_doc} {
+    my gen_text $attr $form_doc
+}
+FormGenerator proc gen_money {attr form_doc} {
+    my gen_varchar $attr $form_doc
+}
+@ FormGenerator proc gen_set {} {
+description {!! Zur Zeit kein Widget für Sets vorhanden alse benutze einfach
+text}
+}
+FormGenerator proc gen_set {attr form_doc} {
+    set node [$form_doc createElement text]
+    $node setAttribute label [$attr getAttribute name]
+    $node setAttribute textwidth 10
+    my setStandards $attr $node
+    return $node
+}
+FormGenerator proc gen_smallint {attr form_doc} {
+    my gen_int $attr $form_doc
+}
+FormGenerator proc gen_text {attr form_doc} {
+    set node [$form_doc createElement text]
+    $node setAttribute subtype area
+    $node setAttribute label [$attr getAttribute name]
+    my setStandards $attr $node
+    return $node
+}
+FormGenerator proc gen_time {attr form_doc} {
+    set node [$form_doc createElement text]
+    $node setAttribute label [$attr getAttribute name]
+    $node setAttribute textwidth 10
+    my setStandards $attr $node
+    return $node
+}
+FormGenerator proc gen_timestamp {attr form_doc} {
+    set node [$form_doc createElement text]
+    $node setAttribute label [$attr getAttribute name]
+    $node setAttribute textwidth 20
+    my setStandards $attr $node
+    # Nicht editierbart
+    $node setAttribute state disabled
+    return $node
+}
+FormGenerator proc gen_tinyblob {attr form_doc} {
+    my gen_text $attr $form_doc
+}
+FormGenerator proc gen_tinyint {attr form_doc} {
+    my gen_int $attr $form_doc
+}
+FormGenerator proc gen_tinytext {attr form_doc} {
+    my gen_text $attr $form_doc
+}
+FormGenerator proc gen_varchar {attr form_doc} {
+    set node [$form_doc createElement text]
+    $node setAttribute label [$attr getAttribute name]
+    if {[$attr hasAttribute length]} {
+        set len [$attr getAttribute length]
+    } else {
+        set len 50
+    }
+    # 50 sollte irgendwann ber Benutzer beienflußbar sein 
+    # !!opt
+    if {$len>50} {set len 50}
+    $node setAttribute textwidth $len
+    my setStandards $attr $node
+    return $node
+}
+@ FormGenerator proc makeChildForm {} {
+description {Erzeugt aus Vererbung ein NoteTab Formular}
+}
+FormGenerator proc makeChildForm {pack_node table_node primattr} {
+    set domdoc [$pack_node ownerDocument]
+    # suche ob bereit ein InheritForm vorhanden ist
+    set if_node [$pack_node selectNodes ancestor::form/descendant::inheritform]
+    if {$if_node==""} {
+        set if_node [$domdoc createElement inheritform]
+        $if_node setAttribute data $primattr
+        $pack_node appendChild $if_node
+    } 
+    set child_node [$domdoc createElement child]
+    $child_node setAttribute label [$table_node getAttribute name]
+    $child_node setAttribute form [$table_node getAttribute name]
+    $child_node setAttribute inheritkey [$table_node getAttribute inheritkey]
+    $if_node appendChild $child_node
+}
+@ FormGenerator proc makeFormLink {} {
+description {Aus Assoziationtarget erzeugt FormularLinks}
+}
+FormGenerator proc makeFormLink {pack_node at_node primattr tablename} {
+    set domdoc [$pack_node ownerDocument]
+    set fl_node [$domdoc createElement formlink]
+    $fl_node setAttribute label [$at_node getAttribute name]
+    $fl_node setAttribute data $primattr
+    if {![$at_node hasAttribute rolename]} {
+        $fl_node setAttribute label [$at_node getAttribute name]
+        $fl_node setAttribute refattribute [tdom_extractAttributes [$at_node selectNodes //descendant::assoziationcollection\[@name=\"[$at_node getAttribute name]\"\]/child::participant\[@table=\"$tablename\"\]/attribute::reference]]
+    } else {
+        set rolename [$at_node getAttribute rolename]
+        $fl_node setAttribute label $rolename
+        $fl_node setAttribute refattribute [tdom_extractAttributes [$at_node selectNodes //descendant::assoziationcollection\[@name=\"[$at_node getAttribute name]\"\]/child::participant\[@table=\"$tablename\"\ and\ @rolename=\"$rolename\"\]/attribute::reference]]
+    }
+    # Finde die Target Tabelle
+    set tg_table [$at_node selectNodes //descendant::table\[child::assoziationcollection\[@name=\"[$at_node getAttribute name]\"\]\]]
+    # Wenn es eine Kind Table ist dann nehme den Vater
+    # bis der WurzelObjekt gefunden wird
+    # 
+    # Diese Funktion wird nicht Untersützt der Fremdschlüssel taucht erst
+    # in Kinderobjekten der FormServer baut die Abfragen so das es ihn
+    # bereits in Wurzel-Objekt sucht
+    # Eine Lösung ist möglich braucht aber weitere Implementierung
+    # -> Eine Abfrage für Zwei Tabellen mit JOIN (für 2 Eigebettet Formulare)
+#     while  {[$tg_table hasAttribute type] && [$tg_table getAttribute type]=="child"} {
+#         set tg_table [$tg_table parentNode]
+#     }
+    $fl_node setAttribute form [$tg_table getAttribute name]
+    if {[$tg_table hasAttribute type] && 
+        [$tg_table getAttribute type]=="relationship"} {
+        # Erzeuge Objekt Links
+        $fl_node setAttribute reftable [$tg_table getAttribute name]
+        foreach partic [$tg_table selectNodes child::assoziationcollection/child::participant] {
+            if {$tablename==[$partic getAttribute table]} {
+                if {[$at_node hasAttribute rolename] 
+                    && [$partic hasAttribute rolename]} {
+                    if {[$at_node getAttribute rolename]==[$partic getAttribute rolename]} {
+                        continue
+                    }
+                } else {
+                    continue
+                }
+            }
+            set ol_node [$domdoc createElement objectlink]
+            $ol_node setAttribute form [$partic getAttribute table]
+            $ol_node setAttribute refattribute [$partic getAttribute reference]
+            if {[$partic hasAttribute rolename]} {
+                $ol_node setAttribute label [$partic getAttribute rolename]
+            } else {
+                $ol_node setAttribute label [$partic getAttribute table]
+            }
+            $fl_node appendChild $ol_node
+        } 
+    }
+    $pack_node appendChild $fl_node
+}
+@ FormGenerator proc makeNestedForm {} {
+description {Aus Aggregation des Tabellen erzeugt Eigebetete Formulare}
+}
+FormGenerator proc makeNestedForm {pack_node table_node primattr} {
+    set domdoc [$pack_node ownerDocument]
+    set nf_node [$domdoc createElement nestedform]
+    $nf_node setAttribute label [$table_node getAttribute name]
+    $nf_node setAttribute data $primattr
+    $nf_node setAttribute form [$table_node getAttribute name]
+    $nf_node setAttribute refattribute [$table_node getAttribute reference]
+    $pack_node appendChild $nf_node
+}
+@ FormGenerator proc makeReference {} {
+description {Erzeugt References (Fremdschlüssel Verweise) aus XML Tag assoziationcollection}
+}
+FormGenerator proc makeReference {pack_node ac_node table_node} {
+    set domdoc [$pack_node ownerDocument]
+    foreach part_node [$ac_node selectNodes child::participant] {
+        #puts "part $part_node"
+        set ref_node [$domdoc createElement reference]
+        set data [$part_node getAttribute reference]
+        $ref_node setAttribute data $data
+        set attrNode [$table_node selectNodes descendant::attr\[@name=\"$data\"\]]
+        $ref_node setAttribute dbtype [$attrNode getAttribute type]
+        set rt_node [$ac_node selectNodes /descendant::table\[@name=\"[$part_node getAttribute table]\"\]]
+        $ref_node setAttribute form [$part_node getAttribute table]
+        if {$rt_node==""} {
+            error "Can't find Table [$part_node getAttribute table] referenced from assoziationtarget Tag"
+        }
+        set table_name [$rt_node getAttribute name]
+        $ref_node setAttribute label $table_name
+        #puts "Table $rt_node $table_name"
+        # Suche Schlüssel der Tabelle
+        set primattr [tdom_getprimattr $rt_node]
+        #puts "Table $rt_node $table_name PK $primattr"
+        # Suche nach Objekt Etikette (label) 
+        # Suche alle Text Nodes zu label in der Tabele
+        set labels_tn [$rt_node selectNodes child::label/child::valuelist/child::item/text()]
+        set sqlquery {}
+        if {$labels_tn!=""} {
+            set labels {}
+            foreach tn $labels_tn {
+                lappend labels [$tn nodeValue]
+            }
+            set sqlquery "SELECT [join $primattr ,],[join $labels ,] FROM $table_name"
+            set columns [expr [llength $primattr]+[llength $labels]]
+            set columnslabel [concat $primattr $labels]
+            set idRelationship [tdom_extractAttributes [$rt_node selectNodes child::label/attribute::id-relationship]]
+            if {$idRelationship=="1" && [[$rt_node parentNode] nodeName]=="table"} {
+                # ID-Relationship
+                # bei Aggregation
+                set plabels_tn [[$rt_node parentNode] selectNodes child::label/child::valuelist/child::item/text()]
+                set plabels {}
+                foreach tn $plabels_tn {
+                    lappend plabels [$tn nodeValue]
+                }
+                if {$plabels!=""} {
+                    set columns [expr $columns + [llength $plabels] ]
+                    set columnslabel [concat $primattr $plabels $labels]
+                    set parent_name  [[$rt_node parentNode] getAttribute name]
+                    set reference [$rt_node getAttribute reference]
+                    set sqlquery "SELECT $table_name.[join $primattr ,],$parent_name.[join $plabels ,$parent_name.],$table_name.[join $labels ,$table_name.] FROM $table_name,$parent_name WHERE $table_name.$reference=$parent_name.$reference"
+                }
+            }
+        } elseif {[[$rt_node parentNode] nodeName]=="table" && 
+                  [$rt_node hasAttribute type] &&
+                  [$rt_node getAttribute type]=="child"} {
+            # !!! Vererbung von Etiketten
+            set labels_tn [[$rt_node parentNode] selectNodes child::label/child::valuelist/child::item/text()]
+            if {$labels_tn!=""} {
+                # Voraussetzung es gibt nur ein prim Attribut
+                set parent_primattr [tdom_getprimattr [$rt_node parentNode]]
+                set labels {};
+                set parent_name  [[$rt_node parentNode] getAttribute name]
+                foreach tn $labels_tn {
+                    lappend labels [$tn nodeValue]
+                }
+                set sqlquery "SELECT $table_name.$primattr,$parent_name.[join $labels $parent_name,] FROM ${table_name},$parent_name WHERE $table_name.$primattr=$parent_name.$parent_primattr"
+                set columns [expr 1+[llength $labels]]
+                set columnslabel [concat $primattr $labels] 
+            }
+        } 
+        # Keine Labels gefunden
+        if {$sqlquery==""} {
+            set sqlquery "SELECT [join $primattr ,] FROM [$rt_node getAttribute name]"
+            set columns [llength $primattr]
+            set columnslabel $primattr
+        }
+        $ref_node setAttribute columns $columns
+        $ref_node setAttribute columnslabel $columnslabel 
+        tdom_setpername $ref_node sqlquery $sqlquery
+        $pack_node appendChild $ref_node
+    }
+}
+@ FormGenerator proc setStandards {} {
+description {Prozeduren für die Erzugung der einzelnen Formularelemente
+haben den Aufruf gen_${type_name}
+1.Argument tDom node, das auf ein Attribut der Table (DB Schema) zeigt
+2.Argument tDom Document des Formulars.}
+}
+FormGenerator proc setStandards {attr node} {
+    $node setAttribute data [$attr getAttribute name]
+    $node setAttribute dbtype [$attr getAttribute type]
+    if {[$attr hasAttribute default]} {
+        $node setAttribute dbdefault [$attr getAttribute default]
+    }
+    if {[$attr hasAttribute noteditable] && 
+        [$attr getAttribute noteditable]} {
+        $node setAttribute state disabled
+    }
+    # Übernehme Metadata/desciption zu description
+    foreach desc_node [$attr selectNodes child::metadata/child::description] {
+        set tnode [[$node ownerDocument] createElement checks]
+        $tnode appendChild [[$node ownerDocument] createTextNode [$desc_node text]]
+        $node appendChild $tnode
+        break
+    }
+    # Übernehme checks
+    foreach checks_node [$attr selectNodes child::checks] {
+        puts "node as list [$checks_node asList] "
+        $node appendFromList [$checks_node asList]
+        break
+    }
+    # Autoincrement ist nicht editable
+    if {[$attr hasAttribute auto_increment] && 
+        [$attr getAttribute auto_increment]} {
+        $node setAttribute state disabled
+    }
+
+}
+
