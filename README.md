@@ -21,4 +21,14 @@ Xdobry ist programmed in Tcl but it used many Tcl Extensions:
 # Installation #
 
 You will need tcl and many extension to get it run.
-There are windows binaries in releases
+There are windows binaries in releases.
+
+For ubuntu
+
+   sudo apt-get install tcl tk nsf
+
+Start
+ 
+   wish SchemaEditor.tcl
+   wish FormEditor.tcl
+   wish FormServer.tcl

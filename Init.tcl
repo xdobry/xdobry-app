@@ -40,6 +40,9 @@ set helpdir /usr/share/doc/xdobry-0.30/docu
 
 tix addbitmapdir [file join $progdir bitmaps]
 
+# neutralize deprecated XOTCL @
+namespace import xotcl::*
+
 package require IDEErrorReporter
 ErrorReporter set version 0.31
 ErrorReporter set appName xdobry
